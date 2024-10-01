@@ -2010,7 +2010,9 @@ primary
 yes
 Krylatskaya Street, 3
 40.0
-1
+2
 36000
-primary
+secondary
+2005
+23
 no

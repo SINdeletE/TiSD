@@ -9,6 +9,8 @@
 #include "string_tools.h"
 #include "aparts_tools.h"
 
+#define ITER_COUNT 100
+
 int apart_read(apart_t *apart, FILE *f);
 bool file_is_incorrect(FILE *f, size_t *size);
 
@@ -457,7 +459,7 @@ int aparts_output_by_price(apart_t *aparts, size_t size, double min_price, doubl
 
             price = square(&aparts[i]) * quad_meter_cost(&aparts[i]);
 
-            if (price - min_price > -EPS && price - max_price < EPS)
+            if (price - min_price > -EPS && price - max_price < EPS && ! sec_were_there_animals(&aparts[i]) && room_count(&aparts[i]) == 2)
             {
                 it_has_data = true;
 
@@ -500,65 +502,73 @@ int statistics_get(apart_t *aparts, size_t size, keystat_t *keys)
 
     // APARTS TIME
 
-    aparts_ncpy(aparts_cpy, aparts, size);
-
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
-    if (insertion_sort(aparts_cpy, size, sizeof(apart_t), aparts_intcmp, (void *(*)(apart_t *))p_room_count))
+    for (size_t i = 0; i < ITER_COUNT; i++)
     {
-        free(aparts_cpy);
-        free(keys_cpy);
+        aparts_ncpy(aparts_cpy, aparts, size);
 
-        return APART_STAT_ERR_ALLOC;
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        if (insertion_sort(aparts_cpy, size, sizeof(apart_t), aparts_intcmp, (void *(*)(apart_t *))p_room_count))
+        {
+            free(aparts_cpy);
+            free(keys_cpy);
+
+            return APART_STAT_ERR_ALLOC;
+        }
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+        time_insertion_aparts += 1000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec) / 1000;
+
+        aparts_ncpy(aparts_cpy, aparts, size);
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        if (gnome_sort(aparts_cpy, size, sizeof(apart_t), aparts_intcmp, (void *(*)(apart_t *))p_room_count))
+        {
+            free(aparts_cpy);
+            free(keys_cpy);
+
+            return APART_STAT_ERR_ALLOC;
+        }
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+        time_gnome_aparts += 1000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec) / 1000;
+
+        // APARTS TIME
+
+        // KEYS TIME
+
+        keys_ncpy(keys_cpy, keys, size);
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        if (key_insertion_sort(keys_cpy, size, sizeof(keystat_t), keys_intcmp, (void *(*)(keystat_t *))key_p_room_count))
+        {
+            free(aparts_cpy);
+            free(keys_cpy);
+
+            return APART_STAT_ERR_ALLOC;
+        }
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+        time_insertion_keys += 1000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec) / 1000;
+
+        keys_ncpy(keys_cpy, keys, size);
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        if (key_gnome_sort(keys_cpy, size, sizeof(keystat_t), keys_intcmp, (void *(*)(keystat_t *))key_p_room_count))
+        {
+            free(aparts_cpy);
+            free(keys_cpy);
+
+            return APART_STAT_ERR_ALLOC;
+        }
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+        time_gnome_keys += 1000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec) / 1000;
     }
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
-    time_insertion_aparts = 1000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec) / 1000;
-
-    aparts_ncpy(aparts_cpy, aparts, size);
-
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
-    if (gnome_sort(aparts_cpy, size, sizeof(apart_t), aparts_intcmp, (void *(*)(apart_t *))p_room_count))
-    {
-        free(aparts_cpy);
-        free(keys_cpy);
-
-        return APART_STAT_ERR_ALLOC;
-    }
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
-    time_gnome_aparts = 1000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec) / 1000;
-
-    // APARTS TIME
 
     // KEYS TIME
 
-    keys_ncpy(keys_cpy, keys, size);
-
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
-    if (key_insertion_sort(keys_cpy, size, sizeof(keystat_t), keys_intcmp, (void *(*)(keystat_t *))key_p_room_count))
-    {
-        free(aparts_cpy);
-        free(keys_cpy);
-
-        return APART_STAT_ERR_ALLOC;
-    }
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
-    time_insertion_keys = 1000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec) / 1000;
-
-    keys_ncpy(keys_cpy, keys, size);
-
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
-    if (key_gnome_sort(keys_cpy, size, sizeof(keystat_t), keys_intcmp, (void *(*)(keystat_t *))key_p_room_count))
-    {
-        free(aparts_cpy);
-        free(keys_cpy);
-
-        return APART_STAT_ERR_ALLOC;
-    }
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
-    time_gnome_keys = 1000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec) / 1000;
+    time_insertion_aparts /= ITER_COUNT;
+    time_insertion_keys /= ITER_COUNT;
+    time_gnome_aparts /= ITER_COUNT;
+    time_gnome_keys /= ITER_COUNT;
 
     keys_ncpy(keys, keys_cpy, size);
-
-    // KEYS TIME
 
     free(aparts_cpy);
     free(keys_cpy);

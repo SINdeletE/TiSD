@@ -68,7 +68,7 @@ int main(void)
         printf("3. Add apart\n");
         printf("4. Delete apart\n");
         printf("5. Sort table\n");
-        printf("6. Get secondary aparts by price\n");
+        printf("6. Get secondary aparts by price without animals with 2 rooms\n");
         printf("7. Get sorts statistics\n");
         printf("8. Output aparts by keys (AFTER SORT STATISTICS)\n");
 
@@ -219,7 +219,7 @@ int main(void)
                 printf("2. Gnome sort\n");
                 printf("Enter sort algorithm code: ");
                 
-                if (scanf("%d", &func_code) != 1 || clear_buf(stdin))
+                if (scanf("%d", &func_code) != 1)
                     func_code = 0;
 
                 if (clear_buf(stdin))
@@ -365,7 +365,7 @@ int main(void)
 
                 if (max_price - min_price < -EPS)
                 {
-                    printf("\nMAX PRICE CAN'T BE LOWER THAN MIN PRICE\n");
+                    printf("\nMAX PRICE CAN'T BE LOWER THAN MIN PRICE WITH 2 ROOMS\n");
 
                     break;
                 }
@@ -374,7 +374,7 @@ int main(void)
                 switch (aparts_output_by_price(aparts, size, min_price, max_price))
                 {
                     case APART_BY_PRICE_ERR_NO_SECONDARY:
-                        printf("\nNO SECONDARY APARTS IN FILE\n");
+                        printf("\nNO SECONDARY APARTS WITHOUT ANIMALS IN FILE\n");
 
                         break;
                     case APART_BY_PRICE_ERR_NO_DATA:
