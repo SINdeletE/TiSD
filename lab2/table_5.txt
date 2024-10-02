@@ -1,0 +1,30 @@
+Garden Street, 20
+55.5
+2
+29000
+primary
+yes
+Krylatskaya Street, 3
+40.0
+1
+36000
+primary
+no
+Lenin Street, 10
+45.5
+2
+30000
+primary
+yes
+Mir Avenue, 25
+60.0
+3
+25000
+primary
+no
+Pushkin Street, 15
+35.0
+1
+35000
+primary
+yes

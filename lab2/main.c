@@ -123,7 +123,10 @@ int main(void)
                 break;
             case CODE_SHOW:
                 if (aparts != NULL && size != 0)
+                {
+                    printf("\n\n");
                     aparts_output(aparts, size);
+                }
                 else
                     printf("\nNO DATA\n");
 
@@ -171,6 +174,13 @@ int main(void)
 
                 break;
             case CODE_DELETE:
+                if (size == 0)
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+
                 printf("Enter apart index (starts from 1): ");
 
                 if (scanf("%zu", &index) != 1 || index < 1 || index > size + 1)
@@ -224,7 +234,7 @@ int main(void)
 
                 if (clear_buf(stdin))
                 {
-                    printf("\nINVALID VALUE!\n");
+                    printf("\nINVALID SORT CODE!\n");
 
                     break;
                 }
@@ -245,7 +255,7 @@ int main(void)
 
                 if (!sort)
                 {
-                    printf("\nINVALID CODE!\n");
+                    printf("\nINVALID SORT CODE!\n");
 
                     break;
                 }
@@ -321,7 +331,7 @@ int main(void)
                     
                         break;
                     default:
-                        printf("\nINVALID SORT CODE!\n");
+                        printf("\nINVALID KEY CODE!\n");
                 }
 
                 break;
@@ -336,14 +346,14 @@ int main(void)
                 printf("\nEnter min price: ");
                 if (scanf("%lf", &min_price) != 1 || min_price < -EPS)
                 {
-                    printf("\nINVALID VALUE\n");
+                    printf("\nINVALID MIN VALUE\n");
 
                     break;
                 }
 
                 if (clear_buf(stdin))
                 {
-                    printf("\nINVALID VALUE\n");
+                    printf("\nINVALID MIN VALUE\n");
 
                     break;
                 }
@@ -351,21 +361,21 @@ int main(void)
                 printf("Enter max price: ");
                 if (scanf("%lf", &max_price) != 1 || max_price < -EPS)
                 {
-                    printf("\nINVALID VALUE\n");
+                    printf("\nINVALID MAX VALUE\n");
 
                     break;
                 }
 
                 if (clear_buf(stdin))
                 {
-                    printf("\nINVALID VALUE\n");
+                    printf("\nINVALID MAX VALUE\n");
 
                     break;
                 }
 
                 if (max_price - min_price < -EPS)
                 {
-                    printf("\nMAX PRICE CAN'T BE LOWER THAN MIN PRICE WITH 2 ROOMS\n");
+                    printf("\nMAX PRICE CAN'T BE LOWER THAN MIN PRICE\n");
 
                     break;
                 }
@@ -374,7 +384,7 @@ int main(void)
                 switch (aparts_output_by_price(aparts, size, min_price, max_price))
                 {
                     case APART_BY_PRICE_ERR_NO_SECONDARY:
-                        printf("\nNO SECONDARY APARTS WITHOUT ANIMALS IN FILE\n");
+                        printf("\nNO SECONDARY APARTS WITHOUT ANIMALS WITH 2 ROOMS IN FILE\n");
 
                         break;
                     case APART_BY_PRICE_ERR_NO_DATA:
