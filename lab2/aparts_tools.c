@@ -26,7 +26,7 @@ void swap(void *src, void *dst, size_t size);
 
 void key_fill(keystat_t *key, int room_count, size_t index);
 void keys_ncpy(keystat_t *dst, keystat_t *src, size_t n);
-void stat_output(long time_insertion_aparts, long time_gnome_aparts, long time_insertion_keys, long time_gnome_keys);
+void stat_output(long time_insertion_aparts, long time_gnome_aparts, long time_insertion_keys, long time_gnome_keys, size_t size);
 
 // KEY
 
@@ -573,7 +573,7 @@ int statistics_get(apart_t *aparts, size_t size, keystat_t *keys)
     free(aparts_cpy);
     free(keys_cpy);
 
-    stat_output(time_insertion_aparts, time_gnome_aparts, time_insertion_keys, time_gnome_keys);
+    stat_output(time_insertion_aparts, time_gnome_aparts, time_insertion_keys, time_gnome_keys, size);
 
     return APART_STAT_OK;
 }
@@ -587,12 +587,56 @@ void aparts_output_by_keys(apart_t *aparts, size_t size, keystat_t *keys)
     }
 }
 
-void stat_output(long time_insertion_aparts, long time_gnome_aparts, long time_insertion_keys, long time_gnome_keys)
+void stat_output(long time_insertion_aparts, long time_gnome_aparts, long time_insertion_keys, long time_gnome_keys, size_t size)
 {
-    printf("\nTime insertion (aparts): %ld\n", time_insertion_aparts);
-    printf("Time insertion (keys): %ld\n", time_insertion_keys);
-    printf("Time gnome (aparts): %ld\n", time_gnome_aparts);
-    printf("Time gnome (keys): %ld\n", time_gnome_keys);
+    printf("\nTIME DATA (in microseconds):\n");
+    printf("Time insertion sort (aparts): %ld\n", time_insertion_aparts);
+    printf("Time insertion sort (keys): %ld\n", time_insertion_keys);
+    printf("Time gnome sort (aparts): %ld\n", time_gnome_aparts);
+    printf("Time gnome sort (keys): %ld\n", time_gnome_keys);
+
+    printf("\nSORTS COMPARING (using aparts):\n");
+    if (time_insertion_aparts < time_gnome_aparts)
+        printf("Insertion sort is %.6lf%% faster, than Gnome sort\n", (((double)time_gnome_aparts / (double)time_insertion_aparts) - 1.0) * 100.0);
+    else if (time_insertion_aparts > time_gnome_aparts)
+        printf("Gnome sort is %.6lf%% faster, than Insertion sort\n", (((double)time_insertion_aparts / (double)time_gnome_aparts) - 1.0) * 100.0);
+    else
+        printf("Gnome sort and Insertion sort are equal\n");
+
+    printf("\nSORTS COMPARING (using keys):\n");
+    if (time_insertion_keys < time_gnome_keys)
+        printf("Insertion sort is %.6lf%% faster, than Gnome sort\n", (((double)time_gnome_keys / (double)time_insertion_keys) - 1.0) * 100.0);
+    else if (time_insertion_keys > time_gnome_keys)
+        printf("Gnome sort is %.6lf%% faster, than Insertion sort\n", (((double)time_insertion_keys / (double)time_gnome_keys) - 1.0) * 100.0);
+    else
+        printf("Gnome sort and Insertion sort are equal\n");
+
+    printf("\nINSERTION SORT COMPARING (using aparts and keys):\n");
+    if (time_insertion_keys < time_insertion_aparts)
+        printf("Insertion sort is %.6lf%% faster, if we using keys\n", (((double)time_insertion_aparts / (double)time_insertion_keys) - 1.0) * 100.0);
+    else if (time_insertion_keys > time_insertion_aparts)
+        printf("Insertion sort is %.6lf%% faster, if we using aparts\n", (((double)time_insertion_keys / (double)time_insertion_aparts) - 1.0) * 100.0);
+    else
+        printf("No matter, keys or aparts. Insertion sort has the same result\n");
+
+    printf("\nGNOME SORT COMPARING (using aparts and keys):\n");
+    if (time_gnome_keys < time_gnome_aparts)
+        printf("Gnome sort is %.6lf%% faster, if we using keys\n", (((double)time_gnome_aparts / (double)time_gnome_keys) - 1.0) * 100.0);
+    else if (time_gnome_keys > time_gnome_aparts)
+        printf("Gnome sort is %.6lf%% faster, if we using aparts\n", (((double)time_gnome_keys / (double)time_gnome_aparts) - 1.0) * 100.0);
+    else
+        printf("No matter, keys or aparts. Gnome sort has the same result\n");
+
+    printf("\nMEMORY (Insertion sort)\n");
+    if ((size * (sizeof(apart_t) + sizeof(keystat_t)) + sizeof(keystat_t)) > ((size + 1) * sizeof(apart_t)))
+        printf("Keys requires %.6lf%% bigger memory, than aparts sort\n", ((double)(size * (sizeof(apart_t) + sizeof(keystat_t)) + sizeof(keystat_t)) / (double)((size + 1) * sizeof(apart_t)) - 1.0) * 100.0);
+    else if ((size * (sizeof(apart_t) + sizeof(keystat_t)) + sizeof(keystat_t)) < ((size + 1) * sizeof(apart_t)))
+        printf("Aparts requires %.6lf%% bigger memory, than keys sort\n", ((double)((size + 1) * sizeof(apart_t)) / (double)(size * (sizeof(apart_t) + sizeof(keystat_t)) + sizeof(keystat_t)) - 1.0) * 100.0);
+    else
+        printf("Keys memory and aparts memory are equal\n");
+
+    printf("\nMEMORY (Gnome sort)\n");
+    printf("Keys requires %.6lf%% bigger memory, than aparts sort\n", ((double)(size * (sizeof(apart_t) + sizeof(keystat_t))) / (double)(size * sizeof(apart_t)) - 1.0) * 100.0);
 }
 
 int keys_create(apart_t *aparts, size_t size, keystat_t **keys)
