@@ -628,6 +628,12 @@ void stat_output(long time_insertion_aparts, long time_gnome_aparts, long time_i
         printf("No matter, keys or aparts. Gnome sort has the same result\n");
 
     printf("\nMEMORY (Insertion sort)\n");
+    printf("MEMORY Insertion sort (aparts): %zu\n", ((size + 1) * sizeof(apart_t)));
+    printf("MEMORY Insertion sort (keys): %zu\n", (size * (sizeof(apart_t) + sizeof(keystat_t)) + sizeof(keystat_t)));
+    printf("\nMEMORY (Gnome sort)\n");
+    printf("MEMORY Gnome sort (aparts): %zu\n", ((size * sizeof(apart_t))));
+    printf("MEMORY Gnome sort (keys): %zu\n\n", (size * (sizeof(apart_t) + sizeof(keystat_t))));
+
     if ((size * (sizeof(apart_t) + sizeof(keystat_t)) + sizeof(keystat_t)) > ((size + 1) * sizeof(apart_t)))
         printf("Keys requires %.6lf%% bigger memory, than aparts sort\n", ((double)(size * (sizeof(apart_t) + sizeof(keystat_t)) + sizeof(keystat_t)) / (double)((size + 1) * sizeof(apart_t)) - 1.0) * 100.0);
     else if ((size * (sizeof(apart_t) + sizeof(keystat_t)) + sizeof(keystat_t)) < ((size + 1) * sizeof(apart_t)))
@@ -728,6 +734,15 @@ void keys_ncpy(keystat_t *dst, keystat_t *src, size_t n)
 {
     for (size_t i = 0; i < n; i++)
         dst[i] = src[i];
+}
+
+void output_keys(keystat_t *keys, size_t size)
+{
+    printf("\nINDEX | KEY (room_count)\n");
+    for (size_t i = 0; i < size; i++)
+    {
+        printf("%zu        %d\n", keys[i].index, keys[i].room_count);
+    }
 }
 
 // KEY

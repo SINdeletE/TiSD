@@ -30,9 +30,10 @@
 #define CODE_BY_PRICE 6
 #define CODE_STATISTICS 7
 #define CODE_OUTPUT_BY_KEYS 8
+#define CODE_OUTPUT_KEYS 9
 
-#define CODE_SAVE 9
-#define CODE_EXIT 10
+#define CODE_SAVE 10
+#define CODE_EXIT 11
 
 void keys_free(keystat_t **keys);
 
@@ -71,9 +72,10 @@ int main(void)
         printf("6. Get secondary aparts by price without animals with 2 rooms\n");
         printf("7. Get sorts statistics\n");
         printf("8. Output aparts by keys (AFTER SORT STATISTICS)\n");
+        printf("9. Output keys\n");
 
-        printf("\n9. Save file\n");
-        printf("10. Exit program\n");
+        printf("\n10. Save file\n");
+        printf("11. Exit program\n");
 
         printf("Code: ");
         if (scanf("%d", &code) != 1)
@@ -116,6 +118,13 @@ int main(void)
                         break;
                     default:
                         keys_free(&keys);
+
+                        if (keys_create(aparts, size, &keys))
+                        {
+                            printf("\nCOMPUTER COULDN't ALLOC MEMORY FOR KEYS!\n");
+
+                            break;
+                        }
 
                         printf("\nDATA WAS READ SUCCESSFULLY!\n");
                 }   
@@ -169,6 +178,13 @@ int main(void)
                     default:
                         keys_free(&keys);
 
+                        if (keys_create(aparts, size, &keys))
+                        {
+                            printf("\nCOMPUTER COULDN't ALLOC MEMORY FOR KEYS!\n");
+
+                            break;
+                        }
+
                         printf("\nDATA WAS ADDED SUCCESSFULLY!\n");
                 }
 
@@ -210,7 +226,8 @@ int main(void)
 
                         break;
                     default:
-                        keys_free(&keys);
+                        if (size == 0)
+                            keys_free(&keys);
 
                         printf("\nAPART WAS DELETED SUCCESSFULLY!\n");
                 }
@@ -286,6 +303,14 @@ int main(void)
 
                             printf("\nAPART WAS SORTED SUCCESSFULLY!\n");
                         }
+
+                        keys_free(&keys);
+                        if (keys_create(aparts, size, &keys))
+                        {
+                            printf("\nCOMPUTER COULDN't ALLOC MEMORY FOR KEYS!\n");
+
+                            break;
+                        }
                     
                         break;
                     case CODE_SQUARE:
@@ -299,6 +324,14 @@ int main(void)
                             keys_free(&keys);
                             
                             printf("\nAPART WAS SORTED SUCCESSFULLY!\n");
+                        }
+                        
+                        keys_free(&keys);
+                        if (keys_create(aparts, size, &keys))
+                        {
+                            printf("\nCOMPUTER COULDN't ALLOC MEMORY FOR KEYS!\n");
+
+                            break;
                         }
                     
                         break;
@@ -314,7 +347,15 @@ int main(void)
                             
                             printf("\nAPART WAS SORTED SUCCESSFULLY!\n");
                         }
-                    
+                        
+                        keys_free(&keys);
+                        if (keys_create(aparts, size, &keys))
+                        {
+                            printf("\nCOMPUTER COULDN't ALLOC MEMORY FOR KEYS!\n");
+
+                            break;
+                        }
+
                         break;
                     case CODE_QUAD_METER_COST:
                         comparator = aparts_doublecmp;
@@ -329,6 +370,14 @@ int main(void)
                             printf("\nAPART WAS SORTED SUCCESSFULLY!\n");
                         }
                     
+                        keys_free(&keys);
+                        if (keys_create(aparts, size, &keys))
+                        {
+                            printf("\nCOMPUTER COULDN't ALLOC MEMORY FOR KEYS!\n");
+
+                            break;
+                        }
+
                         break;
                     default:
                         printf("\nINVALID KEY CODE!\n");
@@ -435,6 +484,22 @@ int main(void)
                 }
                 
                 aparts_output_by_keys(aparts, size, keys);
+
+                break;
+            case CODE_OUTPUT_KEYS:
+                if (size == 0)
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+                if (keys == NULL)
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+                output_keys(keys, size);
 
                 break;
             case CODE_SAVE:

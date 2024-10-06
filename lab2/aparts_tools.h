@@ -79,6 +79,8 @@ int key_gnome_sort(void *base, size_t num, size_t size, int (*compare)(const voi
 
 int keys_intcmp(const void *p1, const void *p2, void *(*param) (keystat_t *));
 
+void output_keys(keystat_t *keys, size_t size);
+
 // KEY
 
 #endif
