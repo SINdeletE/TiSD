@@ -4,12 +4,8 @@
 
 #include <stddef.h>
 
-#define MIN_NUM -1000
-#define MAX_NUM 1000
-
-#define CELL_SIZE 13
-
-
+#include "general_consts.h"
+#include "vector_tools.h"
 
 #define MAT_INIT_OK 0
 #define MAT_INIT_ERR_ALLOC 1
@@ -27,6 +23,6 @@ typedef struct
 
 void matrix_free(matrix_t *matrix);
 int matrix_autoinit(matrix_t *matrix, size_t m, size_t n, int percent);
-void matrix_output_sparse(matrix_t *matrix);
+void matrix_output_sparse(matrix_t *matrix, vector_t *vector);
 
 #endif

@@ -4,16 +4,14 @@
 
 #include <stddef.h>
 
-#define MIN_NUM -1000
-#define MAX_NUM 1000
-
-
-
-
+#include "general_consts.h"
 
 #define VEC_INIT_OK 0
 #define VEC_INIT_ERR_ALLOC 1
 #define VEC_INIT_ERR_FILL 2
+
+#define VEC_ASSIGN_OK 0
+#define VEC_ASSIGN_ERR_ALLOC 1
 
 typedef struct 
 {
@@ -21,9 +19,12 @@ typedef struct
     size_t *JB;
 
     size_t size;
+    size_t full_size;
 } vector_t;
 
 void vector_free(vector_t *vector);
 int vector_autoinit(vector_t *vector, size_t m, int percent);
+void vector_str_output(vector_t *vector);
+int vector_parameters_assign(vector_t *dst, vector_t *src);
 
 #endif

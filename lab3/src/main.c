@@ -5,6 +5,7 @@
 
 #include "matrix_tools.h"
 #include "vector_tools.h"
+#include "operations.h"
 
 #define IO_OK 0
 #define IO_ERR_INVALID_DATA 1
@@ -17,6 +18,7 @@
 // ---
 
 #define CODE_OUTPUT 2
+#define CODE_SPARSE_MULTIPLICATION 3
 
 #define CODE_EXIT 5
 
@@ -24,8 +26,9 @@ int clear_buf(FILE *f);
 
 int main(void)
 {
-    matrix_t matrix = (matrix_t){NULL, NULL, NULL, 0};
-    vector_t vector = (vector_t){NULL, NULL, 0};
+    matrix_t matrix = (matrix_t){NULL, NULL, NULL, 0, 0};
+    vector_t vector = (vector_t){NULL, NULL, 0, 0};
+    vector_t result_vector = (vector_t){NULL, NULL, 0, 0};
 
     size_t m = 0;
     size_t n = 0;
@@ -44,7 +47,8 @@ int main(void)
     {
         printf("\nEnter a number of command:\n");
         printf("1. Initialize matrix and vector\n");
-        printf("2. Output matrix (sparse)\n");
+        printf("2. Output matrix (sparse) and vector (str format)\n");
+        printf("3. Count vector str and sparse multiplication\n");
 
         printf("5. Exit program\n");
 
@@ -148,10 +152,36 @@ int main(void)
 
                 break;
             case CODE_OUTPUT:
+                printf("\nMATRIX\n");
                 if (matrix.A != NULL)
-                    matrix_output_sparse(&matrix);
+                    matrix_output_sparse(&matrix, &vector);
                 else
                     printf("\nNO MATRIX\n");
+
+                printf("\nVECTOR\n");
+                if (vector.B != NULL)
+                    vector_str_output(&vector);
+                else
+                    printf("\nNO VECTOR\n");
+
+                break;
+            case CODE_SPARSE_MULTIPLICATION:
+                if (matrix.A == NULL)
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+
+                if (vector_sparse_multiplic(&result_vector, &vector, &matrix))
+                {
+                    printf("\nCOMPUTER CAN'T ALLOC NEEDED DATA\n");
+
+                    break;
+                }
+
+                printf("\nRESULT VECTOR\n");
+                vector_str_output(&result_vector);
 
                 break;
             case CODE_EXIT:

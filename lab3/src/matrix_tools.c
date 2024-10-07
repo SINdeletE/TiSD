@@ -163,9 +163,11 @@ int matrix_autoinit_alloc_real_mem(matrix_t *matrix)
     return 0;
 }
 
-void matrix_output_sparse(matrix_t *matrix)
+void matrix_output_sparse(matrix_t *matrix, vector_t *vector)
 {
-    printf("\n index |   ");
+    printf("full_size = %zu x %zu\n", vector->full_size, matrix->JA_size - 1);
+
+    printf(" index |   ");
     for (size_t i = 0; i < matrix->size; i++)
         printf("%-*zu", CELL_SIZE, i);
     printf("\n");

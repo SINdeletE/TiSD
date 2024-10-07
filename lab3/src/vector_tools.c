@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
@@ -44,7 +45,7 @@ int vector_autoinit(vector_t *vector, size_t m, int percent)
     {
         if ((rand() % (100 + 1)) <= percent)
         {
-            vector->B[size] = rand() % (MAX_NUM - MIN_NUM) + MIN_NUM;
+            while ((vector->B[size] = rand() % (MAX_NUM - MIN_NUM) + MIN_NUM) == 0);
             vector->JB[size] = j;
 
             size++;
@@ -52,6 +53,7 @@ int vector_autoinit(vector_t *vector, size_t m, int percent)
     }
 
     vector->size = size;
+    vector->full_size = m;
 
     if (vector_autoinit_alloc_real_mem(vector))
     {
@@ -94,4 +96,49 @@ int vector_autoinit_alloc_real_mem(vector_t *vector)
     vector->JB = JB_cpy;
 
     return 0;
+}
+
+void vector_str_output(vector_t *vector)
+{
+    printf("full_size = %zu\n", vector->full_size);
+
+    printf(" index |   ");
+    for (size_t i = 0; i < vector->size; i++)
+        printf("%-*zu", CELL_SIZE, i);
+    printf("\n");
+
+    printf("   B   |   ");
+    for (size_t i = 0; i < vector->size; i++)
+        printf("%-*i", CELL_SIZE, vector->B[i]);
+    printf("\n");
+
+    printf("  JB   |   ");
+    for (size_t i = 0; i < vector->size; i++)
+        printf("%-*zu", CELL_SIZE, vector->JB[i]);
+    printf("\n");
+}
+
+int vector_parameters_assign(vector_t *dst, vector_t *src)
+{
+    if ((dst->B = calloc(src->full_size, sizeof(*(dst->B)))) == NULL)
+    {
+        vector_free(dst);
+
+        return VEC_ASSIGN_ERR_ALLOC;
+    }
+
+    if ((dst->JB = malloc(src->full_size * sizeof(*(dst->JB)))) == NULL)
+    {
+        vector_free(dst);
+
+        return VEC_ASSIGN_ERR_ALLOC;
+    }
+
+    for (size_t i = 0; i < src->size; i++)
+        dst->JB[i] = src->JB[i];
+
+    dst->size = src->size;
+    dst->full_size = src->full_size;
+
+    return VEC_ASSIGN_OK;
 }
