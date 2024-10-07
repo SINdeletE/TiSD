@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
@@ -6,9 +7,20 @@
 
 void matrix_autoinit_no_col_fill(matrix_t *matrix, size_t str_i, size_t shift);
 int matrix_autoinit_alloc_real_mem(matrix_t *matrix);
+void matrix_free_without_JA(matrix_t *matrix);
 
 // НЕ СТИРАЕТ SIZE
 void matrix_free(matrix_t *matrix)
+{
+    matrix_free_without_JA(matrix);
+
+    if (matrix->JA != NULL)
+        free(matrix->JA);
+    
+    matrix->JA = NULL;
+}
+
+void matrix_free_without_JA(matrix_t *matrix)
 {
     if (matrix->A != NULL)
         free(matrix->A);
@@ -19,11 +31,6 @@ void matrix_free(matrix_t *matrix)
         free(matrix->IA);
     
     matrix->IA = NULL;
-
-    if (matrix->JA != NULL)
-        free(matrix->JA);
-    
-    matrix->JA = NULL;
 }
 
 int matrix_autoinit(matrix_t *matrix, size_t m, size_t n, int percent)
@@ -49,7 +56,7 @@ int matrix_autoinit(matrix_t *matrix, size_t m, size_t n, int percent)
         return MAT_INIT_ERR_ALLOC;
     }
 
-    if ((matrix->JA = calloc(n, sizeof(*(matrix->JA)) + 1)) == NULL)
+    if ((matrix->JA = calloc(n + 1, sizeof(*(matrix->JA)))) == NULL)
     {
         matrix_free(matrix);
 
@@ -62,7 +69,7 @@ int matrix_autoinit(matrix_t *matrix, size_t m, size_t n, int percent)
         {
             if ((rand() % (100 + 1)) <= percent)
             {
-                matrix->A[size] = rand() % (MAX_NUM - MIN_NUM) + MIN_NUM;
+                while ((matrix->A[size] = rand() % (MAX_NUM - MIN_NUM) + MIN_NUM) == 0);
                 matrix->IA[size] = j;
 
                 if (! col_flag)
@@ -86,18 +93,24 @@ int matrix_autoinit(matrix_t *matrix, size_t m, size_t n, int percent)
         col_flag = false;
     }
 
-    matrix->A[m] = size;
+    matrix->JA[n] = size;
 
     if (no_col_shift)
-        matrix_autoinit_no_col_fill(matrix, m, no_col_shift);
+        matrix_autoinit_no_col_fill(matrix, n, no_col_shift);
 
     matrix->size = size;
+    matrix->JA_size = n + 1;
 
-    if (matrix_autoinit_alloc_real_mem(matrix))
+    switch (matrix_autoinit_alloc_real_mem(matrix))
     {
-        matrix_free(matrix);
+        case MAT_INIT_ERR_FILL:
+            matrix_free(matrix);
 
-        return MAT_INIT_ERR_ALLOC;
+            return MAT_INIT_ERR_FILL;
+        case MAT_INIT_ERR_ALLOC:
+            matrix_free(matrix);
+
+            return MAT_INIT_ERR_ALLOC;
     }
 
     return MAT_INIT_OK;
@@ -113,6 +126,10 @@ int matrix_autoinit_alloc_real_mem(matrix_t *matrix)
 {
     int *A_cpy;
     size_t *IA_cpy;
+    size_t *JA_cpy = matrix->JA;
+
+    if (matrix->size == 0)
+        return MAT_INIT_ERR_FILL;
 
     if ((A_cpy = malloc(matrix->size * sizeof(*(matrix->A)))) == NULL)
     {
@@ -137,10 +154,34 @@ int matrix_autoinit_alloc_real_mem(matrix_t *matrix)
         IA_cpy[i] = matrix->IA[i];
     }
 
-    matrix_free(matrix);
+    matrix_free_without_JA(matrix);
 
     matrix->A = A_cpy;
     matrix->IA = IA_cpy;
+    matrix->JA = JA_cpy;
 
     return 0;
+}
+
+void matrix_output_sparse(matrix_t *matrix)
+{
+    printf("\n index |   ");
+    for (size_t i = 0; i < matrix->size; i++)
+        printf("%-*zu", CELL_SIZE, i);
+    printf("\n");
+
+    printf("   A   |   ");
+    for (size_t i = 0; i < matrix->size; i++)
+        printf("%-*i", CELL_SIZE, matrix->A[i]);
+    printf("\n");
+
+    printf("  IA   |   ");
+    for (size_t i = 0; i < matrix->size; i++)
+        printf("%-*zu", CELL_SIZE, matrix->IA[i]);
+    printf("\n");
+
+    printf("  JA   |   ");
+    for (size_t i = 0; i < matrix->JA_size; i++)
+        printf("%-*zu", CELL_SIZE, matrix->JA[i]);
+    printf("\n");
 }

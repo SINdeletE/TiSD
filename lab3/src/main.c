@@ -16,6 +16,8 @@
 #define CODE_SELF_INIT 2
 // ---
 
+#define CODE_OUTPUT 2
+
 #define CODE_EXIT 5
 
 int clear_buf(FILE *f);
@@ -42,7 +44,7 @@ int main(void)
     {
         printf("\nEnter a number of command:\n");
         printf("1. Initialize matrix and vector\n");
-
+        printf("2. Output matrix (sparse)\n");
 
         printf("5. Exit program\n");
 
@@ -106,11 +108,34 @@ int main(void)
 
                         matrix_free(&matrix);
                         vector_free(&vector);
+
+                        switch (vector_autoinit(&vector, m, percent))
+                        {
+                            case VEC_INIT_ERR_ALLOC:
+                                printf("\nCOMPUTER CAN'T AUTOINITIALIZE VECTOR\n");
+
+                                break;
+                            case VEC_INIT_ERR_FILL:
+                                printf("\nTOO LOW PERSENT. PLEASE, TRY AGAIN\n");
+
+                                break;
+                            default:
+                                printf("\nVECTOR WAS INITIALIZED SUCCESSFULLY!\n");
+                        }  
                         
-                        if (matrix_autoinit(&matrix, m, n, percent) || vector_autoinit(&vector, m, percent))
-                            printf("\nCOMPUTER CAN'T AUTOINITIALIZE MATRIX\n");
-                        else
-                            printf("\nMATRIX AND VECTOR WERE INITIALIZED SUCCESSFULLY!\n");
+                        switch (matrix_autoinit(&matrix, m, n, percent))
+                        {
+                            case MAT_INIT_ERR_ALLOC:
+                                printf("\nCOMPUTER CAN'T AUTOINITIALIZE MATRIX\n");
+
+                                break;
+                            case MAT_INIT_ERR_FILL:
+                                printf("\nTOO LOW PERSENT. PLEASE, TRY AGAIN\n");
+
+                                break;
+                            default:
+                                printf("\nMATRIX WAS INITIALIZED SUCCESSFULLY!\n");
+                        }                        
 
                         break;
                     case CODE_SELF_INIT:
@@ -120,6 +145,13 @@ int main(void)
                     default:
                         printf("\nINVALID CODE\n");
                 }
+
+                break;
+            case CODE_OUTPUT:
+                if (matrix.A != NULL)
+                    matrix_output_sparse(&matrix);
+                else
+                    printf("\nNO MATRIX\n");
 
                 break;
             case CODE_EXIT:

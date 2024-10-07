@@ -4,8 +4,8 @@
 
 #include <stddef.h>
 
-#define MIN_NUM -10000000
-#define MAX_NUM 10000000
+#define MIN_NUM -1000
+#define MAX_NUM 1000
 
 
 
@@ -13,6 +13,7 @@
 
 #define VEC_INIT_OK 0
 #define VEC_INIT_ERR_ALLOC 1
+#define VEC_INIT_ERR_FILL 2
 
 typedef struct 
 {
