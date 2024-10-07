@@ -10,9 +10,6 @@
 #define VEC_INIT_ERR_ALLOC 1
 #define VEC_INIT_ERR_FILL 2
 
-#define VEC_ASSIGN_OK 0
-#define VEC_ASSIGN_ERR_ALLOC 1
-
 typedef struct 
 {
     int *B;

@@ -117,28 +117,3 @@ void vector_str_output(vector_t *vector)
         printf("%-*zu", CELL_SIZE, vector->JB[i]);
     printf("\n");
 }
-
-int vector_parameters_assign(vector_t *dst, vector_t *src)
-{
-    if ((dst->B = calloc(src->full_size, sizeof(*(dst->B)))) == NULL)
-    {
-        vector_free(dst);
-
-        return VEC_ASSIGN_ERR_ALLOC;
-    }
-
-    if ((dst->JB = malloc(src->full_size * sizeof(*(dst->JB)))) == NULL)
-    {
-        vector_free(dst);
-
-        return VEC_ASSIGN_ERR_ALLOC;
-    }
-
-    for (size_t i = 0; i < src->size; i++)
-        dst->JB[i] = src->JB[i];
-
-    dst->size = src->size;
-    dst->full_size = src->full_size;
-
-    return VEC_ASSIGN_OK;
-}
