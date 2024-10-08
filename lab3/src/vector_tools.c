@@ -117,3 +117,19 @@ void vector_str_output(vector_t *vector)
         printf("%-*zu", CELL_SIZE, vector->JB[i]);
     printf("\n");
 }
+
+void vector_output_usual(vector_t *vector)
+{
+    size_t j = 0;
+    printf("full_size = %zu\n", vector->full_size);
+
+    for (size_t i = 0; i < vector->full_size; i++)
+        if (j < vector->size && vector->JB[j] == i)
+        {
+            printf("%-*d", CELL_SIZE, vector->B[j]);
+
+            j++;
+        }
+        else
+            printf("%-*d", CELL_SIZE, 0);
+}

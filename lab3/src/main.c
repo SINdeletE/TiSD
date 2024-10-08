@@ -199,11 +199,11 @@ int main(void)
                         else
                             printf("\nNO MATRIX\n");
 
-                        // printf("\nVECTOR\n");
-                        // if (vector.B != NULL)
-                        //     vector_usual_output(&vector);
-                        // else
-                        //     printf("\nNO VECTOR\n");
+                        printf("\nVECTOR\n");
+                        if (vector.B != NULL)
+                            vector_output_usual(&vector);
+                        else
+                            printf("\nNO VECTOR\n");
                 }
 
                     break;

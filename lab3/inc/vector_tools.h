@@ -21,7 +21,10 @@ typedef struct
 
 void vector_free(vector_t *vector);
 int vector_autoinit(vector_t *vector, size_t m, int percent);
+
 void vector_str_output(vector_t *vector);
+void vector_output_usual(vector_t *vector);
+
 int vector_parameters_assign(vector_t *dst, vector_t *src);
 
 #endif
