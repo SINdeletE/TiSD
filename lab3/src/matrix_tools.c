@@ -187,3 +187,30 @@ void matrix_output_sparse(matrix_t *matrix, vector_t *vector)
         printf("%-*zu", CELL_SIZE, matrix->JA[i]);
     printf("\n");
 }
+
+void matrix_output_usual(matrix_t *matrix, vector_t *vector)
+{
+    bool flag = false;
+
+    printf("full_size = %zu x %zu\n", vector->full_size, matrix->JA_size - 1);
+
+    for (size_t i = 0; i < vector->full_size; i++)
+    {
+        for (size_t j = 0; j < matrix->JA_size - 1; j++)
+        {
+            for (size_t z = matrix->JA[j]; ! flag && z < matrix->JA[j + 1]; z++)
+                if (i == matrix->IA[z] && matrix->A[z])
+                {
+                    printf("%-*d", CELL_SIZE, matrix->A[z]);
+
+                    flag = true;
+                }
+            
+            if (! flag)
+                printf("%-*d", CELL_SIZE, 0);
+
+            flag = false;
+        }
+        printf("\n");
+    }
+}

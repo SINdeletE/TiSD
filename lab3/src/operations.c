@@ -7,6 +7,8 @@ int vector_sparse_alloc_real_mem(vector_t *vector);
 
 int vector_sparse_multiplic(vector_t *res, vector_t *vector, matrix_t *matrix)
 {
+    vector_free(res);
+
     if (vector_start_parameters_assign(res, matrix))
     {
         vector_free(res);

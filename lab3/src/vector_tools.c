@@ -109,7 +109,7 @@ void vector_str_output(vector_t *vector)
 
     printf("   B   |   ");
     for (size_t i = 0; i < vector->size; i++)
-        printf("%-*i", CELL_SIZE, vector->B[i]);
+        printf("%-*d", CELL_SIZE, vector->B[i]);
     printf("\n");
 
     printf("  JB   |   ");

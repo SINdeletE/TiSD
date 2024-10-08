@@ -23,6 +23,8 @@ typedef struct
 
 void matrix_free(matrix_t *matrix);
 int matrix_autoinit(matrix_t *matrix, size_t m, size_t n, int percent);
+
 void matrix_output_sparse(matrix_t *matrix, vector_t *vector);
+void matrix_output_usual(matrix_t *matrix, vector_t *vector);
 
 #endif

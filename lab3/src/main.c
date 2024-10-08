@@ -17,7 +17,13 @@
 #define CODE_SELF_INIT 2
 // ---
 
+// ---
 #define CODE_OUTPUT 2
+
+#define CODE_OUTPUT_SPARSE 1
+#define CODE_OUTPUT_USUAL 2
+// ---
+
 #define CODE_SPARSE_MULTIPLICATION 3
 
 #define CODE_EXIT 5
@@ -152,19 +158,55 @@ int main(void)
 
                 break;
             case CODE_OUTPUT:
-                printf("\nMATRIX\n");
-                if (matrix.A != NULL)
-                    matrix_output_sparse(&matrix, &vector);
-                else
-                    printf("\nNO MATRIX\n");
+                if (matrix.A == NULL)
+                {
+                    printf("\nNO DATA\n");
 
-                printf("\nVECTOR\n");
-                if (vector.B != NULL)
-                    vector_str_output(&vector);
-                else
-                    printf("\nNO VECTOR\n");
+                    break;
+                }
 
-                break;
+                printf("\nEnter output method:\n");
+                printf("1. Sparse output\n");
+                printf("2. Usual output\n");
+                printf("\nCode: ");
+                if (scanf("%d", &code) != 1 || clear_buf(stdin))
+                {
+                    printf("\nINVALID CODE\n");
+
+                    break;
+                }
+
+                switch (code)
+                {
+                    case CODE_OUTPUT_SPARSE:
+                        printf("\nMATRIX\n");
+                        if (matrix.A != NULL)
+                            matrix_output_sparse(&matrix, &vector);
+                        else
+                            printf("\nNO MATRIX\n");
+
+                        printf("\nVECTOR\n");
+                        if (vector.B != NULL)
+                            vector_str_output(&vector);
+                        else
+                            printf("\nNO VECTOR\n");
+
+                        break;
+                    case CODE_OUTPUT_USUAL:
+                        printf("\nMATRIX\n");
+                        if (matrix.A != NULL)
+                            matrix_output_usual(&matrix, &vector);
+                        else
+                            printf("\nNO MATRIX\n");
+
+                        // printf("\nVECTOR\n");
+                        // if (vector.B != NULL)
+                        //     vector_usual_output(&vector);
+                        // else
+                        //     printf("\nNO VECTOR\n");
+                }
+
+                    break;
             case CODE_SPARSE_MULTIPLICATION:
                 if (matrix.A == NULL)
                 {
@@ -187,6 +229,7 @@ int main(void)
             case CODE_EXIT:
                 matrix_free(&matrix);
                 vector_free(&vector);
+                vector_free(&result_vector);
 
                 flag = false;
 
