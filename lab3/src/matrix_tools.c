@@ -276,4 +276,6 @@ int sparse_to_matrix(matrix_t *dst, sparse_t *src, vector_str_t *vector)
             flag = false;
         }
     }
+
+    return MAT_CONVERT_OK;
 }

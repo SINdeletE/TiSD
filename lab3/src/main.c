@@ -32,9 +32,9 @@ int clear_buf(FILE *f);
 
 int main(void)
 {
-    sparse_t matrix = (sparse_t){NULL, NULL, NULL, 0, 0};
-    vector_str_t vector = (vector_str_t){NULL, NULL, 0, 0};
-    vector_str_t result_vector = (vector_str_t){NULL, NULL, 0, 0};
+    sparse_t sparse = (sparse_t){NULL, NULL, NULL, 0, 0};
+    vector_str_t vector_str = (vector_str_t){NULL, NULL, 0, 0};
+    vector_str_t result_vector_str = (vector_str_t){NULL, NULL, 0, 0};
 
     size_t m = 0;
     size_t n = 0;
@@ -101,7 +101,7 @@ int main(void)
                 switch (code)
                 {
                     case CODE_AUTO_INIT:
-                        printf("\nEnter a percent of fill: ");
+                        printf("\nEnter a percent of fill for sparse matrix: ");
                         if (scanf("%d", &percent) != 1 || clear_buf(stdin))
                         {
                             printf("\nINVALID PERCENT\n");
@@ -116,24 +116,9 @@ int main(void)
                             break;
                         }
 
-                        sparse_free(&matrix);
-                        vector_str_free(&vector);
-
-                        switch (vector_str_autoinit(&vector, m, percent))
-                        {
-                            case VEC_INIT_ERR_ALLOC:
-                                printf("\nCOMPUTER CAN'T AUTOINITIALIZE VECTOR\n");
-
-                                break;
-                            case VEC_INIT_ERR_FILL:
-                                printf("\nTOO LOW PERSENT. PLEASE, TRY AGAIN\n");
-
-                                break;
-                            default:
-                                printf("\nVECTOR WAS INITIALIZED SUCCESSFULLY!\n");
-                        }  
+                        sparse_free(&sparse);
                         
-                        switch (sparse_autoinit(&matrix, m, n, percent))
+                        switch (sparse_autoinit(&sparse, m, n, percent))
                         {
                             case MAT_INIT_ERR_ALLOC:
                                 printf("\nCOMPUTER CAN'T AUTOINITIALIZE MATRIX\n");
@@ -145,7 +130,40 @@ int main(void)
                                 break;
                             default:
                                 printf("\nMATRIX WAS INITIALIZED SUCCESSFULLY!\n");
-                        }                        
+                        }
+
+
+
+                        printf("\nEnter a percent of fill for vector str: ");
+                        if (scanf("%d", &percent) != 1 || clear_buf(stdin))
+                        {
+                            printf("\nINVALID PERCENT\n");
+
+                            break;
+                        }
+                        // if percent < 1% && percent > 100%
+                        if (percent < 1 || percent > 100)
+                        {
+                            printf("\nINVALID PERCENT\n");
+
+                            break;
+                        }
+
+                        vector_str_free(&vector_str);
+
+                        switch (vector_str_autoinit(&vector_str, m, percent))
+                        {
+                            case VEC_INIT_ERR_ALLOC:
+                                printf("\nCOMPUTER CAN'T AUTOINITIALIZE VECTOR\n");
+
+                                break;
+                            case VEC_INIT_ERR_FILL:
+                                printf("\nTOO LOW PERSENT. PLEASE, TRY AGAIN\n");
+
+                                break;
+                            default:
+                                printf("\nVECTOR WAS INITIALIZED SUCCESSFULLY!\n");
+                        }
 
                         break;
                     case CODE_SELF_INIT:
@@ -158,7 +176,7 @@ int main(void)
 
                 break;
             case CODE_OUTPUT:
-                if (matrix.A == NULL)
+                if (sparse.A == NULL || vector_str.B == NULL)
                 {
                     printf("\nNO DATA\n");
 
@@ -180,42 +198,30 @@ int main(void)
                 {
                     case CODE_OUTPUT_SPARSE:
                         printf("\nMATRIX\n");
-                        if (matrix.A != NULL)
-                            sparse_output(&matrix, &vector);
-                        else
-                            printf("\nNO MATRIX\n");
+                        sparse_output(&sparse, &vector_str);
 
                         printf("\nVECTOR\n");
-                        if (vector.B != NULL)
-                            vector_str_output(&vector);
-                        else
-                            printf("\nNO VECTOR\n");
+                        vector_str_output(&vector_str);
 
                         break;
                     case CODE_OUTPUT_USUAL:
                         printf("\nMATRIX\n");
-                        if (matrix.A != NULL)
-                            sparse_output_usual(&matrix, &vector);
-                        else
-                            printf("\nNO MATRIX\n");
+                        sparse_output_usual(&sparse, &vector_str);
 
                         printf("\nVECTOR\n");
-                        if (vector.B != NULL)
-                            vector_str_output_usual(&vector);
-                        else
-                            printf("\nNO VECTOR\n");
+                        vector_str_output_usual(&vector_str);
                 }
 
                     break;
             case CODE_SPARSE_MULTIPLICATION:
-                if (matrix.A == NULL)
+                if (sparse.A == NULL || vector_str.B == NULL)
                 {
                     printf("\nNO DATA\n");
 
                     break;
                 }
 
-                if (vector_str_sparse_multiplic(&result_vector, &vector, &matrix))
+                if (vector_str_sparse_multiplic(&result_vector_str, &vector_str, &sparse))
                 {
                     printf("\nCOMPUTER CAN'T ALLOC NEEDED DATA\n");
 
@@ -223,13 +229,13 @@ int main(void)
                 }
 
                 printf("\nRESULT VECTOR\n");
-                vector_str_output(&result_vector);
+                vector_str_output(&result_vector_str);
 
                 break;
             case CODE_EXIT:
-                sparse_free(&matrix);
-                vector_str_free(&vector);
-                vector_str_free(&result_vector);
+                sparse_free(&sparse);
+                vector_str_free(&vector_str);
+                vector_str_free(&result_vector_str);
 
                 flag = false;
 

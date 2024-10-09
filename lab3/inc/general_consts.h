@@ -5,6 +5,6 @@
 #define MIN_NUM -1000
 #define MAX_NUM 1000
 
-#define CELL_SIZE 13
+#define CELL_SIZE 10
 
 #endif
