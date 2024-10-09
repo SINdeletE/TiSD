@@ -2,16 +2,16 @@
 
 #include "operations.h"
 
-int vector_start_parameters_assign(vector_t *dst, matrix_t *matrix);
-int vector_sparse_alloc_real_mem(vector_t *vector);
+int vector_str_start_parameters_assign(vector_str_t *dst, sparse_t *matrix);
+int vector_str_sparse_alloc_real_mem(vector_str_t *vector);
 
-int vector_sparse_multiplic(vector_t *res, vector_t *vector, matrix_t *matrix)
+int vector_str_sparse_multiplic(vector_str_t *res, vector_str_t *vector, sparse_t *matrix)
 {
-    vector_free(res);
+    vector_str_free(res);
 
-    if (vector_start_parameters_assign(res, matrix))
+    if (vector_str_start_parameters_assign(res, matrix))
     {
-        vector_free(res);
+        vector_str_free(res);
 
         return MULTI_INIT_ERR_ALLOC;
     }
@@ -27,9 +27,9 @@ int vector_sparse_multiplic(vector_t *res, vector_t *vector, matrix_t *matrix)
                     break;
                 }
 
-    if (vector_sparse_alloc_real_mem(res))
+    if (vector_str_sparse_alloc_real_mem(res))
     {
-        vector_free(res);
+        vector_str_free(res);
 
         return MULTI_INIT_ERR_ALLOC;
     }
@@ -37,18 +37,18 @@ int vector_sparse_multiplic(vector_t *res, vector_t *vector, matrix_t *matrix)
     return MULTI_INIT_OK;
 }
 
-int vector_start_parameters_assign(vector_t *dst, matrix_t *matrix)
+int vector_str_start_parameters_assign(vector_str_t *dst, sparse_t *matrix)
 {
     if ((dst->B = calloc(matrix->JA_size - 1, sizeof(*(dst->B)))) == NULL)
     {
-        vector_free(dst);
+        vector_str_free(dst);
 
         return VEC_ASSIGN_ERR_ALLOC;
     }
 
     if ((dst->JB = malloc((matrix->JA_size - 1) * sizeof(*(dst->JB)))) == NULL)
     {
-        vector_free(dst);
+        vector_str_free(dst);
 
         return VEC_ASSIGN_ERR_ALLOC;
     }
@@ -62,7 +62,7 @@ int vector_start_parameters_assign(vector_t *dst, matrix_t *matrix)
     return VEC_ASSIGN_OK;
 }
 
-int vector_sparse_alloc_real_mem(vector_t *vector)
+int vector_str_sparse_alloc_real_mem(vector_str_t *vector)
 {
     int *B_cpy;
     size_t *JB_cpy;
@@ -77,14 +77,14 @@ int vector_sparse_alloc_real_mem(vector_t *vector)
 
     if ((B_cpy = calloc(real_size, sizeof(*(vector->B)))) == NULL)
     {
-        vector_free(vector);
+        vector_str_free(vector);
 
         return VEC_ALLOC_REAL_ERR_ALLOC;
     }
 
     if ((JB_cpy = malloc(real_size * sizeof(*(vector->JB)))) == NULL)
     {
-        vector_free(vector);
+        vector_str_free(vector);
 
         return VEC_ALLOC_REAL_ERR_ALLOC;
     }
@@ -99,7 +99,7 @@ int vector_sparse_alloc_real_mem(vector_t *vector)
             real_size++;
         }
 
-    vector_free(vector);
+    vector_str_free(vector);
 
     vector->B = B_cpy;
     vector->JB = JB_cpy;

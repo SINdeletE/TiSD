@@ -32,9 +32,9 @@ int clear_buf(FILE *f);
 
 int main(void)
 {
-    matrix_t matrix = (matrix_t){NULL, NULL, NULL, 0, 0};
-    vector_t vector = (vector_t){NULL, NULL, 0, 0};
-    vector_t result_vector = (vector_t){NULL, NULL, 0, 0};
+    sparse_t matrix = (sparse_t){NULL, NULL, NULL, 0, 0};
+    vector_str_t vector = (vector_str_t){NULL, NULL, 0, 0};
+    vector_str_t result_vector = (vector_str_t){NULL, NULL, 0, 0};
 
     size_t m = 0;
     size_t n = 0;
@@ -116,10 +116,10 @@ int main(void)
                             break;
                         }
 
-                        matrix_free(&matrix);
-                        vector_free(&vector);
+                        sparse_free(&matrix);
+                        vector_str_free(&vector);
 
-                        switch (vector_autoinit(&vector, m, percent))
+                        switch (vector_str_autoinit(&vector, m, percent))
                         {
                             case VEC_INIT_ERR_ALLOC:
                                 printf("\nCOMPUTER CAN'T AUTOINITIALIZE VECTOR\n");
@@ -133,7 +133,7 @@ int main(void)
                                 printf("\nVECTOR WAS INITIALIZED SUCCESSFULLY!\n");
                         }  
                         
-                        switch (matrix_autoinit(&matrix, m, n, percent))
+                        switch (sparse_autoinit(&matrix, m, n, percent))
                         {
                             case MAT_INIT_ERR_ALLOC:
                                 printf("\nCOMPUTER CAN'T AUTOINITIALIZE MATRIX\n");
@@ -181,7 +181,7 @@ int main(void)
                     case CODE_OUTPUT_SPARSE:
                         printf("\nMATRIX\n");
                         if (matrix.A != NULL)
-                            matrix_output_sparse(&matrix, &vector);
+                            sparse_output(&matrix, &vector);
                         else
                             printf("\nNO MATRIX\n");
 
@@ -195,13 +195,13 @@ int main(void)
                     case CODE_OUTPUT_USUAL:
                         printf("\nMATRIX\n");
                         if (matrix.A != NULL)
-                            matrix_output_usual(&matrix, &vector);
+                            sparse_output_usual(&matrix, &vector);
                         else
                             printf("\nNO MATRIX\n");
 
                         printf("\nVECTOR\n");
                         if (vector.B != NULL)
-                            vector_output_usual(&vector);
+                            vector_str_output_usual(&vector);
                         else
                             printf("\nNO VECTOR\n");
                 }
@@ -215,7 +215,7 @@ int main(void)
                     break;
                 }
 
-                if (vector_sparse_multiplic(&result_vector, &vector, &matrix))
+                if (vector_str_sparse_multiplic(&result_vector, &vector, &matrix))
                 {
                     printf("\nCOMPUTER CAN'T ALLOC NEEDED DATA\n");
 
@@ -227,9 +227,9 @@ int main(void)
 
                 break;
             case CODE_EXIT:
-                matrix_free(&matrix);
-                vector_free(&vector);
-                vector_free(&result_vector);
+                sparse_free(&matrix);
+                vector_str_free(&vector);
+                vector_str_free(&result_vector);
 
                 flag = false;
 

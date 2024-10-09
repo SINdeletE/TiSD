@@ -4,15 +4,16 @@
 #include <time.h>
 
 #include "matrix_tools.h"
+#include "general_consts.h"
 
-void matrix_autoinit_no_col_fill(matrix_t *matrix, size_t str_i, size_t shift);
-int matrix_autoinit_alloc_real_mem(matrix_t *matrix);
-void matrix_free_without_JA(matrix_t *matrix);
+void sparse_autoinit_no_col_fill(sparse_t *matrix, size_t str_i, size_t shift);
+int sparse_autoinit_alloc_real_mem(sparse_t *matrix);
+void sparse_free_without_JA(sparse_t *matrix);
 
 // НЕ СТИРАЕТ SIZE
-void matrix_free(matrix_t *matrix)
+void sparse_free(sparse_t *matrix)
 {
-    matrix_free_without_JA(matrix);
+    sparse_free_without_JA(matrix);
 
     if (matrix->JA != NULL)
         free(matrix->JA);
@@ -20,7 +21,7 @@ void matrix_free(matrix_t *matrix)
     matrix->JA = NULL;
 }
 
-void matrix_free_without_JA(matrix_t *matrix)
+void sparse_free_without_JA(sparse_t *matrix)
 {
     if (matrix->A != NULL)
         free(matrix->A);
@@ -33,7 +34,7 @@ void matrix_free_without_JA(matrix_t *matrix)
     matrix->IA = NULL;
 }
 
-int matrix_autoinit(matrix_t *matrix, size_t m, size_t n, int percent)
+int sparse_autoinit(sparse_t *matrix, size_t m, size_t n, int percent)
 {
     bool col_flag = false;
 
@@ -44,21 +45,21 @@ int matrix_autoinit(matrix_t *matrix, size_t m, size_t n, int percent)
 
     if ((matrix->A = malloc(m * n * sizeof(*(matrix->A)))) == NULL)
     {
-        matrix_free(matrix);
+        sparse_free(matrix);
 
         return MAT_INIT_ERR_ALLOC;
     }
 
     if ((matrix->IA = malloc(m * n * sizeof(*(matrix->IA)))) == NULL)
     {
-        matrix_free(matrix);
+        sparse_free(matrix);
 
         return MAT_INIT_ERR_ALLOC;
     }
 
     if ((matrix->JA = calloc(n + 1, sizeof(*(matrix->JA)))) == NULL)
     {
-        matrix_free(matrix);
+        sparse_free(matrix);
 
         return MAT_INIT_ERR_ALLOC;
     }
@@ -82,7 +83,7 @@ int matrix_autoinit(matrix_t *matrix, size_t m, size_t n, int percent)
         
         if (col_flag && no_col_shift)
         {
-            matrix_autoinit_no_col_fill(matrix, i, no_col_shift);
+            sparse_autoinit_no_col_fill(matrix, i, no_col_shift);
 
             no_col_shift = 0;
         }
@@ -96,19 +97,19 @@ int matrix_autoinit(matrix_t *matrix, size_t m, size_t n, int percent)
     matrix->JA[n] = size;
 
     if (no_col_shift)
-        matrix_autoinit_no_col_fill(matrix, n, no_col_shift);
+        sparse_autoinit_no_col_fill(matrix, n, no_col_shift);
 
     matrix->size = size;
     matrix->JA_size = n + 1;
 
-    switch (matrix_autoinit_alloc_real_mem(matrix))
+    switch (sparse_autoinit_alloc_real_mem(matrix))
     {
         case MAT_INIT_ERR_FILL:
-            matrix_free(matrix);
+            sparse_free(matrix);
 
             return MAT_INIT_ERR_FILL;
         case MAT_INIT_ERR_ALLOC:
-            matrix_free(matrix);
+            sparse_free(matrix);
 
             return MAT_INIT_ERR_ALLOC;
     }
@@ -116,13 +117,13 @@ int matrix_autoinit(matrix_t *matrix, size_t m, size_t n, int percent)
     return MAT_INIT_OK;
 }
 
-void matrix_autoinit_no_col_fill(matrix_t *matrix, size_t str_i, size_t shift)
+void sparse_autoinit_no_col_fill(sparse_t *matrix, size_t str_i, size_t shift)
 {
     for (size_t i = 1; i <= shift; i++)
         matrix->JA[str_i - i] = matrix->JA[str_i];
 }
 
-int matrix_autoinit_alloc_real_mem(matrix_t *matrix)
+int sparse_autoinit_alloc_real_mem(sparse_t *matrix)
 {
     int *A_cpy;
     size_t *IA_cpy;
@@ -133,14 +134,14 @@ int matrix_autoinit_alloc_real_mem(matrix_t *matrix)
 
     if ((A_cpy = malloc(matrix->size * sizeof(*(matrix->A)))) == NULL)
     {
-        matrix_free(matrix);
+        sparse_free(matrix);
 
         return MAT_INIT_ERR_ALLOC;
     }
 
     if ((IA_cpy = malloc(matrix->size * sizeof(*(matrix->IA)))) == NULL)
     {
-        matrix_free(matrix);
+        sparse_free(matrix);
 
         free(A_cpy);
         return MAT_INIT_ERR_ALLOC;
@@ -154,7 +155,7 @@ int matrix_autoinit_alloc_real_mem(matrix_t *matrix)
         IA_cpy[i] = matrix->IA[i];
     }
 
-    matrix_free_without_JA(matrix);
+    sparse_free_without_JA(matrix);
 
     matrix->A = A_cpy;
     matrix->IA = IA_cpy;
@@ -163,7 +164,7 @@ int matrix_autoinit_alloc_real_mem(matrix_t *matrix)
     return 0;
 }
 
-void matrix_output_sparse(matrix_t *matrix, vector_t *vector)
+void sparse_output(sparse_t *matrix, vector_str_t *vector)
 {
     printf("full_size = %zu x %zu\n", vector->full_size, matrix->JA_size - 1);
 
@@ -188,7 +189,7 @@ void matrix_output_sparse(matrix_t *matrix, vector_t *vector)
     printf("\n");
 }
 
-void matrix_output_usual(matrix_t *matrix, vector_t *vector)
+void sparse_output_usual(sparse_t *matrix, vector_str_t *vector)
 {
     bool flag = false;
 
@@ -212,5 +213,67 @@ void matrix_output_usual(matrix_t *matrix, vector_t *vector)
             flag = false;
         }
         printf("\n");
+    }
+}
+
+// ---------------------------------------------------------------------------------
+
+
+// НЕ СТИРАЕТ N и M
+void matrix_free(matrix_t *matrix)
+{
+    if (matrix->strs)
+    {
+        for (size_t i = 0; i < matrix->n; i++)
+            free(matrix->strs[i]);
+
+        free(matrix->strs);
+    }
+    
+    matrix->strs = NULL;
+}
+
+int matrix_alloc_data(matrix_t *matrix, size_t n, size_t m)
+{
+    if ((matrix->strs = calloc(n, sizeof(int*))) == NULL)
+        return MAT_ALLOC_ERR;
+    
+    for (size_t i = 0; i < n; i++)
+        if ((matrix->strs[i] = malloc(m * sizeof(int))) == NULL)
+        {
+            matrix_free(matrix);
+
+            return MAT_ALLOC_ERR;
+        }
+
+    return MAT_ALLOC_OK;
+}
+
+int sparse_to_matrix(matrix_t *dst, sparse_t *src, vector_str_t *vector)
+{
+    matrix_free(dst);
+
+    if (matrix_alloc_data(dst, vector->full_size, src->JA_size - 1))
+        return MAT_CONVERT_ERR_ALLOC;
+
+    bool flag = false;
+
+    for (size_t i = 0; i < vector->full_size; i++)
+    {
+        for (size_t j = 0; j < src->JA_size - 1; j++)
+        {
+            for (size_t z = src->JA[j]; ! flag && z < src->JA[j + 1]; z++)
+                if (i == src->IA[z] && src->A[z])
+                {
+                    dst->strs[i][j] = src->A[z];
+
+                    flag = true;
+                }
+            
+            if (! flag)
+                dst->strs[i][j] = 0;
+
+            flag = false;
+        }
     }
 }

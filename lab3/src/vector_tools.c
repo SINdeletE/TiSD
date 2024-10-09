@@ -4,11 +4,12 @@
 #include <time.h>
 
 #include "vector_tools.h"
+#include "general_consts.h"
 
-int vector_autoinit_alloc_real_mem(vector_t *vector);
+int vector_str_autoinit_alloc_real_mem(vector_str_t *vector);
 
 // НЕ СТИРАЕТ SIZE
-void vector_free(vector_t *vector)
+void vector_str_free(vector_str_t *vector)
 {
     if (vector->B != NULL)
         free(vector->B);
@@ -21,7 +22,7 @@ void vector_free(vector_t *vector)
     vector->JB = NULL;
 }
 
-int vector_autoinit(vector_t *vector, size_t m, int percent)
+int vector_str_autoinit(vector_str_t *vector, size_t m, int percent)
 {
     size_t size = 0;
 
@@ -29,14 +30,14 @@ int vector_autoinit(vector_t *vector, size_t m, int percent)
 
     if ((vector->B = malloc(m * sizeof(*(vector->B)))) == NULL)
     {
-        vector_free(vector);
+        vector_str_free(vector);
 
         return VEC_INIT_ERR_ALLOC;
     }
 
     if ((vector->JB = malloc(m * sizeof(*(vector->JB)))) == NULL)
     {
-        vector_free(vector);
+        vector_str_free(vector);
 
         return VEC_INIT_ERR_ALLOC;
     }
@@ -55,9 +56,9 @@ int vector_autoinit(vector_t *vector, size_t m, int percent)
     vector->size = size;
     vector->full_size = m;
 
-    if (vector_autoinit_alloc_real_mem(vector))
+    if (vector_str_autoinit_alloc_real_mem(vector))
     {
-        vector_free(vector);
+        vector_str_free(vector);
 
         return VEC_INIT_ERR_ALLOC;
     }
@@ -65,20 +66,20 @@ int vector_autoinit(vector_t *vector, size_t m, int percent)
     return VEC_INIT_OK;
 }
 
-int vector_autoinit_alloc_real_mem(vector_t *vector)
+int vector_str_autoinit_alloc_real_mem(vector_str_t *vector)
 {
     int *B_cpy;
     size_t *JB_cpy;
 
     if ((B_cpy = malloc(vector->size * sizeof(*(vector->B)))) == NULL)
     {
-        vector_free(vector);
+        vector_str_free(vector);
 
         return VEC_INIT_ERR_ALLOC;
     }
     if ((JB_cpy = malloc(vector->size * sizeof(*(vector->JB)))) == NULL)
     {
-        vector_free(vector);
+        vector_str_free(vector);
 
         free(B_cpy);
         return VEC_INIT_ERR_ALLOC;
@@ -90,7 +91,7 @@ int vector_autoinit_alloc_real_mem(vector_t *vector)
         JB_cpy[i] = vector->JB[i];
     }
 
-    vector_free(vector);
+    vector_str_free(vector);
 
     vector->B = B_cpy;
     vector->JB = JB_cpy;
@@ -98,7 +99,7 @@ int vector_autoinit_alloc_real_mem(vector_t *vector)
     return 0;
 }
 
-void vector_str_output(vector_t *vector)
+void vector_str_output(vector_str_t *vector)
 {
     printf("full_size = %zu\n", vector->full_size);
 
@@ -118,7 +119,7 @@ void vector_str_output(vector_t *vector)
     printf("\n");
 }
 
-void vector_output_usual(vector_t *vector)
+void vector_str_output_usual(vector_str_t *vector)
 {
     size_t j = 0;
     printf("full_size = %zu\n", vector->full_size);
@@ -132,4 +133,40 @@ void vector_output_usual(vector_t *vector)
         }
         else
             printf("%-*d", CELL_SIZE, 0);
+}
+
+
+// ---------------------------------------------------------------------------------
+
+
+// НЕ СТИРАЕТ SIZE
+void vector_free(vector_t *vector)
+{
+    if (vector->coords != NULL)
+        free(vector->coords);
+    
+    vector->coords = NULL;
+}
+
+int vector_str_to_vector(vector_t *dst, vector_str_t *src)
+{
+    vector_free(dst);
+
+    if ((dst->coords = malloc(src->full_size * sizeof(*(src->B)))) == NULL)
+        return VEC_CONVERT_ERR_ALLOC;
+
+    size_t j = 0;
+    for (size_t i = 0; i < src->full_size; i++)
+        if (j < src->size && src->JB[j] == i)
+        {
+            dst->coords[i] = src->B[j];
+
+            j++;
+        }
+        else
+            dst->coords[i] = 0;
+    
+    dst->full_size = src->full_size;
+
+    return VEC_CONVERT_OK;
 }
