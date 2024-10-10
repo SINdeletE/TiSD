@@ -101,23 +101,38 @@ int vector_str_autoinit_alloc_real_mem(vector_str_t *vector)
 
 void vector_str_output(vector_str_t *vector)
 {
+    size_t str_size = 0;
+    size_t i = 0;
+    size_t max_i = 0;
     printf("full_size = %zu\n", vector->full_size);
 
-    printf(" index |   ");
-    for (size_t i = 0; i < vector->size; i++)
-        printf("%-*zu", CELL_SIZE, i);
-    printf("\n");
+    while (str_size < vector->size)
+    {
+        max_i = 0;
 
-    printf("   B   |   ");
-    for (size_t i = 0; i < vector->size; i++)
-        printf("%-*d", CELL_SIZE, vector->B[i]);
-    printf("\n");
+        printf(" index |   ");
+        i = str_size;
+        for (; (i % STR_TABLE_SIZE != 0 || i == str_size) && i < vector->size;)
+            printf("%-*zu", CELL_SIZE, i++);
+        max_i = i % STR_TABLE_SIZE > max_i ? i % STR_TABLE_SIZE : max_i;
+        if (i - str_size == STR_TABLE_SIZE)
+            max_i = STR_TABLE_SIZE;
+        printf("\n");
 
-    printf("  JB   |   ");
-    for (size_t i = 0; i < vector->size; i++)
-        printf("%-*zu", CELL_SIZE, vector->JB[i]);
-    
-    printf("\n");
+        printf("   B   |   ");
+        i = str_size;
+        for (; (i % STR_TABLE_SIZE != 0 || i == str_size) && i < vector->size;)
+            printf("%-*d", CELL_SIZE, vector->B[i++]);
+        printf("\n");
+
+        printf("  JB   |   ");
+        i = str_size;
+        for (; (i % STR_TABLE_SIZE != 0 || i == str_size) && i < vector->size;)
+            printf("%-*zu", CELL_SIZE, vector->JB[i++]);
+        printf("\n\n");
+
+        str_size += max_i;
+    }
 }
 
 void vector_str_output_usual(vector_str_t *vector)

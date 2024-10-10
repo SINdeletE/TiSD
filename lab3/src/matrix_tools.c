@@ -64,6 +64,13 @@ int sparse_autoinit(sparse_t *matrix, size_t m, size_t n, int percent)
         return MAT_INIT_ERR_ALLOC;
     }
 
+    // while (size != (size_t)((double)(n * m) * (double)percent / 100.0) ? (size_t)((double)(n * m) * (double)percent / 100.0) : 1)
+    // {
+    col_flag = false;
+
+    size = 0;
+    no_col_shift = 0;
+
     for (size_t i = 0; i < n; i++)
     {
         for (size_t j = 0; j < m; j++)
@@ -93,6 +100,7 @@ int sparse_autoinit(sparse_t *matrix, size_t m, size_t n, int percent)
 
         col_flag = false;
     }
+    // }
 
     matrix->JA[n] = size;
 
@@ -166,27 +174,47 @@ int sparse_autoinit_alloc_real_mem(sparse_t *matrix)
 
 void sparse_output(sparse_t *matrix, vector_str_t *vector)
 {
+    size_t str_size = 0;
+    size_t i = 0;
+    size_t max_i = 0;
     printf("full_size = %zu x %zu\n", vector->full_size, matrix->JA_size - 1);
 
-    printf(" index |   ");
-    for (size_t i = 0; i < matrix->size; i++)
-        printf("%-*zu", CELL_SIZE, i);
-    printf("\n");
+    while (str_size < (matrix->size > matrix->JA_size ? matrix->size : matrix->JA_size))
+    {
+        max_i = 0;
 
-    printf("   A   |   ");
-    for (size_t i = 0; i < matrix->size; i++)
-        printf("%-*i", CELL_SIZE, matrix->A[i]);
-    printf("\n");
+        printf(" index |   ");
+        i = str_size;
+        for (; (i % STR_TABLE_SIZE != 0 || i == str_size) && i < matrix->size;)
+            printf("%-*zu", CELL_SIZE, i++);
+        max_i = i % STR_TABLE_SIZE > max_i ? i % STR_TABLE_SIZE : max_i;
+        if (i - str_size == STR_TABLE_SIZE)
+            max_i = STR_TABLE_SIZE;
+        printf("\n");
 
-    printf("  IA   |   ");
-    for (size_t i = 0; i < matrix->size; i++)
-        printf("%-*zu", CELL_SIZE, matrix->IA[i]);
-    printf("\n");
+        printf("   A   |   ");
+        i = str_size;
+        for (; (i % STR_TABLE_SIZE != 0 || i == str_size) && i < matrix->size;)
+            printf("%-*i", CELL_SIZE, matrix->A[i++]);
+        printf("\n");
 
-    printf("  JA   |   ");
-    for (size_t i = 0; i < matrix->JA_size; i++)
-        printf("%-*zu", CELL_SIZE, matrix->JA[i]);
-    printf("\n");
+        printf("  IA   |   ");
+        i = str_size;
+        for (; (i % STR_TABLE_SIZE != 0 || i == str_size) && i < matrix->size;)
+            printf("%-*zu", CELL_SIZE, matrix->IA[i++]);
+        printf("\n");
+
+        printf("  JA   |   ");
+        i = str_size;
+        for (; (i % STR_TABLE_SIZE != 0 || i == str_size) && i < matrix->JA_size;)
+            printf("%-*zu", CELL_SIZE, matrix->JA[i++]);
+        max_i = i % STR_TABLE_SIZE > max_i ? i % STR_TABLE_SIZE : max_i;
+        if (i - str_size == STR_TABLE_SIZE)
+            max_i = STR_TABLE_SIZE;
+        printf("\n\n");
+
+        str_size += max_i;
+    }
 }
 
 void sparse_output_usual(sparse_t *matrix, vector_str_t *vector)

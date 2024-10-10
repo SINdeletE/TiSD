@@ -6,5 +6,6 @@
 #define MAX_NUM 1000
 
 #define CELL_SIZE 10
+#define STR_TABLE_SIZE 10
 
 #endif
