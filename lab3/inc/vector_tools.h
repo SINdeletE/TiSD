@@ -39,5 +39,6 @@ int vector_str_parameters_assign(vector_str_t *dst, vector_str_t *src);
 
 void vector_free(vector_t *vector);
 int vector_str_to_vector(vector_t *dst, vector_str_t *src);
+void vector_output(vector_t *vector);
 
 #endif

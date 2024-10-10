@@ -235,7 +235,7 @@ void matrix_free(matrix_t *matrix)
 
 int matrix_alloc_data(matrix_t *matrix, size_t n, size_t m)
 {
-    if ((matrix->strs = calloc(n, sizeof(int*))) == NULL)
+    if ((matrix->strs = calloc(n, sizeof(*(matrix->strs)))) == NULL)
         return MAT_ALLOC_ERR;
     
     for (size_t i = 0; i < n; i++)
@@ -276,6 +276,9 @@ int sparse_to_matrix(matrix_t *dst, sparse_t *src, vector_str_t *vector)
             flag = false;
         }
     }
+
+    dst->n = vector->full_size;
+    dst->m = src->JA_size - 1;
 
     return MAT_CONVERT_OK;
 }

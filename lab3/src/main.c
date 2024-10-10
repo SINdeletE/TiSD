@@ -25,6 +25,7 @@
 // ---
 
 #define CODE_SPARSE_MULTIPLICATION 3
+#define CODE_MATRIX_MULTIPLICATION 4
 
 #define CODE_EXIT 5
 
@@ -36,12 +37,16 @@ int main(void)
     vector_str_t vector_str = (vector_str_t){NULL, NULL, 0, 0};
     vector_str_t result_vector_str = (vector_str_t){NULL, NULL, 0, 0};
 
+    matrix_t matrix = (matrix_t){NULL, 0, 0};
+    vector_t vector = (vector_t){NULL, 0};
+    vector_t result_vector = (vector_t){NULL, 0};
+
     size_t m = 0;
     size_t n = 0;
 
     bool flag = true;
     int code;
-    // int func_code = 0;
+    int func_code = 0;
 
     // --- INIT
 
@@ -55,6 +60,7 @@ int main(void)
         printf("1. Initialize matrix and vector\n");
         printf("2. Output matrix (sparse) and vector (str format)\n");
         printf("3. Count vector str and sparse multiplication\n");
+        printf("4. Count vector and matrix multiplication\n");
 
         printf("5. Exit program\n");
 
@@ -101,6 +107,8 @@ int main(void)
                 switch (code)
                 {
                     case CODE_AUTO_INIT:
+                        // sparse
+
                         printf("\nEnter a percent of fill for sparse matrix: ");
                         if (scanf("%d", &percent) != 1 || clear_buf(stdin))
                         {
@@ -118,7 +126,7 @@ int main(void)
 
                         sparse_free(&sparse);
                         
-                        switch (sparse_autoinit(&sparse, m, n, percent))
+                        switch (func_code = sparse_autoinit(&sparse, m, n, percent))
                         {
                             case MAT_INIT_ERR_ALLOC:
                                 printf("\nCOMPUTER CAN'T AUTOINITIALIZE MATRIX\n");
@@ -132,7 +140,14 @@ int main(void)
                                 printf("\nMATRIX WAS INITIALIZED SUCCESSFULLY!\n");
                         }
 
+                        if (func_code)
+                        {
+                            sparse_free(&sparse);
 
+                            break;
+                        }
+
+                        // vector_str
 
                         printf("\nEnter a percent of fill for vector str: ");
                         if (scanf("%d", &percent) != 1 || clear_buf(stdin))
@@ -151,7 +166,7 @@ int main(void)
 
                         vector_str_free(&vector_str);
 
-                        switch (vector_str_autoinit(&vector_str, m, percent))
+                        switch (func_code = vector_str_autoinit(&vector_str, m, percent))
                         {
                             case VEC_INIT_ERR_ALLOC:
                                 printf("\nCOMPUTER CAN'T AUTOINITIALIZE VECTOR\n");
@@ -162,7 +177,58 @@ int main(void)
 
                                 break;
                             default:
+                                vector_str_to_vector(&vector, &vector_str);
+
                                 printf("\nVECTOR WAS INITIALIZED SUCCESSFULLY!\n");
+                        }
+
+                        if (func_code)
+                        {
+                            sparse_free(&sparse);
+                            vector_str_free(&vector_str);
+
+                            break;
+                        }
+
+                        switch (func_code = sparse_to_matrix(&matrix, &sparse, &vector_str))
+                        {
+                            case MAT_CONVERT_ERR_ALLOC:
+                                printf("\nCOMPUTER CAN'T ALLOC MEMORY FOR MATRIX\n");
+
+                                break;
+                            default:
+                                printf("\nMATRIX WAS CONVERTED SUCCESSFULLY!\n");
+                        }
+
+                        if (func_code)
+                        {
+                            sparse_free(&sparse);
+                            vector_str_free(&vector_str);
+
+                            matrix_free(&matrix);
+
+                            break;
+                        }
+
+                        switch (func_code = vector_str_to_vector(&vector, &vector_str))
+                        {
+                            case VEC_CONVERT_ERR_ALLOC:
+                                printf("\nCOMPUTER CAN'T ALLOC MEMORY FOR VECTOR\n");
+
+                                break;
+                            default:
+                                printf("\nVECTOR WAS CONVERTED SUCCESSFULLY!\n");
+                        }
+
+                        if (func_code)
+                        {
+                            sparse_free(&sparse);
+                            vector_str_free(&vector_str);
+
+                            matrix_free(&matrix);
+                            vector_free(&vector);
+
+                            break;
                         }
 
                         break;
@@ -232,10 +298,34 @@ int main(void)
                 vector_str_output(&result_vector_str);
 
                 break;
+
+            case CODE_MATRIX_MULTIPLICATION:
+                if (matrix.strs == NULL || vector.coords == NULL)
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+
+                if (vector_matrix_multiplic(&result_vector, &vector, &matrix))
+                {
+                    printf("\nCOMPUTER CAN'T ALLOC NEEDED DATA\n");
+
+                    break;
+                }
+
+                printf("\nRESULT VECTOR\n");
+                vector_output(&result_vector);
+
+                break;
             case CODE_EXIT:
                 sparse_free(&sparse);
                 vector_str_free(&vector_str);
                 vector_str_free(&result_vector_str);
+
+                matrix_free(&matrix);
+                vector_free(&vector);
+                vector_free(&result_vector);
 
                 flag = false;
 

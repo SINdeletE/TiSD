@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "operations.h"
 
@@ -73,8 +74,6 @@ int vector_str_sparse_alloc_real_mem(vector_str_t *vector)
         if (vector->B[i] != 0)
             real_size++;
 
-    vector->size = real_size;
-
     if ((B_cpy = calloc(real_size, sizeof(*(vector->B)))) == NULL)
     {
         vector_str_free(vector);
@@ -103,6 +102,39 @@ int vector_str_sparse_alloc_real_mem(vector_str_t *vector)
 
     vector->B = B_cpy;
     vector->JB = JB_cpy;
+    vector->size = real_size;
 
     return VEC_ALLOC_REAL_OK;
+}
+
+int vector_start_parameters_assign(vector_t *dst, matrix_t *matrix)
+{
+    if ((dst->coords = calloc(matrix->m, sizeof(*(dst->coords)))) == NULL)
+    {
+        vector_free(dst);
+
+        return VEC_ASSIGN_ERR_ALLOC;
+    }
+
+    dst->full_size = matrix->m;
+
+    return VEC_ASSIGN_OK;
+}
+
+int vector_matrix_multiplic(vector_t *res, vector_t *vector, matrix_t *matrix)
+{
+    vector_free(res);
+
+    if (vector_start_parameters_assign(res, matrix))
+    {
+        vector_free(res);
+
+        return MULTI_INIT_ERR_ALLOC;
+    }
+
+    for (size_t j = 0; j < matrix->m; j++)
+        for (size_t z = 0; z < matrix->n; z++)
+            res->coords[j] += vector->coords[z] * matrix->strs[z][j];
+
+    return MULTI_INIT_OK;
 }

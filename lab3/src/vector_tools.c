@@ -116,6 +116,7 @@ void vector_str_output(vector_str_t *vector)
     printf("  JB   |   ");
     for (size_t i = 0; i < vector->size; i++)
         printf("%-*zu", CELL_SIZE, vector->JB[i]);
+    
     printf("\n");
 }
 
@@ -133,6 +134,8 @@ void vector_str_output_usual(vector_str_t *vector)
         }
         else
             printf("%-*d", CELL_SIZE, 0);
+    
+    printf("\n");
 }
 
 
@@ -169,4 +172,20 @@ int vector_str_to_vector(vector_t *dst, vector_str_t *src)
     dst->full_size = src->full_size;
 
     return VEC_CONVERT_OK;
+}
+
+void vector_output(vector_t *vector)
+{
+    printf("full_size = %zu\n", vector->full_size);
+
+    printf(" index |   ");
+    for (size_t i = 0; i < vector->full_size; i++)
+        printf("%-*zu", CELL_SIZE, i);
+    printf("\n");
+
+    printf("coords |   ");
+    for (size_t j = 0; j < vector->full_size; j++)
+        printf("%-*d", CELL_SIZE, vector->coords[j]);
+
+    printf("\n");
 }
