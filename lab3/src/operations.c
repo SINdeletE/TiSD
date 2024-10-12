@@ -109,14 +109,14 @@ int vector_str_sparse_alloc_real_mem(vector_str_t *vector)
 
 int vector_start_parameters_assign(vector_t *dst, matrix_t *matrix)
 {
-    if ((dst->coords = calloc(matrix->m, sizeof(*(dst->coords)))) == NULL)
+    if ((dst->coords = calloc(matrix->n, sizeof(*(dst->coords)))) == NULL)
     {
         vector_free(dst);
 
         return VEC_ASSIGN_ERR_ALLOC;
     }
 
-    dst->full_size = matrix->m;
+    dst->full_size = matrix->n;
 
     return VEC_ASSIGN_OK;
 }
@@ -132,8 +132,8 @@ int vector_matrix_multiplic(vector_t *res, vector_t *vector, matrix_t *matrix)
         return MULTI_INIT_ERR_ALLOC;
     }
 
-    for (size_t j = 0; j < matrix->m; j++)
-        for (size_t z = 0; z < matrix->n; z++)
+    for (size_t j = 0; j < matrix->n; j++)
+        for (size_t z = 0; z < matrix->m; z++)
             res->coords[j] += vector->coords[z] * matrix->strs[z][j];
 
     return MULTI_INIT_OK;

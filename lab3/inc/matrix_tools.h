@@ -9,6 +9,7 @@
 #define MAT_INIT_OK 0
 #define MAT_INIT_ERR_ALLOC 1
 #define MAT_INIT_ERR_FILL 2
+#define MAT_INIT_ERR_ZERO_MATRIX 3
 
 #define MAT_CONVERT_OK 0
 #define MAT_CONVERT_ERR_ALLOC 1
@@ -30,12 +31,12 @@ typedef struct
 {
     int **strs;
 
-    size_t n;
     size_t m;
+    size_t n;
 } matrix_t;
 
 void sparse_free(sparse_t *matrix);
-int sparse_autoinit(sparse_t *matrix, size_t m, size_t n, int percent);
+int sparse_to_matrix(matrix_t *dst, sparse_t *src, vector_str_t *vector);
 
 void sparse_output(sparse_t *matrix, vector_str_t *vector);
 void sparse_output_usual(sparse_t *matrix, vector_str_t *vector);
@@ -43,6 +44,11 @@ void sparse_output_usual(sparse_t *matrix, vector_str_t *vector);
 // --- 
 
 void matrix_free(matrix_t *matrix);
-int sparse_to_matrix(matrix_t *dst, sparse_t *src, vector_str_t *vector);
+int matrix_to_sparse(matrix_t *matrix, sparse_t *sparse);
+
+// ---
+
+int matrix_autoinit(matrix_t *matrix, size_t m, size_t n, int percent);
+int matrix_init_manual(matrix_t *matrix, size_t m, size_t n);
 
 #endif

@@ -10,6 +10,8 @@ void sparse_autoinit_no_col_fill(sparse_t *matrix, size_t str_i, size_t shift);
 int sparse_autoinit_alloc_real_mem(sparse_t *matrix);
 void sparse_free_without_JA(sparse_t *matrix);
 
+int matrix_alloc_data(matrix_t *matrix, size_t m, size_t n);
+
 // НЕ СТИРАЕТ SIZE
 void sparse_free(sparse_t *matrix)
 {
@@ -34,7 +36,7 @@ void sparse_free_without_JA(sparse_t *matrix)
     matrix->IA = NULL;
 }
 
-int sparse_autoinit(sparse_t *matrix, size_t m, size_t n, int percent)
+int matrix_to_sparse(matrix_t *matrix, sparse_t *sparse)
 {
     bool col_flag = false;
 
@@ -43,54 +45,50 @@ int sparse_autoinit(sparse_t *matrix, size_t m, size_t n, int percent)
 
     srand(time(NULL));
 
-    if ((matrix->A = malloc(m * n * sizeof(*(matrix->A)))) == NULL)
+    if ((sparse->A = malloc(matrix->m * matrix->n * sizeof(*(sparse->A)))) == NULL)
     {
-        sparse_free(matrix);
+        sparse_free(sparse);
 
         return MAT_INIT_ERR_ALLOC;
     }
 
-    if ((matrix->IA = malloc(m * n * sizeof(*(matrix->IA)))) == NULL)
+    if ((sparse->IA = malloc(matrix->m * matrix->n * sizeof(*(sparse->IA)))) == NULL)
     {
-        sparse_free(matrix);
+        sparse_free(sparse);
 
         return MAT_INIT_ERR_ALLOC;
     }
 
-    if ((matrix->JA = calloc(n + 1, sizeof(*(matrix->JA)))) == NULL)
+    if ((sparse->JA = calloc(matrix->n + 1, sizeof(*(sparse->JA)))) == NULL)
     {
-        sparse_free(matrix);
+        sparse_free(sparse);
 
         return MAT_INIT_ERR_ALLOC;
     }
 
-    // while (size != (size_t)((double)(n * m) * (double)percent / 100.0) ? (size_t)((double)(n * m) * (double)percent / 100.0) : 1)
-    // {
     col_flag = false;
 
     size = 0;
     no_col_shift = 0;
 
-    for (size_t i = 0; i < n; i++)
+    for (size_t i = 0; i < matrix->n; i++)
     {
-        for (size_t j = 0; j < m; j++)
-        {
-            if ((rand() % (100 + 1)) <= percent)
+        for (size_t j = 0; j < matrix->m; j++)
+            if (matrix->strs[j][i])
             {
-                while ((matrix->A[size] = rand() % (MAX_NUM - MIN_NUM) + MIN_NUM) == 0);
-                matrix->IA[size] = j;
+                sparse->A[size] = matrix->strs[j][i];
+                sparse->IA[size] = j;
 
                 if (! col_flag)
-                    matrix->JA[i] = size;
+                    sparse->JA[i] = size;
 
                 size++;
                 col_flag = true;
             }
-        }
         
         if (col_flag && no_col_shift)
         {
-            sparse_autoinit_no_col_fill(matrix, i, no_col_shift);
+            sparse_autoinit_no_col_fill(sparse, i, no_col_shift);
 
             no_col_shift = 0;
         }
@@ -102,22 +100,22 @@ int sparse_autoinit(sparse_t *matrix, size_t m, size_t n, int percent)
     }
     // }
 
-    matrix->JA[n] = size;
+    sparse->JA[matrix->n] = size;
 
     if (no_col_shift)
-        sparse_autoinit_no_col_fill(matrix, n, no_col_shift);
+        sparse_autoinit_no_col_fill(sparse, matrix->n, no_col_shift);
 
-    matrix->size = size;
-    matrix->JA_size = n + 1;
+    sparse->size = size;
+    sparse->JA_size = matrix->n + 1;
 
-    switch (sparse_autoinit_alloc_real_mem(matrix))
+    switch (sparse_autoinit_alloc_real_mem(sparse))
     {
         case MAT_INIT_ERR_FILL:
-            sparse_free(matrix);
+            sparse_free(sparse);
 
             return MAT_INIT_ERR_FILL;
         case MAT_INIT_ERR_ALLOC:
-            sparse_free(matrix);
+            sparse_free(sparse);
 
             return MAT_INIT_ERR_ALLOC;
     }
@@ -131,25 +129,25 @@ void sparse_autoinit_no_col_fill(sparse_t *matrix, size_t str_i, size_t shift)
         matrix->JA[str_i - i] = matrix->JA[str_i];
 }
 
-int sparse_autoinit_alloc_real_mem(sparse_t *matrix)
+int sparse_autoinit_alloc_real_mem(sparse_t *sparse)
 {
     int *A_cpy;
     size_t *IA_cpy;
-    size_t *JA_cpy = matrix->JA;
+    size_t *JA_cpy = sparse->JA;
 
-    if (matrix->size == 0)
+    if (sparse->size == 0)
         return MAT_INIT_ERR_FILL;
 
-    if ((A_cpy = malloc(matrix->size * sizeof(*(matrix->A)))) == NULL)
+    if ((A_cpy = malloc(sparse->size * sizeof(*(sparse->A)))) == NULL)
     {
-        sparse_free(matrix);
+        sparse_free(sparse);
 
         return MAT_INIT_ERR_ALLOC;
     }
 
-    if ((IA_cpy = malloc(matrix->size * sizeof(*(matrix->IA)))) == NULL)
+    if ((IA_cpy = malloc(sparse->size * sizeof(*(sparse->IA)))) == NULL)
     {
-        sparse_free(matrix);
+        sparse_free(sparse);
 
         free(A_cpy);
         return MAT_INIT_ERR_ALLOC;
@@ -157,17 +155,17 @@ int sparse_autoinit_alloc_real_mem(sparse_t *matrix)
 
     // -----
 
-    for (size_t i = 0; i < matrix->size; i++)
+    for (size_t i = 0; i < sparse->size; i++)
     {
-        A_cpy[i] = matrix->A[i];
-        IA_cpy[i] = matrix->IA[i];
+        A_cpy[i] = sparse->A[i];
+        IA_cpy[i] = sparse->IA[i];
     }
 
-    sparse_free_without_JA(matrix);
+    sparse_free_without_JA(sparse);
 
-    matrix->A = A_cpy;
-    matrix->IA = IA_cpy;
-    matrix->JA = JA_cpy;
+    sparse->A = A_cpy;
+    sparse->IA = IA_cpy;
+    sparse->JA = JA_cpy;
 
     return 0;
 }
@@ -252,7 +250,7 @@ void matrix_free(matrix_t *matrix)
 {
     if (matrix->strs)
     {
-        for (size_t i = 0; i < matrix->n; i++)
+        for (size_t i = 0; i < matrix->m; i++)
             free(matrix->strs[i]);
 
         free(matrix->strs);
@@ -261,13 +259,13 @@ void matrix_free(matrix_t *matrix)
     matrix->strs = NULL;
 }
 
-int matrix_alloc_data(matrix_t *matrix, size_t n, size_t m)
+int matrix_alloc_data(matrix_t *matrix, size_t m, size_t n)
 {
-    if ((matrix->strs = calloc(n, sizeof(*(matrix->strs)))) == NULL)
+    if ((matrix->strs = calloc(m, sizeof(*(matrix->strs)))) == NULL)
         return MAT_ALLOC_ERR;
     
-    for (size_t i = 0; i < n; i++)
-        if ((matrix->strs[i] = malloc(m * sizeof(int))) == NULL)
+    for (size_t i = 0; i < m; i++)
+        if ((matrix->strs[i] = calloc(n, sizeof(int))) == NULL)
         {
             matrix_free(matrix);
 
@@ -275,6 +273,33 @@ int matrix_alloc_data(matrix_t *matrix, size_t n, size_t m)
         }
 
     return MAT_ALLOC_OK;
+}
+
+int matrix_autoinit(matrix_t *matrix, size_t m, size_t n, int percent)
+{
+    size_t elems;
+
+    matrix_free(matrix);
+
+    if (matrix_alloc_data(matrix, m, n))
+        return MAT_INIT_ERR_ALLOC;
+
+    elems = (size_t)((double)(n * m) * (double)percent / 100.0) ? (size_t)((double)(n * m) * (double)percent / 100.0) : 1;
+
+    while (elems)
+        for (size_t i = 0; elems && i < m; i++)
+            for (size_t j = 0; elems && j < n; j++)
+                if (!matrix->strs[i][j] && (rand() % (100 + 1)) <= percent)
+                {
+                    while ((matrix->strs[i][j] = rand() % (MAX_NUM - MIN_NUM) + MIN_NUM) == 0);
+
+                    elems--;
+                }
+    
+    matrix->m = m;
+    matrix->n = n;
+
+    return MAT_INIT_OK;
 }
 
 int sparse_to_matrix(matrix_t *dst, sparse_t *src, vector_str_t *vector)
@@ -287,7 +312,6 @@ int sparse_to_matrix(matrix_t *dst, sparse_t *src, vector_str_t *vector)
     bool flag = false;
 
     for (size_t i = 0; i < vector->full_size; i++)
-    {
         for (size_t j = 0; j < src->JA_size - 1; j++)
         {
             for (size_t z = src->JA[j]; ! flag && z < src->JA[j + 1]; z++)
@@ -303,10 +327,34 @@ int sparse_to_matrix(matrix_t *dst, sparse_t *src, vector_str_t *vector)
 
             flag = false;
         }
-    }
 
     dst->n = vector->full_size;
     dst->m = src->JA_size - 1;
 
     return MAT_CONVERT_OK;
+}
+
+int matrix_init_manual(matrix_t *matrix, size_t m, size_t n)
+{
+    bool is_zero_matrix = true;
+
+    matrix_free(matrix);
+
+    if (matrix_alloc_data(matrix, m, n))
+        return MAT_INIT_ERR_ALLOC;
+
+    for (size_t i = 0; i < m; i++)
+        for (size_t j = 0; j < n; j++)
+            if (scanf("%d", &matrix->strs[i][j]) != 1)
+                return MAT_INIT_ERR_FILL;
+            else if (matrix->strs[i][j] != 0)
+                is_zero_matrix = false;
+
+    if (is_zero_matrix)
+        return MAT_INIT_ERR_ZERO_MATRIX;
+
+    matrix->m = m;
+    matrix->n = n;
+
+    return MAT_INIT_OK;
 }
