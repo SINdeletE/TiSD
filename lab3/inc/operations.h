@@ -14,6 +14,11 @@
 #define VEC_ALLOC_REAL_OK 0
 #define VEC_ALLOC_REAL_ERR_ALLOC 1
 
+// ---
+
+#define MULTI_STAT_OK 0
+#define MULTI_STAT_ERR_ALLOC 1
+
 int vector_str_sparse_multiplic(vector_str_t *res, vector_str_t *vector, sparse_t *matrix);
 int vector_matrix_multiplic(vector_t *res, vector_t *vector, matrix_t *matrix);
 

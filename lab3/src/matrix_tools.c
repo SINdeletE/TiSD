@@ -242,6 +242,13 @@ void sparse_output_usual(sparse_t *matrix, vector_str_t *vector)
     }
 }
 
+size_t sparse_mem(sparse_t *sparse)
+{
+    return sizeof(sparse->size) + sizeof(sparse->JA_size) + sizeof(sparse->A) + sizeof(sparse->IA) + \
+    sizeof(sparse->JA) + sizeof(*(sparse->A)) * sparse->size + sizeof(*(sparse->IA)) * sparse->size + \
+    sizeof(*(sparse->JA)) * sparse->JA_size;
+}
+
 // ---------------------------------------------------------------------------------
 
 
@@ -292,6 +299,35 @@ int matrix_autoinit(matrix_t *matrix, size_t m, size_t n, int percent)
                 if (!matrix->strs[i][j] && (rand() % (100 + 1)) <= percent)
                 {
                     while ((matrix->strs[i][j] = rand() % (MAX_NUM - MIN_NUM) + MIN_NUM) == 0);
+
+                    elems--;
+                }
+    
+    matrix->m = m;
+    matrix->n = n;
+
+    return MAT_INIT_OK;
+}
+
+int matrix_autoinit_by_user(matrix_t *matrix, size_t m, size_t n, int percent)
+{
+    size_t elems;
+
+    matrix_free(matrix);
+
+    if (matrix_alloc_data(matrix, m, n))
+        return MAT_INIT_ERR_ALLOC;
+
+    elems = (size_t)((double)(n * m) * (double)percent / 100.0) ? (size_t)((double)(n * m) * (double)percent / 100.0) : 1;
+
+    while (elems)
+        for (size_t i = 0; elems && i < m; i++)
+            for (size_t j = 0; elems && j < n; j++)
+                if (!matrix->strs[i][j] && (rand() % (100 + 1)) <= percent)
+                {
+                    printf("Enter %zu x %zu element (%zu elements remaining): ", i, j, elems);
+                    if (scanf("%d", &matrix->strs[i][j]) != 1 || matrix->strs[i][j] == 0)
+                        return MAT_INIT_ERR_INVALID_ENTERED_DATA;
 
                     elems--;
                 }
@@ -357,4 +393,9 @@ int matrix_init_manual(matrix_t *matrix, size_t m, size_t n)
     matrix->n = n;
 
     return MAT_INIT_OK;
+}
+
+size_t matrix_mem(matrix_t *matrix)
+{
+    return sizeof(*matrix) + sizeof(matrix->m) + sizeof(matrix->n) + sizeof(matrix->strs) + sizeof(*(matrix->strs) * m) + sizeof(**(matrix->strs) * m * n);
 }

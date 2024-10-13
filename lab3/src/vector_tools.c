@@ -212,6 +212,33 @@ int vector_autoinit(vector_t *vector, size_t m, int percent)
     return VEC_INIT_OK;
 }
 
+int vector_autoinit_by_user(vector_t *vector, size_t m, int percent)
+{
+    size_t elems;
+
+    srand(time(NULL));
+
+    elems = (size_t)((double)(m) * (double)percent / 100.0) ? (size_t)((double)(m) * (double)percent / 100.0) : 1;
+
+    if (vector_alloc_data(vector, m))
+        return VEC_INIT_ERR_ALLOC;
+
+    while (elems)
+        for (size_t j = 0; elems && j < m; j++)
+            if (!vector->coords[j] && (rand() % (100 + 1)) <= percent)
+            {
+                printf("Enter %zu element (%zu elements remaining): ", j, elems);
+                if (scanf("%d", &vector->coords[j]) != 1 || vector->coords[j] == 0)
+                        return VEC_INIT_ERR_INVALID_ENTERED_DATA;
+
+                elems--;
+            }
+
+    vector->full_size = m;
+
+    return VEC_INIT_OK;
+}
+
 int vector_str_to_vector(vector_t *dst, vector_str_t *src)
 {
     vector_free(dst);

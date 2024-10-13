@@ -8,6 +8,7 @@
 #define VEC_INIT_ERR_ALLOC 1
 #define VEC_INIT_ERR_FILL 2
 #define VEC_INIT_ERR_ZERO_VECTOR 3
+#define VEC_INIT_ERR_INVALID_ENTERED_DATA 4
 
 #define VEC_ALLOC_OK 0
 #define VEC_ALLOC_ERR 1
@@ -49,5 +50,6 @@ void vector_output(vector_t *vector);
 
 int vector_autoinit(vector_t *vector, size_t m, int percent);
 int vector_init_manual(vector_t *vector, size_t m);
+int vector_autoinit_by_user(vector_t *vector, size_t m, int percent);
 
 #endif

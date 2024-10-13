@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "operations.h"
 
@@ -137,4 +138,88 @@ int vector_matrix_multiplic(vector_t *res, vector_t *vector, matrix_t *matrix)
             res->coords[j] += vector->coords[z] * matrix->strs[z][j];
 
     return MULTI_INIT_OK;
+}
+
+void all_free(vector_t *vector, vector_str_t *vector_str, matrix_t *matrix, sparse_t *sparse, vector_str_t *r1, vector_t *r2)
+{
+    vector_free(vector);
+    vector_str_free(vector_str);
+
+    matrix_free(matrix);
+    sparse_free(sparse);
+
+    vector_str_free(r1);
+    vector_free(r2);
+}
+
+int vector_matrix_statistics(size_t m, size_t n)
+{
+    vector_t vector = (vector_t){NULL, 0};
+    vector_str_t vector_str = (vector_str_t){NULL, NULL, 0, 0};
+    matrix_t matrix;
+    sparse_t sparse;
+
+    vector_str_t res_vector_str = (vector_str_t){NULL, NULL, 0, 0};
+    vector_t res_vector = (vector_t){NULL, 0};
+
+    struct timespec t_beg, t_end;
+
+    size_t mem_size1 = 0, mem_size2 = 0;
+    long time1 = 0, time2 = 0;
+
+    int percent = 1;
+
+    while (percent <= 100)
+    {
+        all_free(&vector, &vector_str, &matrix, &sparse, &res_vector_str, &res_vector);
+
+        if (vector_autoinit(&vector, m, percent))
+        {
+            all_free(&vector, &vector_str, &matrix, &sparse, &res_vector_str, &res_vector);
+
+            return VEC_INIT_ERR_ALLOC;
+        }
+
+        if (vector_to_vector_str(&vector, &vector_str))
+        {
+            all_free(&vector, &vector_str, &matrix, &sparse, &res_vector_str, &res_vector);
+
+            return VEC_CONVERT_ERR_ALLOC;
+        }
+
+        if (matrix_autoinit(&matrix, m, n, percent))
+        {
+            all_free(&vector, &vector_str, &matrix, &sparse, &res_vector_str, &res_vector);
+
+            return MAT_INIT_ERR_ALLOC;
+        }
+
+        if (matrix_to_sparse(&matrix, &sparse))
+        {
+            all_free(&vector, &vector_str, &matrix, &sparse, &res_vector_str, &res_vector);
+
+            return MAT_CONVERT_ERR_ALLOC;
+        }
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        if (vector_str_sparse_multiplic(&res_vector_str, &vector_str, &sparse))
+        {
+            all_free(&vector, &vector_str, &matrix, &sparse, &res_vector_str, &res_vector);
+
+            return MULTI_STAT_ERR_ALLOC;
+        }
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+        time1 += 1000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec) / 1000;
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        if (vector_matrix_multiplic(&res_vector, &vector, &matrix))
+        {
+            all_free(&vector, &vector_str, &matrix, &sparse, &res_vector_str, &res_vector);
+
+            return MULTI_STAT_ERR_ALLOC;
+        }
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+        time2 += 1000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec) / 1000;
+    }
+    
 }
