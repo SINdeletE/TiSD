@@ -38,7 +38,7 @@ int main(void)
 {
     // -----------------------------------------------------------------------------------
 
-    // bool matrix_is_vector = false;
+    bool matrix_is_vector = false;
 
     sparse_t sparse = (sparse_t){NULL, NULL, NULL, 0, 0};
     matrix_t matrix = (matrix_t){NULL, 0, 0};
@@ -94,15 +94,29 @@ int main(void)
         {
             case CODE_INIT:
                 printf("\nMATRIX\n");
-                printf("Input matrix strokes count (it must be >= 2): ");
-                if (scanf("%zu", &m) != 1 || clear_buf(stdin) || m < 2)
+                printf("Input matrix strokes count (it must be greater than zero): ");
+                if (scanf("%zu", &m) != 1 || clear_buf(stdin) || m < 1)
                 {
                     printf("\nINVALID COUNT\n");
 
                     break;
                 }
-                printf("\nInput matrix columns count (it must be >= 2): ");
-                if (scanf("%zu", &n) != 1 || clear_buf(stdin) || n < 2)
+
+                // VAJNO
+                // VAJNO
+                // VAJNO
+                // VAJNO
+                // VAJNO
+                if (m == 1)
+                    matrix_is_vector = true;
+                // VAJNO
+                // VAJNO
+                // VAJNO
+                // VAJNO
+                // VAJNO
+
+                printf("\nInput matrix columns count (it must be greater than zero): ");
+                if (scanf("%zu", &n) != 1 || clear_buf(stdin) || n < 1)
                 {
                     printf("\nINVALID COUNT\n");
 
@@ -144,48 +158,95 @@ int main(void)
 
                         // MATRIX INIT
 
-                        matrix_free(&matrix);
-                        
-                        switch (func_code = matrix_autoinit(&matrix, m, n, percent))
-                        {
-                            case MAT_INIT_ERR_ALLOC:
-                                printf("\nCOMPUTER CAN'T AUTOINITIALIZE MATRIX\n");
-
-                                break;
-                            default:
-                                printf("\nMATRIX WAS INITIALIZED SUCCESSFULLY!\n");
-                        }
-
-                        if (func_code)
+                        if (!matrix_is_vector)
                         {
                             matrix_free(&matrix);
+                            
+                            switch (func_code = matrix_autoinit(&matrix, m, n, percent))
+                            {
+                                case MAT_INIT_ERR_ALLOC:
+                                    printf("\nCOMPUTER CAN'T AUTOINITIALIZE MATRIX\n");
 
-                            break;
-                        }
+                                    break;
+                                default:
+                                    printf("\nMATRIX WAS INITIALIZED SUCCESSFULLY!\n");
+                            }
 
-                        // MATRIX TO SPARSE CONVERTATION
-
-                        sparse_free(&sparse);
-
-                        switch (func_code = matrix_to_sparse(&matrix, &sparse))
-                        {
-                            case MAT_INIT_ERR_ALLOC:
-                                printf("\nCOMPUTER CAN'T CONVERT TO SPARSE\n");
-
-                                break;
-                            case MAT_INIT_ERR_FILL:
-                                printf("ERR PERCENT!");
+                            if (func_code)
+                            {
+                                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
 
                                 break;
-                            default:
-                                printf("\nMATRIX WAS CONVERTED TO SPARSE SUCCESSFULLY!\n");
+                            }
+
+                            // MATRIX TO SPARSE CONVERTATION
+
+                            sparse_free(&sparse);
+
+                            switch (func_code = matrix_to_sparse(&matrix, &sparse))
+                            {
+                                case MAT_INIT_ERR_ALLOC:
+                                    printf("\nCOMPUTER CAN'T CONVERT TO SPARSE\n");
+
+                                    break;
+                                case MAT_INIT_ERR_FILL:
+                                    printf("ERR PERCENT!");
+
+                                    break;
+                                default:
+                                    printf("\nMATRIX WAS CONVERTED TO SPARSE SUCCESSFULLY!\n");
+                            }
+
+                            if (func_code)
+                            {
+                                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
+
+                                break;
+                            }
                         }
-
-                        if (func_code)
+                        else
                         {
-                            matrix_free(&matrix);
+                            vector_free(&matrix_vector);
 
-                            break;
+                            switch (func_code = vector_autoinit(&matrix_vector, n, percent))
+                            {
+                                case VEC_INIT_ERR_ALLOC:
+                                    printf("\nCOMPUTER CAN'T AUTOINITIALIZE VECTOR\n");
+
+                                    break;
+                                case VEC_INIT_ERR_FILL:
+                                    printf("\nTOO LOW PERSENT. PLEASE, TRY AGAIN\n");
+
+                                    break;
+                                default:
+                                    printf("\nVECTOR WAS INITIALIZED SUCCESSFULLY!\n");
+                            }
+
+                            if (func_code)
+                            {
+                                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
+
+                                break;
+                            }
+
+                            // VECTOR TO VECTOR STR CONVERTATION
+
+                            switch (func_code = vector_to_vector_str(&matrix_vector, &matrix_vector_str))
+                            {
+                                case VEC_CONVERT_ERR_ALLOC:
+                                    printf("\nCOMPUTER CAN'T ALLOC MEMORY FOR VECTOR\n");
+
+                                    break;
+                                default:
+                                    printf("\nVECTOR WAS CONVERTED SUCCESSFULLY!\n");
+                            }
+
+                            if (func_code)
+                            {
+                                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
+
+                                break;
+                            }
                         }
 
                         // VECTOR INIT
@@ -223,10 +284,7 @@ int main(void)
 
                         if (func_code)
                         {
-                            sparse_free(&sparse);
-                            matrix_free(&matrix);
-
-                            vector_free(&vector);
+                            all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
 
                             break;
                         }
@@ -245,11 +303,7 @@ int main(void)
 
                         if (func_code)
                         {
-                            sparse_free(&sparse);
-                            vector_str_free(&vector_str);
-
-                            matrix_free(&matrix);
-                            vector_free(&vector);
+                            all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
 
                             break;
                         }
@@ -259,55 +313,103 @@ int main(void)
                         // MATRIX INIT
 
                         printf("\nEnter matrix elements:\n");
-                        switch (matrix_init_manual(&matrix, m, n))
+                        if (!matrix_is_vector)
                         {
-                            case MAT_INIT_ERR_ALLOC:
-                                printf("\nCOMPUTER CAN'T INITIALIZE MATRIX\n");
+                            switch (matrix_init_manual(&matrix, m, n))
+                            {
+                                case MAT_INIT_ERR_ALLOC:
+                                    printf("\nCOMPUTER CAN'T INITIALIZE MATRIX\n");
+
+                                    break;
+                                case MAT_INIT_ERR_FILL:
+                                    printf("\nENTERED INVALID DATA\n");
+
+                                    break;
+                                case MAT_INIT_ERR_ZERO_MATRIX:
+                                    printf("\nMATRIX CAN'T BE ZERO\n");
+
+                                    break;
+                                default:
+                                    printf("\nMATRIX WAS INITIALIZED SUCCESSFULLY!\n");
+                            }
+
+                            if (func_code)
+                            {
+                                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
 
                                 break;
-                            case MAT_INIT_ERR_FILL:
-                                printf("\nENTERED INVALID DATA\n");
+                            }
 
-                                break;
-                            case MAT_INIT_ERR_ZERO_MATRIX:
-                                printf("\nMATRIX CAN'T BE ZERO\n");
+                            // MATRIX TO SPARSE CONVERTATION
 
-                                break;
-                            default:
-                                printf("\nMATRIX WAS INITIALIZED SUCCESSFULLY!\n");
-                        }
-
-                        if (func_code)
-                        {
-                            matrix_free(&matrix);
-
-                            break;
-                        }
-
-                        // MATRIX TO SPARSE CONVERTATION
-
-                        sparse_free(&sparse);
-
-                        switch (func_code = matrix_to_sparse(&matrix, &sparse))
-                        {
-                            case MAT_INIT_ERR_ALLOC:
-                                printf("\nCOMPUTER CAN'T CONVERT TO SPARSE\n");
-
-                                break;
-                            case MAT_INIT_ERR_FILL:
-                                printf("ERR PERCENT!");
-
-                                break;
-                            default:
-                                printf("\nMATRIX WAS CONVERTED TO SPARSE SUCCESSFULLY!\n");
-                        }
-
-                        if (func_code)
-                        {
                             sparse_free(&sparse);
-                            matrix_free(&matrix);
 
-                            break;
+                            switch (func_code = matrix_to_sparse(&matrix, &sparse))
+                            {
+                                case MAT_INIT_ERR_ALLOC:
+                                    printf("\nCOMPUTER CAN'T CONVERT TO SPARSE\n");
+
+                                    break;
+                                case MAT_INIT_ERR_FILL:
+                                    printf("ERR PERCENT!");
+
+                                    break;
+                                default:
+                                    printf("\nMATRIX WAS CONVERTED TO SPARSE SUCCESSFULLY!\n");
+                            }
+
+                            if (func_code)
+                            {
+                                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
+
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            switch (func_code = vector_init_manual(&matrix_vector, n))
+                            {
+                                case VEC_INIT_ERR_ALLOC:
+                                    printf("\nCOMPUTER CAN'T INITIALIZE VECTOR\n");
+
+                                    break;
+                                case VEC_INIT_ERR_FILL:
+                                    printf("\nENTERED INVALID DATA\n");
+
+                                    break;
+                                case VEC_INIT_ERR_ZERO_VECTOR:
+                                    printf("\nVECTOR CAN'T BE ZERO\n");
+
+                                    break;
+                                default:
+                                    printf("\nVECTOR WAS INITIALIZED SUCCESSFULLY!\n");
+                            }
+
+                            if (func_code)
+                            {
+                                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
+
+                                break;
+                            }
+
+                            // VECTOR TO VECTOR STR CONVERTATION
+
+                            switch (func_code = vector_to_vector_str(&matrix_vector, &matrix_vector_str))
+                            {
+                                case VEC_CONVERT_ERR_ALLOC:
+                                    printf("\nCOMPUTER CAN'T ALLOC MEMORY FOR VECTOR\n");
+
+                                    break;
+                                default:
+                                    printf("\nVECTOR WAS CONVERTED SUCCESSFULLY!\n");
+                            }
+
+                            if (func_code)
+                            {
+                                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
+
+                                break;
+                            }
                         }
 
                         printf("\nEnter vector elements:\n");
@@ -331,10 +433,8 @@ int main(void)
 
                         if (func_code)
                         {
-                            sparse_free(&sparse);
-                            matrix_free(&matrix);
+                            all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
 
-                            vector_free(&vector);
                             break;
                         }
 
@@ -352,11 +452,7 @@ int main(void)
 
                         if (func_code)
                         {
-                            sparse_free(&sparse);
-                            vector_str_free(&vector_str);
-
-                            matrix_free(&matrix);
-                            vector_free(&vector);
+                            all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
 
                             break;
                         }
@@ -384,55 +480,109 @@ int main(void)
 
                         // MATRIX INIT
 
-                        matrix_free(&matrix);
-                        
-                        switch (func_code = matrix_autoinit_by_user(&matrix, m, n, percent))
-                        {
-                            case MAT_INIT_ERR_ALLOC:
-                                printf("\nCOMPUTER CAN'T AUTOINITIALIZE MATRIX\n");
-
-                                break;
-                            case MAT_INIT_ERR_INVALID_ENTERED_DATA:
-                                printf("\nENTERED INVALID DATA\n");
-
-                                break;
-                            default:
-                                printf("\nMATRIX WAS INITIALIZED SUCCESSFULLY!\n");
-                        }
-
-                        if (clear_buf(stdin))
-                            func_code = MAT_INIT_ERR_INVALID_ENTERED_DATA;
-
-                        if (func_code)
+                        if (!matrix_is_vector)
                         {
                             matrix_free(&matrix);
+                            
+                            switch (func_code = matrix_autoinit_by_user(&matrix, m, n, percent))
+                            {
+                                case MAT_INIT_ERR_ALLOC:
+                                    printf("\nCOMPUTER CAN'T AUTOINITIALIZE MATRIX\n");
 
-                            break;
-                        }
+                                    break;
+                                case MAT_INIT_ERR_INVALID_ENTERED_DATA:
+                                    printf("\nENTERED INVALID DATA\n");
 
-                        // MATRIX TO SPARSE CONVERTATION
+                                    break;
+                                default:
+                                    printf("\nMATRIX WAS INITIALIZED SUCCESSFULLY!\n");
+                            }
 
-                        sparse_free(&sparse);
+                            if (clear_buf(stdin))
+                                func_code = MAT_INIT_ERR_INVALID_ENTERED_DATA;
 
-                        switch (func_code = matrix_to_sparse(&matrix, &sparse))
-                        {
-                            case MAT_INIT_ERR_ALLOC:
-                                printf("\nCOMPUTER CAN'T CONVERT TO SPARSE\n");
+                            if (func_code)
+                            {
+                                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
 
                                 break;
-                            case MAT_INIT_ERR_FILL:
-                                printf("ERR PERCENT!");
+                            }
+
+                            // MATRIX TO SPARSE CONVERTATION
+
+                            sparse_free(&sparse);
+
+                            switch (func_code = matrix_to_sparse(&matrix, &sparse))
+                            {
+                                case MAT_INIT_ERR_ALLOC:
+                                    printf("\nCOMPUTER CAN'T CONVERT TO SPARSE\n");
+
+                                    break;
+                                case MAT_INIT_ERR_FILL:
+                                    printf("ERR PERCENT!");
+
+                                    break;
+                                default:
+                                    printf("\nMATRIX WAS CONVERTED TO SPARSE SUCCESSFULLY!\n");
+                            }
+
+                            if (func_code)
+                            {
+                                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
 
                                 break;
-                            default:
-                                printf("\nMATRIX WAS CONVERTED TO SPARSE SUCCESSFULLY!\n");
+                            }
                         }
-
-                        if (func_code)
+                        else
                         {
-                            matrix_free(&matrix);
+                            vector_free(&matrix_vector);
 
-                            break;
+                            switch (func_code = vector_autoinit_by_user(&matrix_vector, n, percent))
+                            {
+                                case VEC_INIT_ERR_ALLOC:
+                                    printf("\nCOMPUTER CAN'T AUTOINITIALIZE VECTOR\n");
+
+                                    break;
+                                case VEC_INIT_ERR_FILL:
+                                    printf("\nTOO LOW PERSENT. PLEASE, TRY AGAIN\n");
+
+                                    break;
+                                case VEC_INIT_ERR_INVALID_ENTERED_DATA:
+                                    printf("\nENTERED INVALID DATA\n");
+
+                                    break;
+                                default:
+                                    printf("\nVECTOR WAS INITIALIZED SUCCESSFULLY!\n");
+                            }
+
+                            if (clear_buf(stdin))
+                                func_code = MAT_INIT_ERR_INVALID_ENTERED_DATA;
+
+                            if (func_code)
+                            {
+                                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
+
+                                break;
+                            }
+
+                            // VECTOR TO VECTOR STR CONVERTATION
+
+                            switch (func_code = vector_to_vector_str(&matrix_vector, &matrix_vector_str))
+                            {
+                                case VEC_CONVERT_ERR_ALLOC:
+                                    printf("\nCOMPUTER CAN'T ALLOC MEMORY FOR VECTOR\n");
+
+                                    break;
+                                default:
+                                    printf("\nVECTOR WAS CONVERTED SUCCESSFULLY!\n");
+                            }
+
+                            if (func_code)
+                            {
+                                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
+
+                                break;
+                            }
                         }
 
                         // VECTOR INIT
@@ -477,10 +627,7 @@ int main(void)
 
                         if (func_code)
                         {
-                            sparse_free(&sparse);
-                            matrix_free(&matrix);
-
-                            vector_free(&vector);
+                            all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
 
                             break;
                         }
@@ -499,11 +646,7 @@ int main(void)
 
                         if (func_code)
                         {
-                            sparse_free(&sparse);
-                            vector_str_free(&vector_str);
-
-                            matrix_free(&matrix);
-                            vector_free(&vector);
+                            all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
 
                             break;
                         }
@@ -511,21 +654,25 @@ int main(void)
                         break;
                 }
 
-                // VECTOR INIT 
-
-
-
                 break;
             case CODE_OUTPUT:
-                if (sparse.A == NULL || vector_str.B == NULL)
+                if (!matrix_is_vector && (sparse.A == NULL || vector_str.B == NULL))
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+                else if (matrix_is_vector && (matrix_vector_str.B == NULL || matrix_vector.coords == NULL))
                 {
                     printf("\nNO DATA\n");
 
                     break;
                 }
 
+
+
                 printf("\nEnter output method:\n");
-                printf("1. Sparse output\n");
+                printf("1. Sparse (or vector_str if strokes count equal 1) + vector_str output\n");
                 printf("2. Usual output\n");
                 printf("\nCode: ");
                 if (scanf("%d", &code) != 1 || clear_buf(stdin))
@@ -538,16 +685,32 @@ int main(void)
                 switch (code)
                 {
                     case CODE_OUTPUT_SPARSE:
-                        printf("\nMATRIX\n");
-                        sparse_output(&sparse, &vector_str);
+                        if (!matrix_is_vector)
+                        {
+                            printf("\nMATRIX (sparse)\n");
+                            sparse_output(&sparse, &vector_str);
+                        }
+                        else
+                        {
+                            printf("\nMATRIX (vector_str)\n");
+                            vector_str_output(&matrix_vector_str);
+                        }
 
                         printf("\nVECTOR\n");
                         vector_str_output(&vector_str);
 
                         break;
                     case CODE_OUTPUT_USUAL:
-                        printf("\nMATRIX\n");
-                        sparse_output_usual(&sparse, &vector_str);
+                        if (!matrix_is_vector)
+                        {
+                            printf("\nMATRIX\n");
+                            sparse_output_usual(&sparse, &vector_str);
+                        }
+                        else
+                        {
+                            printf("\nMATRIX\n");
+                            vector_str_output_usual(&matrix_vector_str);
+                        }
 
                         printf("\nVECTOR\n");
                         vector_str_output_usual(&vector_str);
@@ -559,76 +722,120 @@ int main(void)
 
                     break;
             case CODE_SPARSE_MULTIPLICATION:
-                if (sparse.A == NULL || vector_str.B == NULL)
+                if (!matrix_is_vector && (sparse.A == NULL || vector_str.B == NULL))
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+                else if (matrix_is_vector && (matrix_vector_str.B == NULL || matrix_vector.coords == NULL))
                 {
                     printf("\nNO DATA\n");
 
                     break;
                 }
 
-                if (vector_str_sparse_multiplic(&result_vector_str, &vector_str, &sparse))
-                {
-                    printf("\nCOMPUTER CAN'T ALLOC NEEDED DATA\n");
 
-                    break;
+
+                if (!matrix_is_vector)
+                {
+                    if (vector_str_sparse_multiplic(&result_vector_str, &vector_str, &sparse))
+                    {
+                        printf("\nCOMPUTER CAN'T ALLOC NEEDED DATA\n");
+
+                        break;
+                    }
+                }
+                else
+                {
+                    if (vector_str_vector_str_multiplic(&result_vector_str, &vector_str, &matrix_vector_str))
+                    {
+                        printf("\nCOMPUTER CAN'T ALLOC NEEDED DATA\n");
+
+                        break;
+                    }
                 }
 
                 printf("\nRESULT VECTOR\n");
                 vector_str_output(&result_vector_str);
 
                 break;
-
             case CODE_MATRIX_MULTIPLICATION:
-                if (matrix.strs == NULL || vector.coords == NULL)
+                if (!matrix_is_vector && (sparse.A == NULL || vector_str.B == NULL))
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+                else if (matrix_is_vector && (matrix_vector_str.B == NULL || matrix_vector.coords == NULL))
                 {
                     printf("\nNO DATA\n");
 
                     break;
                 }
 
-                if (vector_matrix_multiplic(&result_vector, &vector, &matrix))
-                {
-                    printf("\nCOMPUTER CAN'T ALLOC NEEDED DATA\n");
 
-                    break;
+
+                if (!matrix_is_vector)
+                {
+                    if (vector_matrix_multiplic(&result_vector, &vector, &matrix))
+                    {
+                        printf("\nCOMPUTER CAN'T ALLOC NEEDED DATA\n");
+
+                        break;
+                    }
                 }
+                else
+                    if (vector_vector_multiplic(&result_vector, &vector, &matrix_vector))
+                    {
+                        printf("\nCOMPUTER CAN'T ALLOC NEEDED DATA\n");
+
+                        break;
+                    }
 
                 printf("\nRESULT VECTOR\n");
                 vector_output(&result_vector);
 
                 break;
             case CODE_STAT:
-                printf("Input matrix strokes count (it must be >= 2): ");
-                if (scanf("%zu", &m) != 1 || clear_buf(stdin) || m < 2)
+                printf("Input matrix strokes count (it must be greater than zero): ");
+                if (scanf("%zu", &m) != 1 || clear_buf(stdin) || m < 1)
                 {
                     printf("\nINVALID COUNT\n");
 
                     break;
                 }
-                printf("\nInput matrix columns count (it must be >= 2): ");
-                if (scanf("%zu", &n) != 1 || clear_buf(stdin) || n < 2)
+                printf("\nInput matrix columns count (it must be greater than zero): ");
+                if (scanf("%zu", &n) != 1 || clear_buf(stdin) || n < 1)
                 {
                     printf("\nINVALID COUNT\n");
 
                     break;
                 }
 
-                switch (func_code = vector_matrix_statistics(m, n))
-                {
-                case MULTI_STAT_ERR_ALLOC:
-                    printf("\nCOMPUTER CAN'T ALLOC MEMORY FOR STATISTICS GENERATION\n");
-                    
-                    break;
-                }
+                if (m != 1)
+                    switch (func_code = vector_matrix_statistics(m, n))
+                    {
+                    case MULTI_STAT_ERR_ALLOC:
+                        printf("\nCOMPUTER CAN'T ALLOC MEMORY FOR STATISTICS GENERATION\n");
+                        
+                        break;
+                    }
+                else
+                    switch (func_code = vector_vector_statistics(m, n))
+                    {
+                    case MULTI_STAT_ERR_ALLOC:
+                        printf("\nCOMPUTER CAN'T ALLOC MEMORY FOR STATISTICS GENERATION\n");
+                        
+                        break;
+                    }
 
                 break;
             case CODE_EXIT:
-                sparse_free(&sparse);
-                vector_str_free(&vector_str);
-                vector_str_free(&result_vector_str);
+                
+                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
 
-                matrix_free(&matrix);
-                vector_free(&vector);
+                vector_str_free(&result_vector_str);
                 vector_free(&result_vector);
 
                 flag = false;
