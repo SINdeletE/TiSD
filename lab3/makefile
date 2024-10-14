@@ -7,7 +7,7 @@ UNIT_DIR := unit_tests
 
 vpath %.c $(SRC_DIR) $(UNIT_DIR)
 
-CFLAGS := -std=c99 -Wall -Werror -Wpedantic -Wextra -Wfloat-conversion -Wfloat-equal -Wvla -I $(INC_DIR)
+CFLAGS := -std=gnu99 -Wall -Werror -Wpedantic -Wextra -Wfloat-conversion -Wfloat-equal -Wvla -I $(INC_DIR)
 LFLAGS := -lm
 
 DEBUG_CFLAGS := -O0 -g

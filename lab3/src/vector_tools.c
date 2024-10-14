@@ -164,6 +164,12 @@ void vector_str_output_usual(vector_str_t *vector)
     printf("\n");
 }
 
+size_t vector_str_mem(vector_str_t *vector)
+{
+    return sizeof(vector->B) + sizeof(*(vector->B)) * vector->size + \
+    sizeof(vector->JB) + sizeof(*(vector->JB)) * vector->size + sizeof(vector->full_size);
+}
+
 
 // ---------------------------------------------------------------------------------
 
@@ -308,4 +314,10 @@ int vector_init_manual(vector_t *vector, size_t m)
     vector->full_size = m;
 
     return VEC_INIT_OK;
+}
+
+size_t vector_mem(vector_t *vector)
+{
+    return sizeof(vector->coords) + sizeof(*(vector->coords)) * vector->full_size + \
+    sizeof(vector->full_size);
 }

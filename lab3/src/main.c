@@ -28,7 +28,9 @@
 #define CODE_SPARSE_MULTIPLICATION 3
 #define CODE_MATRIX_MULTIPLICATION 4
 
-#define CODE_EXIT 5
+#define CODE_STAT 5
+
+#define CODE_EXIT 6
 
 int clear_buf(FILE *f);
 
@@ -63,7 +65,9 @@ int main(void)
         printf("3. Count vector str and sparse multiplication\n");
         printf("4. Count vector and matrix multiplication\n");
 
-        printf("5. Exit program\n");
+        printf("\n5. Get statistics\n");
+
+        printf("\n6. Exit program\n");
 
         printf("Code: ");
         if (scanf("%d", &code) != 1)
@@ -577,6 +581,31 @@ int main(void)
 
                 printf("\nRESULT VECTOR\n");
                 vector_output(&result_vector);
+
+                break;
+            case CODE_STAT:
+                printf("Input matrix strokes count (it must be >= 2): ");
+                if (scanf("%zu", &m) != 1 || clear_buf(stdin) || m < 2)
+                {
+                    printf("\nINVALID COUNT\n");
+
+                    break;
+                }
+                printf("\nInput matrix columns count (it must be >= 2): ");
+                if (scanf("%zu", &n) != 1 || clear_buf(stdin) || n < 2)
+                {
+                    printf("\nINVALID COUNT\n");
+
+                    break;
+                }
+
+                switch (func_code = vector_matrix_statistics(m, n))
+                {
+                case MULTI_STAT_ERR_ALLOC:
+                    printf("\nCOMPUTER CAN'T ALLOC MEMORY FOR STATISTICS GENERATION\n");
+                    
+                    break;
+                }
 
                 break;
             case CODE_EXIT:

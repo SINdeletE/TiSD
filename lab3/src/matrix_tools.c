@@ -397,5 +397,6 @@ int matrix_init_manual(matrix_t *matrix, size_t m, size_t n)
 
 size_t matrix_mem(matrix_t *matrix)
 {
-    return sizeof(*matrix) + sizeof(matrix->m) + sizeof(matrix->n) + sizeof(matrix->strs) + sizeof(*(matrix->strs) * m) + sizeof(**(matrix->strs) * m * n);
+    return sizeof(*matrix) + sizeof(matrix->m) + sizeof(matrix->n) + sizeof(matrix->strs) + sizeof(*(matrix->strs)) * matrix->m + \
+    sizeof(**(matrix->strs)) * matrix->m * matrix->n;
 }

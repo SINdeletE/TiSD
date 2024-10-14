@@ -22,4 +22,6 @@
 int vector_str_sparse_multiplic(vector_str_t *res, vector_str_t *vector, sparse_t *matrix);
 int vector_matrix_multiplic(vector_t *res, vector_t *vector, matrix_t *matrix);
 
+int vector_matrix_statistics(size_t m, size_t n);
+
 #endif

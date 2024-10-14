@@ -38,6 +38,7 @@ typedef struct
 
 void sparse_free(sparse_t *matrix);
 int sparse_to_matrix(matrix_t *dst, sparse_t *src, vector_str_t *vector);
+
 size_t sparse_mem(sparse_t *sparse);
 
 void sparse_output(sparse_t *matrix, vector_str_t *vector);
@@ -53,6 +54,7 @@ int matrix_to_sparse(matrix_t *matrix, sparse_t *sparse);
 int matrix_autoinit(matrix_t *matrix, size_t m, size_t n, int percent);
 int matrix_init_manual(matrix_t *matrix, size_t m, size_t n);
 int matrix_autoinit_by_user(matrix_t *matrix, size_t m, size_t n, int percent);
+
 size_t matrix_mem(matrix_t *matrix);
 
 #endif

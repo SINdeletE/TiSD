@@ -40,6 +40,8 @@ void vector_str_output_usual(vector_str_t *vector);
 
 int vector_str_parameters_assign(vector_str_t *dst, vector_str_t *src);
 
+size_t vector_str_mem(vector_str_t *vector);
+
 // --- 
 
 void vector_free(vector_t *vector);
@@ -51,5 +53,7 @@ void vector_output(vector_t *vector);
 int vector_autoinit(vector_t *vector, size_t m, int percent);
 int vector_init_manual(vector_t *vector, size_t m);
 int vector_autoinit_by_user(vector_t *vector, size_t m, int percent);
+
+size_t vector_mem(vector_t *vector);
 
 #endif
