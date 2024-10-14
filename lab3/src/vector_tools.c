@@ -8,8 +8,6 @@
 
 int vector_str_autoinit_alloc_real_mem(vector_str_t *vector);
 
-int vector_alloc_data(vector_t *vector, size_t full_size);
-
 // НЕ СТИРАЕТ SIZE
 void vector_str_free(vector_str_t *vector)
 {

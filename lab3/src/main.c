@@ -36,11 +36,25 @@ int clear_buf(FILE *f);
 
 int main(void)
 {
+    // -----------------------------------------------------------------------------------
+
+    // bool matrix_is_vector = false;
+
     sparse_t sparse = (sparse_t){NULL, NULL, NULL, 0, 0};
+    matrix_t matrix = (matrix_t){NULL, 0, 0};
+
+    // ---
+
+    vector_str_t matrix_vector_str = (vector_str_t){NULL, NULL, 0, 0};
+    vector_t matrix_vector = (vector_t){NULL, 0};
+
+    // ---
+
+    // -----------------------------------------------------------------------------------
+
     vector_str_t vector_str = (vector_str_t){NULL, NULL, 0, 0};
     vector_str_t result_vector_str = (vector_str_t){NULL, NULL, 0, 0};
 
-    matrix_t matrix = (matrix_t){NULL, 0, 0};
     vector_t vector = (vector_t){NULL, 0};
     vector_t result_vector = (vector_t){NULL, 0};
 
