@@ -170,11 +170,13 @@ int vector_matrix_statistics(size_t m, size_t n)
 
     int percent = 1;
 
-    printf("\nSTATISTICS (time in nsec)\n");
+    printf("\nSTATISTICS (time in nsec) (memory in bytes)\n");
 
     printf(" %%percent |");
     printf(" time (str_sparse)  |");
     printf("time (vector_matrix)|");
+    printf("  mem (str_sparse)  |");
+    printf("mem (vector_matrix) |");
     printf("   smaller memory   |");
     printf("     best time      |\n");
 
@@ -213,6 +215,8 @@ int vector_matrix_statistics(size_t m, size_t n)
         printf("%-*d|", STR_TABLE_SIZE, percent);
         printf("%-*ld|", STR_TABLE_SIZE * 2, time1);
         printf("%-*ld|", STR_TABLE_SIZE * 2, time2);
+        printf("%-*zu|", STR_TABLE_SIZE * 2, mem_size1);
+        printf("%-*zu|", STR_TABLE_SIZE * 2, mem_size2);
 
         if (mem_size1 > mem_size2)
             printf("   vector_matrix    |");
