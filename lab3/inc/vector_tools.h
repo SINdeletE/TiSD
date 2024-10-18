@@ -54,6 +54,7 @@ void vector_output(vector_t *vector);
 int vector_autoinit(vector_t *vector, size_t m, int percent);
 int vector_init_manual(vector_t *vector, size_t m);
 int vector_autoinit_by_user(vector_t *vector, size_t m, int percent);
+int vector_init_coords(vector_t *vector, size_t m);
 
 int vector_alloc_data(vector_t *vector, size_t full_size);
 

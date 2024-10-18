@@ -164,8 +164,8 @@ void vector_str_output_usual(vector_str_t *vector)
 
 size_t vector_str_mem(vector_str_t *vector)
 {
-    return sizeof(vector->B) + sizeof(*(vector->B)) * vector->size + \
-    sizeof(vector->JB) + sizeof(*(vector->JB)) * vector->size + sizeof(vector->full_size);
+    return sizeof(*vector) + sizeof(*(vector->B)) * vector->size + \
+    sizeof(*(vector->JB)) * vector->size;
 }
 
 
@@ -314,8 +314,53 @@ int vector_init_manual(vector_t *vector, size_t m)
     return VEC_INIT_OK;
 }
 
+int vector_init_coords(vector_t *vector, size_t m)
+{
+    bool is_zero_vector = true;
+    int tmp;
+    size_t size_fill = 0;
+    size_t ch_j;
+
+    vector_free(vector);
+
+    if (vector_alloc_data(vector, m))
+        return VEC_INIT_ERR_ALLOC;
+
+    while (size_fill <= m)
+    {
+        printf("Enter random int value (if you want to stop, enter -1): ");
+        if (scanf("%d", &tmp) != 1)
+        {
+            vector_free(vector);
+            return VEC_INIT_ERR_FILL;
+        }
+
+        if (tmp == -1)
+            break;
+
+        printf("Enter column (entered %zu of %zu): ", size_fill, m);
+        if (scanf("%zu", &ch_j) != 1 || ch_j >= m)
+            return VEC_INIT_ERR_FILL;
+
+        printf("Enter element (non zero): ");
+        if (scanf("%d", &tmp) != 1 || tmp == 0)
+            return VEC_INIT_ERR_FILL;
+        else if (tmp != 0)
+            is_zero_vector = false;
+
+        vector->coords[ch_j] = tmp;
+        size_fill++;
+    }
+
+    if (is_zero_vector)
+        return VEC_INIT_ERR_ZERO_VECTOR;
+
+    vector->full_size = m;
+
+    return VEC_INIT_OK;
+}
+
 size_t vector_mem(vector_t *vector)
 {
-    return sizeof(vector->coords) + sizeof(*(vector->coords)) * vector->full_size + \
-    sizeof(vector->full_size);
+    return sizeof(*vector) + sizeof(*(vector->coords)) * vector->full_size;
 }

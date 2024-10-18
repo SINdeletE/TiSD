@@ -16,6 +16,7 @@
 #define CODE_AUTO_INIT 1
 #define CODE_SELF_INIT 2
 #define CODE_AUTO_SELF_INIT 3
+#define CODE_COORDS 4
 // ---
 
 // ---
@@ -76,8 +77,8 @@ int main(void)
         printf("\nEnter a number of command:\n");
         printf("1. Initialize matrix and vector\n");
         printf("2. Output matrix (sparse) and vector (str format)\n");
-        printf("3. Count vector str and sparse multiplication\n");
-        printf("4. Count vector and matrix multiplication\n");
+        printf("3. Count vector str and sparse multiplication (and output result in vector_str form)\n");
+        printf("4. Count vector and matrix multiplication (and output result in vector form)\n");
 
         printf("\n5. Get statistics\n");
 
@@ -130,6 +131,7 @@ int main(void)
                 printf("1. Auto\n");
                 printf("2. Self initialize\n");
                 printf("3. Auto self initialize\n");
+                printf("4. Coordinates init\n");
                 printf("\nCode: ");
                 if (scanf("%d", &code) != 1 || clear_buf(stdin))
                 {
@@ -491,6 +493,7 @@ int main(void)
 
                                     break;
                                 case MAT_INIT_ERR_INVALID_ENTERED_DATA:
+                                    all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
                                     printf("\nENTERED INVALID DATA\n");
 
                                     break;
@@ -633,6 +636,165 @@ int main(void)
                         }
 
                         // VECTOR TO VECTOR STR CONVERTATION
+
+                        switch (func_code = vector_to_vector_str(&vector, &vector_str))
+                        {
+                            case VEC_CONVERT_ERR_ALLOC:
+                                printf("\nCOMPUTER CAN'T ALLOC MEMORY FOR VECTOR\n");
+
+                                break;
+                            default:
+                                printf("\nVECTOR WAS CONVERTED SUCCESSFULLY!\n");
+                        }
+
+                        if (func_code)
+                        {
+                            all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
+
+                            break;
+                        }
+
+                        break;
+                    case CODE_COORDS:
+                        // MATRIX INIT
+
+                        printf("\nEnter matrix elements:\n");
+                        if (!matrix_is_vector)
+                        {
+                            switch (matrix_init_coords(&matrix, m, n))
+                            {
+                                case MAT_INIT_ERR_ALLOC:
+                                    printf("\nCOMPUTER CAN'T INITIALIZE MATRIX\n");
+
+                                    break;
+                                case MAT_INIT_ERR_FILL:
+                                    printf("\nENTERED INVALID DATA\n");
+
+                                    break;
+                                case MAT_INIT_ERR_ZERO_MATRIX:
+                                    printf("\nMATRIX CAN'T BE ZERO\n");
+
+                                    break;
+                                case MAT_INIT_ERR_INVALID_ENTERED_DATA:
+                                    printf("\nentered data is invalid\n");
+
+                                    break;
+                                default:
+                                    printf("\nMATRIX WAS INITIALIZED SUCCESSFULLY!\n");
+                            }
+
+                            if (clear_buf(stdin))
+                                func_code = MAT_INIT_ERR_INVALID_ENTERED_DATA;
+
+                            if (func_code)
+                            {
+                                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
+
+                                break;
+                            }
+
+                            // MATRIX TO SPARSE CONVERTATION
+
+                            sparse_free(&sparse);
+
+                            switch (func_code = matrix_to_sparse(&matrix, &sparse))
+                            {
+                                case MAT_INIT_ERR_ALLOC:
+                                    printf("\nCOMPUTER CAN'T CONVERT TO SPARSE\n");
+
+                                    break;
+                                case MAT_INIT_ERR_FILL:
+                                    printf("ERR PERCENT!");
+
+                                    break;
+                                default:
+                                    printf("\nMATRIX WAS CONVERTED TO SPARSE SUCCESSFULLY!\n");
+                            }
+
+                            if (func_code)
+                            {
+                                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
+
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            switch (func_code = vector_init_coords(&matrix_vector, n))
+                            {
+                                case VEC_INIT_ERR_ALLOC:
+                                    printf("\nCOMPUTER CAN'T INITIALIZE VECTOR\n");
+
+                                    break;
+                                case VEC_INIT_ERR_FILL:
+                                    printf("\nENTERED INVALID DATA\n");
+
+                                    break;
+                                case VEC_INIT_ERR_ZERO_VECTOR:
+                                    printf("\nVECTOR CAN'T BE ZERO\n");
+
+                                    break;
+                                default:
+                                    printf("\nVECTOR WAS INITIALIZED SUCCESSFULLY!\n");
+                            }
+
+                            if (clear_buf(stdin))
+                                func_code = MAT_INIT_ERR_INVALID_ENTERED_DATA;
+
+                            if (func_code)
+                            {
+                                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
+
+                                break;
+                            }
+
+                            // VECTOR TO VECTOR STR CONVERTATION
+
+                            switch (func_code = vector_to_vector_str(&matrix_vector, &matrix_vector_str))
+                            {
+                                case VEC_CONVERT_ERR_ALLOC:
+                                    printf("\nCOMPUTER CAN'T ALLOC MEMORY FOR VECTOR\n");
+
+                                    break;
+                                default:
+                                    printf("\nVECTOR WAS CONVERTED SUCCESSFULLY!\n");
+                            }
+
+                            if (func_code)
+                            {
+                                all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
+
+                                break;
+                            }
+                        }
+
+                        printf("\nEnter vector elements:\n");
+                        switch (func_code = vector_init_coords(&vector, m))
+                        {
+                            case VEC_INIT_ERR_ALLOC:
+                                printf("\nCOMPUTER CAN'T INITIALIZE VECTOR\n");
+
+                                break;
+                            case VEC_INIT_ERR_FILL:
+                                printf("\nENTERED INVALID DATA\n");
+
+                                break;
+                            case VEC_INIT_ERR_ZERO_VECTOR:
+                                printf("\nVECTOR CAN'T BE ZERO\n");
+
+                                break;
+                            default:
+                                printf("\nVECTOR WAS INITIALIZED SUCCESSFULLY!\n");
+                        }
+
+                        if (func_code)
+                        {
+                            all_free(&vector, &vector_str, &matrix, &sparse, &matrix_vector_str, &matrix_vector);
+
+                            break;
+                        }
+
+                         // VECTOR TO VECTOR STR CONVERTATION
 
                         switch (func_code = vector_to_vector_str(&vector, &vector_str))
                         {
@@ -842,7 +1004,7 @@ int main(void)
 
                 break;
             default:
-                printf("\nINVALID CODE\n");
+                printf("\n\nINVALID CODE\n\n");
         }
     }
 
@@ -852,13 +1014,14 @@ int main(void)
 int clear_buf(FILE *f)
 {
     int ch;
+    int flag = 0;
 
     do
     {
         ch = getc(f);
         if (! isspace(ch) && ch != EOF)
-            return 1;
+            flag = 1;
     } while (ch != '\n' && ch != EOF);
 
-    return 0;
+    return flag;
 }

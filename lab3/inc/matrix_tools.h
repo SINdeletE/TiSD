@@ -54,6 +54,7 @@ int matrix_to_sparse(matrix_t *matrix, sparse_t *sparse);
 int matrix_autoinit(matrix_t *matrix, size_t m, size_t n, int percent);
 int matrix_init_manual(matrix_t *matrix, size_t m, size_t n);
 int matrix_autoinit_by_user(matrix_t *matrix, size_t m, size_t n, int percent);
+int matrix_init_coords(matrix_t *matrix, size_t m, size_t n);
 
 size_t matrix_mem(matrix_t *matrix);
 

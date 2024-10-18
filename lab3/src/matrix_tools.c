@@ -244,8 +244,7 @@ void sparse_output_usual(sparse_t *matrix, vector_str_t *vector)
 
 size_t sparse_mem(sparse_t *sparse)
 {
-    return sizeof(sparse->size) + sizeof(sparse->JA_size) + sizeof(sparse->A) + sizeof(sparse->IA) + \
-    sizeof(sparse->JA) + sizeof(*(sparse->A)) * sparse->size + sizeof(*(sparse->IA)) * sparse->size + \
+    return sizeof(*sparse) + sizeof(*(sparse->A)) * sparse->size + sizeof(*(sparse->IA)) * sparse->size + \
     sizeof(*(sparse->JA)) * sparse->JA_size;
 }
 
@@ -327,7 +326,10 @@ int matrix_autoinit_by_user(matrix_t *matrix, size_t m, size_t n, int percent)
                 {
                     printf("Enter %zu x %zu element (%zu elements remaining): ", i, j, elems);
                     if (scanf("%d", &matrix->strs[i][j]) != 1 || matrix->strs[i][j] == 0)
+                    {
+                        matrix_free(matrix);
                         return MAT_INIT_ERR_INVALID_ENTERED_DATA;
+                    }
 
                     elems--;
                 }
@@ -382,7 +384,10 @@ int matrix_init_manual(matrix_t *matrix, size_t m, size_t n)
     for (size_t i = 0; i < m; i++)
         for (size_t j = 0; j < n; j++)
             if (scanf("%d", &matrix->strs[i][j]) != 1)
+            {
+                matrix_free(matrix);
                 return MAT_INIT_ERR_FILL;
+            }
             else if (matrix->strs[i][j] != 0)
                 is_zero_matrix = false;
 
@@ -395,8 +400,70 @@ int matrix_init_manual(matrix_t *matrix, size_t m, size_t n)
     return MAT_INIT_OK;
 }
 
+int matrix_init_coords(matrix_t *matrix, size_t m, size_t n)
+{
+    bool is_zero_matrix = true;
+    int tmp;
+    size_t size_fill = 0;
+    size_t ch_i, ch_j;
+
+    matrix_free(matrix);
+
+    if (matrix_alloc_data(matrix, m, n))
+        return MAT_INIT_ERR_ALLOC;
+
+    // for (size_t i = 0; i < m; i++)
+    //     for (size_t j = 0; j < n; j++)
+    while (size_fill <= m * n)
+    {
+        printf("Enter random int value (if you want to stop, enter -1): ");
+        if (scanf("%d", &tmp) != 1)
+        {
+            matrix_free(matrix);
+            return MAT_INIT_ERR_FILL;
+        }
+
+        if (tmp == -1)
+            break;
+
+        printf("Enter coordinates (entered %zu of %zu) (str and col): ", size_fill, m * n);
+        if (scanf("%zu", &ch_i) != 1 && ch_i >= m)
+        {
+            matrix_free(matrix);
+            return MAT_INIT_ERR_FILL;
+        }
+
+        if (scanf("%zu", &ch_j) != 1 || ch_j >= n)
+        {
+            matrix_free(matrix);
+            return MAT_INIT_ERR_FILL;
+        }
+
+        printf("Enter element value (non zero): ");
+        if (scanf("%d", &tmp) != 1 || tmp == 0)
+        {
+            matrix_free(matrix);
+            return MAT_INIT_ERR_FILL;
+        }
+        else if (tmp != 0)
+            is_zero_matrix = false;
+
+        matrix->strs[ch_i][ch_j] = tmp;
+
+        size_fill++;
+    }
+
+    if (is_zero_matrix)
+        return MAT_INIT_ERR_ZERO_MATRIX;
+
+    matrix->m = m;
+    matrix->n = n;
+
+    return MAT_INIT_OK;
+}
+
 size_t matrix_mem(matrix_t *matrix)
 {
-    return sizeof(*matrix) + sizeof(matrix->m) + sizeof(matrix->n) + sizeof(matrix->strs) + sizeof(*(matrix->strs)) * matrix->m + \
+    return sizeof(*matrix) + sizeof(*(matrix->strs)) * matrix->m + \
     sizeof(**(matrix->strs)) * matrix->m * matrix->n;
 }

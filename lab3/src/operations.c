@@ -305,7 +305,7 @@ int vector_matrix_statistics(size_t m, size_t n)
 
         if (time1 > time2)
             printf("   vector_matrix    |");
-        else if (mem_size1 < mem_size2)
+        else if (time1 < time2)
             printf("    str_sparse      |");
         else
             printf("       EQUAL        |");
@@ -419,7 +419,7 @@ int vector_vector_statistics(size_t m, size_t n)
 
         if (time1 > time2)
             printf("   vector_matrix    |");
-        else if (mem_size1 < mem_size2)
+        else if (time1 < time2)
             printf("      str_str       |");
         else
             printf("       EQUAL        |");
