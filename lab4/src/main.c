@@ -107,7 +107,7 @@ int main(void)
 
                 break;
             case CODE_SHOW_STATIC:
-                printf("\nStack (first to last):\n");
+                printf("\nStack (last to first):\n");
                 static_stack_show(&static_stack);
 
                 break;
@@ -140,7 +140,38 @@ int main(void)
 
                 break;
             case CODE_SHOW_LIST:
+                printf("\nStack (last to first):\n");
+                list_stack_show(list_stack_head);
 
+                break;
+            case CODE_POP_LIST:
+                if (list_stack_pop(&character, &list_stack_head))
+                    printf("\nSTACK IS EMPTY\n");
+                else
+                {
+                    printf("\nPOP SUCCESSFULLY\n");
+                    printf("Popped: %c\n", character);
+                }
+
+                break;
+            case CODE_PUSH_LIST:
+                printf("Enter character: ");
+                if (scanf("%c", &character) != 1)
+                    printf("\nINVALID ENTERED DATA\n");
+                else
+                {
+                    if (list_stack_push(character, &list_stack_head))
+                        printf("\nCAN'T ALLOC MEMORY FOR NEW ELEMENT\n");
+                    else
+                        printf("\nPUSH SUCCESSFULLY\n");
+                }
+
+                break;
+            case CODE_CLEAN_LIST:
+                list_stack_free(&list_stack_head);
+                printf("\nLIST STACK WAS CLEARED SUCCESSFULLY\n");
+
+                break;
             case CODE_CHECK_STATIC:
                 if (str == NULL)
                 {
@@ -153,7 +184,7 @@ int main(void)
                 fputs(str, stdout);
                 switch (static_stack_string_check(str, &static_stack))
                 {
-                    case CHECK_ERR_STACK_OVERFLOW:
+                    case CHECK_ERR_STACK_INCORRECT_PUSH:
                         printf("\nSTACK WAS OVERFLOWED. CAN'T GET RESULT\n");
 
                         break;
@@ -176,10 +207,10 @@ int main(void)
 
                 printf("\nString: ");
                 fputs(str, stdout);
-                switch (static_stack_string_check(str, &static_stack))
+                switch (list_stack_string_check(str, &list_stack_head))
                 {
-                    case CHECK_ERR_STACK_OVERFLOW:
-                        printf("\nSTACK WAS OVERFLOWED. CAN'T GET RESULT\n");
+                    case CHECK_ERR_STACK_INCORRECT_PUSH:
+                        printf("\nCOULDN'T ALLOC MEMORY FOR PUSH A CHARACTER\n");
 
                         break;
                     case CHECK_INCORRECT:
@@ -193,6 +224,7 @@ int main(void)
                 break;
             case CODE_EXIT:
                 string_free(&str, &alloc_str);
+                list_stack_free(&list_stack_head);
 
                 printf("\nHave a nice day!\n");
                 flag = false;
