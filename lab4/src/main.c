@@ -37,6 +37,8 @@ int main(void)
     static_stack_t static_stack = (static_stack_t) {{0}, 0};
     list_stack_t *list_stack_head = NULL;
 
+    void *tmp = NULL;;
+
     bool flag = true;
     int code;
     // int func_code = 0;
@@ -145,12 +147,18 @@ int main(void)
 
                 break;
             case CODE_POP_LIST:
+                tmp = (void *)list_stack_head;
+
                 if (list_stack_pop(&character, &list_stack_head))
+                {
                     printf("\nSTACK IS EMPTY\n");
+
+                    break;
+                }
                 else
                 {
                     printf("\nPOP SUCCESSFULLY\n");
-                    printf("Popped: %c\n", character);
+                    printf("Popped: %c %p\n", character, tmp);
                 }
 
                 break;
@@ -222,6 +230,8 @@ int main(void)
                 }
 
                 break;
+            case CODE_STAT:
+                
             case CODE_EXIT:
                 string_free(&str, &alloc_str);
                 list_stack_free(&list_stack_head);

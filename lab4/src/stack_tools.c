@@ -162,5 +162,5 @@ void list_stack_show(list_stack_t *head)
     list_stack_t *cur = head;
 
     for (; cur; cur = cur->next)
-        printf("%c\n", cur->value);
+        printf("%c \t %p\n", cur->value, (void *)cur);
 }
