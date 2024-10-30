@@ -7,6 +7,7 @@
 
 #include "stack_tools.h"
 #include "string_tools.h"
+#include "addresses_tools.h"
 
 #define _POSIX_C_SOURCE 200809L
 
@@ -24,8 +25,9 @@
 #define CODE_CLEAN_LIST 9
 #define CODE_CHECK_STATIC 10
 #define CODE_CHECK_LIST 11
-#define CODE_STAT 12
-#define CODE_EXIT 13
+#define CODE_ADDRESSES 12
+#define CODE_STAT 13
+#define CODE_EXIT 14
 
 int clear_buf(FILE *f);
 
@@ -45,6 +47,13 @@ int main(void)
 
     char character;
 
+    if (addresses_init())
+    {
+        printf("\nTHIS COMPUTER CAN'T GET STATISTICS. PLEASE, UPDATE YOUT SOFTWARE\n");
+
+        return 1;
+    }
+
     while (flag)
     {   
         printf("\n--------------------------------\n");
@@ -61,9 +70,11 @@ int main(void)
         printf("\n10. Check brackets correction (static stack)\n");
         printf("11. Check brackets correction (list stack)\n");
 
-        printf("\n12. Get statistics\n");
+        printf("\n12. Show popped addresses\n");
 
-        printf("\n13. Exit program\n");
+        printf("\n13. Get statistics\n");
+
+        printf("\n14. Exit program\n");
         printf("\n--------------------------------\n");
 
         printf("Code: ");
@@ -230,11 +241,19 @@ int main(void)
                 }
 
                 break;
+            case CODE_ADDRESSES:
+                printf("\nAddresses (first to last):\n");
+                addresses_show();
+
+                break;
             case CODE_STAT:
-                
+                stack_statistics(&static_stack, &list_stack_head);
+
+                break;
             case CODE_EXIT:
                 string_free(&str, &alloc_str);
                 list_stack_free(&list_stack_head);
+                addresses_free();
 
                 printf("\nHave a nice day!\n");
                 flag = false;

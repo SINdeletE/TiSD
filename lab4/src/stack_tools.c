@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "stack_tools.h"
+#include "addresses_tools.h"
+
+#define STR_TABLE_SIZE 8
 
 size_t static_stack_size(static_stack_t *stack)
 {
@@ -112,6 +116,8 @@ int list_stack_pop(char *c, list_stack_t **head)
 
     free(tmp);
 
+    addresses_add(tmp);
+
     return 0;
 }
 
@@ -163,4 +169,103 @@ void list_stack_show(list_stack_t *head)
 
     for (; cur; cur = cur->next)
         printf("%c \t %p\n", cur->value, (void *)cur);
+}
+
+void stack_statistics(static_stack_t *static_stack, list_stack_t **list_stack_head)
+{
+    char c;
+
+    struct timespec t_beg, t_end;
+
+    size_t ss_mem_size = 0, ls_mem_size = 0;
+    long ss_time_push = 0, ls_time_push = 0;
+    long ss_time_pop = 0, ls_time_pop = 0;
+
+    static_stack_free(static_stack);
+    list_stack_free(list_stack_head);
+
+    printf("\nSTATISTICS (time in nsec) (memory in bytes) (MAX STACK SIZE IS %d)\n", STACK_MAX_SIZE);
+
+    printf("N count |");
+    printf("PUSH t (static) |");
+    printf(" POP t (static) |");
+    printf("  PUSH t (list) |");
+    printf("   POP t (list) |");
+    printf("Memory (static) |");
+    printf(" Memory (list)  |");
+    printf("  best t (PUSH) |");
+    printf("  best t (POP)  |");
+    printf("  best memory   |\n");
+
+    for (size_t n_elems = 100; n_elems < STACK_MAX_SIZE; n_elems += 200)
+    {
+        ss_time_push = 0;
+        ls_time_push = 0;
+        ss_time_pop = 0;
+        ls_time_pop = 0;
+
+        ss_mem_size = sizeof(static_stack_t);
+        ls_mem_size = sizeof(list_stack_t) * n_elems;
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        for (size_t i = 0; i < ITER_COUNT; i++)
+            static_stack_push('[', static_stack);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+        ss_time_push = 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+        ss_time_push /= ITER_COUNT;
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        for (size_t i = 0; i < ITER_COUNT; i++)
+            static_stack_pop(&c, static_stack);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+        ss_time_pop = 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+        ss_time_pop /= ITER_COUNT;
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        for (size_t i = 0; i < ITER_COUNT; i++)
+            list_stack_push('[', list_stack_head);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+        ls_time_push = 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+        ls_time_push /= ITER_COUNT;
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        for (size_t i = 0; i < ITER_COUNT; i++)
+            list_stack_pop(&c, list_stack_head);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+        ls_time_pop = 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+        ls_time_pop /= ITER_COUNT;
+
+        printf("%-*zu|", STR_TABLE_SIZE, n_elems);
+        printf("%-*ld|", STR_TABLE_SIZE * 2, ss_time_push);
+        printf("%-*ld|", STR_TABLE_SIZE * 2, ss_time_pop);
+        printf("%-*ld|", STR_TABLE_SIZE * 2, ls_time_push);
+        printf("%-*ld|", STR_TABLE_SIZE * 2, ls_time_pop);
+        printf("%-*zu|", STR_TABLE_SIZE * 2, ss_mem_size);
+        printf("%-*zu|", STR_TABLE_SIZE * 2, ls_mem_size);
+        if (ss_time_push < ls_time_push)
+            printf("     STATIC     |");
+        else if (ss_time_push > ls_time_push)
+            printf("      LIST      |");
+        else 
+            printf("      EQUAL     |");
+
+        if (ss_time_pop < ls_time_pop)
+            printf("     STATIC     |");
+        else if (ss_time_pop > ls_time_pop)
+            printf("      LIST      |");
+        else 
+            printf("      EQUAL     |");
+        
+        if (ss_mem_size < ls_mem_size)
+            printf("     STATIC     |");
+        else if (ss_mem_size > ls_mem_size)
+            printf("      LIST      |");
+        else 
+            printf("      EQUAL     |");
+        
+        printf("\n");
+    }
+
+    static_stack_free(static_stack);
+    list_stack_free(list_stack_head);
 }

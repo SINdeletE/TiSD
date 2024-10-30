@@ -4,7 +4,8 @@
 
 #include <stddef.h>
 
-#define STACK_MAX_SIZE 32
+#define STACK_MAX_SIZE 4096
+#define ITER_COUNT 100
 
 #define CHECK_CORRECT 0
 #define CHECK_INCORRECT 1
@@ -42,5 +43,7 @@ int list_stack_string_check(char *str, list_stack_t **head);
 void list_stack_show(list_stack_t *head);
 int list_stack_pop(char *c, list_stack_t **head);
 int list_stack_push(char c, list_stack_t **head);
+
+void stack_statistics(static_stack_t *static_stack, list_stack_t **list_stack_head);
 
 #endif
