@@ -32,10 +32,10 @@ int clear_buf(FILE *f);
 int main(void)
 {
     char *str = NULL;
+    size_t alloc_str = 0;
+    
     static_stack_t static_stack = (static_stack_t) {{0}, 0};
-    // list_stack_t *list_stack_head = NULL;
-
-    size_t alloc_memory = 0;
+    list_stack_t *list_stack_head = NULL;
 
     bool flag = true;
     int code;
@@ -83,15 +83,15 @@ int main(void)
                         break;
                     }
                     else
-                        alloc_memory = sizeof(char);
+                        alloc_str = sizeof(char);
                 }
                 
                 printf("Enter string: ");
-                if (getline(&str, &alloc_memory, stdin) == -1)
+                if (getline(&str, &alloc_str, stdin) == -1)
                 {
                     printf("\nCOMPUTER CAN'T ALLOC MEMORY FOR STRING\n");
 
-                    string_free(&str, &alloc_memory);
+                    string_free(&str, &alloc_str);
                     break;
                 }
 
@@ -99,7 +99,7 @@ int main(void)
                 {
                     printf("\nSTRING CAN'T BE EMPTY\n");
 
-                    string_free(&str, &alloc_memory);
+                    string_free(&str, &alloc_str);
                     break;
                 }
 
@@ -139,6 +139,8 @@ int main(void)
                 printf("\nSTATIC STACK WAS CLEARED SUCCESSFULLY\n");
 
                 break;
+            case CODE_SHOW_LIST:
+
             case CODE_CHECK_STATIC:
                 if (str == NULL)
                 {
@@ -190,7 +192,7 @@ int main(void)
 
                 break;
             case CODE_EXIT:
-                string_free(&str, &alloc_memory);
+                string_free(&str, &alloc_str);
 
                 printf("\nHave a nice day!\n");
                 flag = false;

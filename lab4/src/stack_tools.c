@@ -10,10 +10,9 @@ size_t static_stack_size(static_stack_t *stack)
 
 void static_stack_free(static_stack_t *stack)
 {
-    for (size_t i = 0; i < static_stack_size(stack); i++)
-        stack->stack[i] = 0;
+    char c;
     
-    stack->size = 0;
+    while (! static_stack_pop(&c, stack));
 }
 
 int brackets_with_equal_type(char open, char close)
@@ -33,6 +32,8 @@ int static_stack_pop(char *data, static_stack_t *stack)
         return 1;
     
     *data = stack->stack[static_stack_size(stack) - 1];
+    stack->stack[static_stack_size(stack) - 1] = 0;
+
     stack->size--;
 
     return 0;
@@ -84,12 +85,49 @@ void static_stack_show(static_stack_t *stack)
 
 // __________________________________________________________________________________
 
-// void list_stack_free(list_stack_t *head)
-// {
-//     list_stack_t *cur = head;
+void list_stack_free(list_stack_t **head)
+{
+    char c;
 
-//     for (; cur; cur->next)
-//         stack->stack[i] = 0;
-    
-//     stack->size = 0;
-// }
+    while (! list_stack_pop(&c, head));
+}
+
+int list_stack_pop(char *c, list_stack_t **head)
+{
+    list_stack_t *tmp = NULL;
+
+    if (! *head)
+        return 1;
+
+    tmp = *head;
+    *c = tmp->value;
+
+    *head = (*head)->next;
+
+    free(tmp);
+
+    return 0;
+}
+
+int list_stack_push(char c, list_stack_t **head)
+{
+    list_stack_t *tmp;
+
+    if ((tmp = malloc(sizeof(list_stack_t))) == NULL)
+        return 1;
+
+    tmp->value = c;
+    tmp->next = *head;
+
+    *head = tmp;
+
+    return 0;
+}
+
+void list_stack_show(list_stack_t *head)
+{
+    list_stack_t *cur = head;
+
+    for (; cur; cur->next)
+        printf("%c\n", cur->value);
+}
