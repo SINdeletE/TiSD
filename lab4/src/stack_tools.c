@@ -197,7 +197,7 @@ void stack_statistics(static_stack_t *static_stack, list_stack_t **list_stack_he
     printf("  best t (POP)  |");
     printf("  best memory   |\n");
 
-    for (size_t n_elems = 100; n_elems < STACK_MAX_SIZE; n_elems += 200)
+    for (size_t n_elems = 2; n_elems < STACK_MAX_SIZE; n_elems *= 2)
     {
         ss_time_push = 0;
         ls_time_push = 0;
@@ -205,34 +205,50 @@ void stack_statistics(static_stack_t *static_stack, list_stack_t **list_stack_he
         ls_time_pop = 0;
 
         ss_mem_size = sizeof(static_stack_t);
-        ls_mem_size = sizeof(list_stack_t) * n_elems;
+        ls_mem_size = sizeof(list_stack_t) * n_elems + sizeof(list_stack_t *);
 
-        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        // Чтобы адреса не портили результаты статистики
+        while (addresses_cap() < addresses_size() + n_elems)
+            addresses_realloc();
+
         for (size_t i = 0; i < ITER_COUNT; i++)
-            static_stack_push('[', static_stack);
-        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
-        ss_time_push = 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+        {
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+            for (size_t i = 0; i < n_elems; i++)
+                static_stack_push('[', static_stack);
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+            ss_time_push += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+            
+
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+            for (size_t i = 0; i < n_elems; i++)
+                static_stack_pop(&c, static_stack);
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+            ss_time_pop += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+            
+        }
+
         ss_time_push /= ITER_COUNT;
-
-        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
-        for (size_t i = 0; i < ITER_COUNT; i++)
-            static_stack_pop(&c, static_stack);
-        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
-        ss_time_pop = 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
         ss_time_pop /= ITER_COUNT;
 
-        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
         for (size_t i = 0; i < ITER_COUNT; i++)
-            list_stack_push('[', list_stack_head);
-        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
-        ls_time_push = 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
-        ls_time_push /= ITER_COUNT;
+        {
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+            for (size_t i = 0; i < n_elems; i++)
+                list_stack_push('[', list_stack_head);
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+            ls_time_push += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+            
 
-        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
-        for (size_t i = 0; i < ITER_COUNT; i++)
-            list_stack_pop(&c, list_stack_head);
-        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
-        ls_time_pop = 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+            for (size_t i = 0; i < n_elems; i++)
+                list_stack_pop(&c, list_stack_head);
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+            ls_time_pop += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+            
+        }
+
+        ls_time_push /= ITER_COUNT;
         ls_time_pop /= ITER_COUNT;
 
         printf("%-*zu|", STR_TABLE_SIZE, n_elems);

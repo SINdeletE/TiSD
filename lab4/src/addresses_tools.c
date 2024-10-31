@@ -12,6 +12,16 @@ void addresses_free(void)
     as.size = 0;
 }
 
+size_t addresses_cap(void)
+{
+    return as.cap;
+}
+
+size_t addresses_size(void)
+{
+    return as.size;
+}
+
 int addresses_init(void)
 {
     as = (addresses_t) {NULL, 0, 0};

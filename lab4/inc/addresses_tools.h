@@ -15,6 +15,9 @@ typedef struct
 } addresses_t;
 
 void addresses_free(void);
+size_t addresses_cap(void);
+size_t addresses_size(void);
+
 int addresses_init(void);
 int addresses_realloc(void);
 int addresses_add(void *a);
