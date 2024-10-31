@@ -22,7 +22,6 @@ typedef struct
     size_t size;
 } static_stack_t;
 
-
 typedef struct list_stack_t_ list_stack_t;
 
 typedef struct list_stack_t_

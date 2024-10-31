@@ -121,6 +121,23 @@ int list_stack_pop(char *c, list_stack_t **head)
     return 0;
 }
 
+int list_stack_pop_without_addresses(char *c, list_stack_t **head)
+{
+    list_stack_t *tmp = NULL;
+
+    if (! *head)
+        return 1;
+
+    tmp = *head;
+    *c = tmp->value;
+
+    *head = (*head)->next;
+
+    free(tmp);
+
+    return 0;
+}
+
 int list_stack_push(char c, list_stack_t **head)
 {
     list_stack_t *tmp;
@@ -181,10 +198,14 @@ void stack_statistics(static_stack_t *static_stack, list_stack_t **list_stack_he
     long ss_time_push = 0, ls_time_push = 0;
     long ss_time_pop = 0, ls_time_pop = 0;
 
+    long ss_time_push_sum = 0, ls_time_push_sum = 0;
+    long ss_time_pop_sum = 0, ls_time_pop_sum = 0;
+    size_t elems = 0;
+
     static_stack_free(static_stack);
     list_stack_free(list_stack_head);
 
-    printf("\nSTATISTICS (time in nsec) (memory in bytes) (MAX STACK SIZE IS %d)\n", STACK_MAX_SIZE);
+    printf("\nSTATISTICS (time in nsec) (memory in bytes) (STATIC STACK SIZE IS %d)\n", STACK_MAX_SIZE);
 
     printf("N count |");
     printf("PUSH t (static) |");
@@ -207,9 +228,9 @@ void stack_statistics(static_stack_t *static_stack, list_stack_t **list_stack_he
         ss_mem_size = sizeof(static_stack_t);
         ls_mem_size = sizeof(list_stack_t) * n_elems + sizeof(list_stack_t *);
 
-        // Чтобы адреса не портили результаты статистики
-        while (addresses_cap() < addresses_size() + n_elems)
-            addresses_realloc();
+        // // Чтобы адреса не портили результаты статистики
+        // while (addresses_cap() < addresses_size() + n_elems)
+        //     addresses_realloc();
 
         for (size_t i = 0; i < ITER_COUNT; i++)
         {
@@ -242,7 +263,7 @@ void stack_statistics(static_stack_t *static_stack, list_stack_t **list_stack_he
 
             clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
             for (size_t i = 0; i < n_elems; i++)
-                list_stack_pop(&c, list_stack_head);
+                list_stack_pop_without_addresses(&c, list_stack_head);
             clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
             ls_time_pop += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
             
@@ -280,7 +301,20 @@ void stack_statistics(static_stack_t *static_stack, list_stack_t **list_stack_he
             printf("      EQUAL     |");
         
         printf("\n");
+
+        ss_time_push_sum += ss_time_push;
+        ss_time_pop_sum += ss_time_pop;
+
+        ls_time_push_sum += ls_time_push;
+        ls_time_pop_sum += ls_time_pop;
+
+        elems += n_elems;
     }
+
+    printf("\nAverage push time (static): %ld\n", ss_time_push_sum / elems);
+    printf("\nAverage pop time (static): %ld\n", ss_time_pop_sum / elems);
+    printf("\nAverage push time (list): %ld\n", ls_time_push_sum / elems);
+    printf("\nAverage pop time (list): %ld\n", ls_time_pop_sum / elems);
 
     static_stack_free(static_stack);
     list_stack_free(list_stack_head);
