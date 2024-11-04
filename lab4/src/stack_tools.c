@@ -311,10 +311,24 @@ void stack_statistics(static_stack_t *static_stack, list_stack_t **list_stack_he
         elems += n_elems;
     }
 
-    printf("\nAverage push time (static): %ld\n", ss_time_push_sum / elems);
-    printf("\nAverage pop time (static): %ld\n", ss_time_pop_sum / elems);
-    printf("\nAverage push time (list): %ld\n", ls_time_push_sum / elems);
-    printf("\nAverage pop time (list): %ld\n", ls_time_pop_sum / elems);
+    printf("\nAverage push time (static): %0.6lf", (double)ss_time_push_sum / elems);
+    printf("\nAverage pop time (static):  %0.6lf", (double)ss_time_pop_sum / elems);
+    printf("\nAverage push time (list):  %0.6lf", (double)ls_time_push_sum / elems);
+    printf("\nAverage pop time (list): %0.6lf\n\n", (double)ls_time_pop_sum / elems);
+
+    if (ss_time_push_sum < ls_time_push_sum)
+        printf("Static PUSH time is better than list on: %0.6lf%%\n", (double)ls_time_push_sum / (double)ss_time_push_sum * 100.0);
+    else if (ss_time_push_sum < ls_time_push_sum)
+        printf("List PUSH time is better than static on: %0.6lf%%\n", (double)ss_time_push_sum / (double)ls_time_push_sum * 100.0);
+    else 
+        printf("List PUSH time and static PUSH time are equal\n");
+
+    if (ss_time_pop_sum < ls_time_pop_sum)
+        printf("Static POP time is better than list on: %0.6lf%%\n", (double)ls_time_pop_sum / (double)ss_time_pop_sum * 100.0);
+    else if (ss_time_pop_sum < ls_time_pop_sum)
+        printf("List POP time is better than static on: %0.6lf%%\n", (double)ss_time_pop_sum / (double)ls_time_pop_sum * 100.0);
+    else 
+        printf("List POP time and static POP time are equal\n");
 
     static_stack_free(static_stack);
     list_stack_free(list_stack_head);
