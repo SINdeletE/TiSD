@@ -1,5 +1,13 @@
 #include "static_queue_tools.h"
 
+void static_init(static_queue_t *queue)
+{
+    queue->size = 0;
+    
+    queue->head = queue->times;
+    queue->tail = queue->times;
+}
+
 int static_empty(static_queue_t *queue)
 {
     if (queue->size == 0)

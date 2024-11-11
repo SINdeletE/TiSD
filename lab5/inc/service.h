@@ -18,5 +18,8 @@
 #define T4_MAX 1
 
 #define MAX_PRCS_COUNT 1000
+#define INFO_PRCS_COUNT 100
+
+void static_service(static_queue_t *fst_queue, static_queue_t *sec_queue);
 
 #endif

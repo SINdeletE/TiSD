@@ -15,6 +15,7 @@ typedef struct
     double *tail;
 } static_queue_t;
 
+void static_init(static_queue_t *queue);
 int static_empty(static_queue_t *queue);
 size_t static_size(static_queue_t *queue);
 int static_push(double time, static_queue_t *queue);

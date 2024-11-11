@@ -22,7 +22,6 @@ size_t list_size(list_queue_t *queue)
 
 int list_push(double time, list_queue_t *queue)
 {
-    queue_data_t *iter = NULL;
     queue_data_t *tmp = NULL;
 
     if ((tmp = calloc(1, sizeof(queue_data_t))) == NULL)
