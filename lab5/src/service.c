@@ -45,7 +45,6 @@ size_t static_push_by_delta(static_queue_t *queue, double *T, double delta, int 
 void static_service(static_queue_t *fst_queue, static_queue_t *sec_queue)
 {
     bool flag = true;
-
     bool OA_is_empty = true;
 
     size_t fst_prcs_count = 0;
@@ -82,7 +81,7 @@ void static_service(static_queue_t *fst_queue, static_queue_t *sec_queue)
         fst_total_push += static_push_by_delta(fst_queue, &T1, delta, T1_MIN, T1_MAX, T3_MIN, T3_MAX);
         sec_total_push += static_push_by_delta(sec_queue, &T2, delta, T2_MIN, T2_MAX, T4_MIN, T4_MAX);
 
-        if (fst_prcs_count == MAX_PRCS_COUNT)
+        if (fst_prcs_count == MAX_PRCS_COUNT + 1)
         {
             flag = false;
             
@@ -91,21 +90,21 @@ void static_service(static_queue_t *fst_queue, static_queue_t *sec_queue)
         else if (fst_prcs_count % INFO_PRCS_COUNT == 0 && fst_prcs_count && fst_prcs_count != fst_prcs_last)
         {
             printf("\n1-st type request:\n");
-            printf("processed: %zu\n", fst_prcs_count);
-            printf("Elements count: %zu\n", static_size(fst_queue));
-            printf("total pushed: %zu\n", fst_total_push);
-            printf("total popped: %zu\n", fst_total_pop);
+            printf("processed: %zu elements\n", fst_prcs_count);
+            printf("Elements count: %zu elements\n", static_size(fst_queue));
+            printf("total pushed: %zu elements\n", fst_total_push);
+            printf("total popped: %zu elements\n", fst_total_pop);
 
             printf("\n2-nd type request:\n");
-            printf("Elements count: %zu\n", static_size(sec_queue));
-            printf("total pushed: %zu\n", sec_total_push);
-            printf("total popped: %zu\n", sec_total_pop);
+            printf("Elements count: %zu elements\n", static_size(sec_queue));
+            printf("total pushed: %zu elements\n", sec_total_push);
+            printf("total popped: %zu elements\n", sec_total_pop);
 
-            printf("\nTotal pushed: %zu\n", fst_total_push + sec_total_push);
-            printf("Total popped: %zu\n", fst_total_pop + sec_total_pop);
-            printf("Time: %.6lf\n", total_time);
+            printf("\nTotal pushed: %zu elements\n", fst_total_push + sec_total_push);
+            printf("Total popped: %zu elements\n", fst_total_pop + sec_total_pop);
+            printf("Time: %.6lf units\n", total_time);
             
-            printf("\n----------");
+            printf("\n--------------------------------");
 
             fst_prcs_last = fst_prcs_count;
         }
@@ -134,14 +133,17 @@ void static_service(static_queue_t *fst_queue, static_queue_t *sec_queue)
         }
 
         if (OA_is_empty) // если очередь пустая, а элементов нет, переходим на delta_time = min(2-х заявок)
-        {
             delta = min(T1, T2);
-
-            continue;
-        }
         else
             delta = OA_request_time;
 
         total_iterations++;
     }
+
+    printf("\nTOTAL DATA\n\n");
+    printf("required size: %zu bytes\n", sizeof(static_queue_t) + sizeof(static_queue_t));
+    printf("model time: %.6lf units\n", total_time);
+    printf("total iterations: %zu\n", total_iterations);
+
+    printf("\n--------------------------------");
 }
