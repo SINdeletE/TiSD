@@ -4,7 +4,7 @@
 
 #include <stddef.h>
 
-#define MAX_QUEUE_SIZE 512
+#define MAX_QUEUE_SIZE 256
 
 typedef struct
 {
@@ -15,6 +15,7 @@ typedef struct
     double *tail;
 } static_queue_t;
 
+void static_free(static_queue_t *queue);
 void static_init(static_queue_t *queue);
 int static_empty(static_queue_t *queue);
 size_t static_size(static_queue_t *queue);

@@ -55,3 +55,10 @@ int static_pop(double *time, static_queue_t *queue)
 
     return 0;
 }
+
+void static_free(static_queue_t *queue)
+{
+    double tmp;
+
+    while (! static_pop(&tmp, queue));
+}

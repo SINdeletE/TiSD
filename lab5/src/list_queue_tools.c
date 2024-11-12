@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include "list_queue_tools.h"
+#include "addresses_tools.h"
 
 int list_empty(list_queue_t *queue)
 {
@@ -12,12 +13,38 @@ int list_empty(list_queue_t *queue)
 
 size_t list_size(list_queue_t *queue)
 {
-    size_t size;
+    size_t size = 0;
 
-    for (queue_data_t *iter = queue->head; iter->next; iter = iter->next)
+    for (queue_data_t *iter = queue->head; iter; iter = iter->next)
         size++;
 
     return size;
+}
+
+int list_push_with_addresses(double time, list_queue_t *queue)
+{
+    queue_data_t *tmp = NULL;
+
+    if ((tmp = calloc(1, sizeof(queue_data_t))) == NULL)
+        return 1;
+
+    addresses_add(tmp);
+
+    tmp->time = time;
+    tmp->next = NULL;
+
+    if (! queue->head)
+        queue->head = tmp;
+    
+    if (! queue->tail)
+        queue->tail = tmp;
+    else
+    {
+        queue->tail->next = tmp;
+        queue->tail = queue->tail->next;
+    }
+
+    return 0;
 }
 
 int list_push(double time, list_queue_t *queue)
@@ -62,4 +89,11 @@ int list_pop(double *time, list_queue_t *queue)
     free(tmp);
 
     return 0;
+}
+
+void list_free(list_queue_t *queue)
+{
+    double tmp;
+
+    while (! list_pop(&tmp, queue));
 }
