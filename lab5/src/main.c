@@ -18,7 +18,8 @@
 #define CODE_STATIC_SERVICE 1
 #define CODE_LIST_SERVICE 2
 #define CODE_LIST_ADDRESSES 3
-#define CODE_EXIT 4
+#define CODE_COMPARE_TIMES 4
+#define CODE_EXIT 5
 
 int clear_buf(FILE *f);
 
@@ -56,9 +57,10 @@ int main(void)
         printf("\nEnter a number of command:\n");
         printf("1. Execute service (static queue)\n");
         printf("2. Execute service (list queue)\n");
-        printf("3. Output addresses");
+        printf("3. Output addresses\n");
+        printf("4. Compare REAL worktimes\n");
 
-        printf("\n4. Exit program\n");
+        printf("\n5. Exit program\n");
         printf("\n--------------------------------\n");
 
         printf("Code: ");
@@ -90,6 +92,10 @@ int main(void)
                     printf("\nFRAGMENTATION: NO\n");
                 else
                     printf("\nFRAGMENTATION: YES\n");
+
+                break;
+            case CODE_COMPARE_TIMES:
+                time_comparing(&first_static_queue, &second_static_queue, &first_list_queue, &second_list_queue);
 
                 break;
             case CODE_EXIT:

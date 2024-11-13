@@ -115,6 +115,9 @@ double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue)
     double fst_out_model_time = 0.0;
     double sec_out_model_time = 0.0;
 
+    double fst_model_time = 0.0;
+    double sec_model_time = 0.0;
+
     //
 
     size_t total_iterations = 0;
@@ -227,41 +230,111 @@ double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue)
     }
 
     printf("\nTOTAL DATA\n\n");
-    printf("Required size: %zu bytes\n", 2 * sizeof(static_queue_t));
+    printf("Required size: %zu bytes\n", max_requests * sizeof(list_queue_t));
     printf("Total time: %.6lf units\n", total_time);
 
     printf("\nTotal pushed (1-st queue): %zu elements\n", fst_total_push);
     printf("Total popped (1-st queue): %zu elements\n", fst_total_pop);
 
-    tmp = max(fst_in_model_time, fst_out_model_time);
-    printf("model time (1-st queue): %.6lf units\n", tmp);
+    fst_model_time = max(fst_in_model_time, fst_out_model_time);
+    printf("model time (1-st queue): %.6lf units\n", fst_model_time);
 
-    // printf("Calculated average elements count: %.6lf\n", tmp = fst_in_model_time / (T1_AVG));
-    // printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - fst_total_push) / min(tmp, fst_total_push));
+    tmp = fst_in_model_time / (T1_AVG);
+    // printf("Calculated average elements count: %.6lf\n", tmp);
+    printf("Error (in): %.6lf%% \n", 100.0 * fabs(tmp - fst_total_push) / min(tmp, fst_total_push));
 
     downtime = fst_in_model_time - fst_out_model_time;
-    tmp = downtime + fst_total_pop * (T3_AVG);
-    printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - fst_in_model_time) / min(tmp, fst_in_model_time));
+    fst_model_time = downtime + fst_total_pop * (T3_AVG);
+    printf("Error (out): %.6lf%% \n", 100.0 * fabs(fst_model_time - fst_in_model_time) / min(fst_model_time, fst_in_model_time));
 
     // --------------------------
 
     printf("\nTotal pushed (2-st queue): %zu elements\n", sec_total_push);
     printf("Total popped (2-st queue): %zu elements\n", sec_total_pop);
-    printf("model time (2-st queue): %.6lf units\n", max(sec_in_model_time, sec_out_model_time));
 
-    tmp = max(sec_in_model_time, sec_out_model_time);
-    printf("model time (2-st queue): %.6lf units\n", tmp);
+    sec_model_time = max(sec_in_model_time, sec_out_model_time);
+    printf("model time (2-st queue): %.6lf units\n", sec_model_time);
     downtime = sec_in_model_time - sec_out_model_time;
-    tmp = downtime + sec_total_pop * (T4_AVG);
-    printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - sec_in_model_time) / min(tmp, sec_in_model_time));
+    sec_model_time = downtime + sec_total_pop * (T4_AVG);
+    printf("Error (out): %.6lf%% \n", 100.0 * fabs(sec_model_time - sec_in_model_time) / min(sec_model_time, sec_in_model_time));
 
-    printf("\nModel time: %0.6lf units\n", model_time);
+    // printf("\nModel time: %0.6lf units\n", model_time); // НО ТУТ ХЗ
 
     printf("\n--------------------------------");
 
     return total_time;
 }
 
+void static_push_by_delta_no_stats(static_queue_t *queue, double *T, double delta, int T_min, int T_max, int T_prcs_min, int T_prcs_max)
+{
+    while (delta - *T > -EPS)
+    {
+        if (static_push(rand_get(T_prcs_min, T_prcs_max), queue))
+            return;
+
+        delta -= *T;
+        *T = rand_get(T_min, T_max);
+    }
+
+    *T -= delta;
+}
+
+void static_service_no_stats(static_queue_t *fst_queue, static_queue_t *sec_queue)
+{
+    bool flag = true;
+    bool OA_is_empty = true;
+
+    size_t fst_prcs_count = 0;
+
+    double delta = 0.0;
+
+    double T1, T2;
+    double OA_request_time = 0.0;
+
+    srand(time(NULL));
+
+    T1 = rand_get(T1_MIN, T1_MAX);
+    T2 = rand_get(T2_MIN, T2_MAX);
+
+    while (flag)
+    {
+        static_push_by_delta_no_stats(fst_queue, &T1, delta, T1_MIN, T1_MAX, T3_MIN, T3_MAX);
+
+        static_push_by_delta_no_stats(sec_queue, &T2, delta, T2_MIN, T2_MAX, T4_MIN, T4_MAX);
+
+        if (fst_prcs_count == MAX_PRCS_COUNT + 1)
+        {
+            flag = false;
+            
+            break;
+        }
+
+        if (static_pop(&OA_request_time, fst_queue))
+        {
+            if (static_pop(&OA_request_time, sec_queue))
+            {
+                OA_is_empty = true;
+            }
+            else
+            {
+                OA_is_empty = false;
+            }
+        }
+        else
+        {
+            fst_prcs_count++;
+
+            OA_is_empty = false;
+        }
+
+        if (OA_is_empty)
+            delta = min(T1, T2);
+        else
+        {
+            delta = OA_request_time;
+        }
+    }
+}
 
 
 // -----------------------------------------------
@@ -352,6 +425,9 @@ double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue)
 
     double fst_out_model_time = 0.0;
     double sec_out_model_time = 0.0;
+
+    double fst_model_time = 0.0;
+    double sec_model_time = 0.0;
 
     //
 
@@ -471,31 +547,139 @@ double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue)
     printf("\nTotal pushed (1-st queue): %zu elements\n", fst_total_push);
     printf("Total popped (1-st queue): %zu elements\n", fst_total_pop);
 
-    tmp = max(fst_in_model_time, fst_out_model_time);
-    printf("model time (1-st queue): %.6lf units\n", tmp);
+    fst_model_time = max(fst_in_model_time, fst_out_model_time);
+    printf("model time (1-st queue): %.6lf units\n", fst_model_time);
 
-    // printf("Calculated average elements count: %.6lf\n", tmp = fst_in_model_time / (T1_AVG));
-    // printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - fst_total_push) / min(tmp, fst_total_push));
+    tmp = fst_in_model_time / (T1_AVG);
+    // printf("Calculated average elements count: %.6lf\n", tmp);
+    printf("Error (in): %.6lf%% \n", 100.0 * fabs(tmp - fst_total_push) / min(tmp, fst_total_push));
 
     downtime = fst_in_model_time - fst_out_model_time;
-    tmp = downtime + fst_total_pop * (T3_AVG);
-    printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - fst_in_model_time) / min(tmp, fst_in_model_time));
+    fst_model_time = downtime + fst_total_pop * (T3_AVG);
+    printf("Error (out): %.6lf%% \n", 100.0 * fabs(fst_model_time - fst_in_model_time) / min(fst_model_time, fst_in_model_time));
 
     // --------------------------
 
     printf("\nTotal pushed (2-st queue): %zu elements\n", sec_total_push);
     printf("Total popped (2-st queue): %zu elements\n", sec_total_pop);
-    printf("model time (2-st queue): %.6lf units\n", max(sec_in_model_time, sec_out_model_time));
 
-    tmp = max(sec_in_model_time, sec_out_model_time);
-    printf("model time (2-st queue): %.6lf units\n", tmp);
+    sec_model_time = max(sec_in_model_time, sec_out_model_time);
+    printf("model time (2-st queue): %.6lf units\n", sec_model_time);
     downtime = sec_in_model_time - sec_out_model_time;
-    tmp = downtime + sec_total_pop * (T4_AVG);
-    printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - sec_in_model_time) / min(tmp, sec_in_model_time));
+    sec_model_time = downtime + sec_total_pop * (T4_AVG);
+    printf("Error (out): %.6lf%% \n", 100.0 * fabs(sec_model_time - sec_in_model_time) / min(sec_model_time, sec_in_model_time));
 
-    printf("\nModel time: %0.6lf units\n", model_time);
+    // printf("\nModel time: %0.6lf units\n", model_time); // НО ТУТ ХЗ
 
     printf("\n--------------------------------");
 
     return total_time;
+}
+
+void list_push_by_delta_no_stats(list_queue_t *queue, double *T, double delta, int T_min, int T_max, int T_prcs_min, int T_prcs_max)
+{
+    while (delta - *T > -EPS)
+    {
+        list_push(rand_get(T_prcs_min, T_prcs_max), queue);
+
+        delta -= *T;
+        *T = rand_get(T_min, T_max);
+    }
+
+    *T -= delta;
+}
+
+void list_service_no_stats(list_queue_t *fst_queue, list_queue_t *sec_queue)
+{
+    bool flag = true;
+    bool OA_is_empty = true;
+
+    size_t fst_prcs_count = 0;
+
+    double delta = 0.0;
+
+    double T1, T2;
+    double OA_request_time = 0.0;
+
+    srand(time(NULL));
+
+    T1 = rand_get(T1_MIN, T1_MAX);
+    T2 = rand_get(T2_MIN, T2_MAX);
+
+    while (flag)
+    {
+        list_push_by_delta_no_stats(fst_queue, &T1, delta, T1_MIN, T1_MAX, T3_MIN, T3_MAX);
+
+        list_push_by_delta_no_stats(sec_queue, &T2, delta, T2_MIN, T2_MAX, T4_MIN, T4_MAX);
+
+        if (fst_prcs_count == MAX_PRCS_COUNT + 1)
+        {
+            flag = false;
+            
+            break;
+        }
+
+        if (list_pop(&OA_request_time, fst_queue))
+        {
+            if (list_pop(&OA_request_time, sec_queue))
+            {
+                OA_is_empty = true;
+            }
+            else
+            {
+                OA_is_empty = false;
+            }
+        }
+        else
+        {
+            fst_prcs_count++;
+
+            OA_is_empty = false;
+        }
+
+        if (OA_is_empty)
+            delta = min(T1, T2);
+        else
+        {
+            delta = OA_request_time;
+        }
+    }
+}
+
+void time_comparing(static_queue_t *static_fst_queue, static_queue_t *static_sec_queue, list_queue_t *list_fst_queue, list_queue_t *list_sec_queue)
+{
+    long time_static = 0;
+    long time_list = 0;
+
+    struct timespec t_beg, t_end;
+
+    printf("TIMES (nsec)\n");
+
+    for (size_t i = 0; i < TIME_COMPARING_ITER; i++)
+    {
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        static_service_no_stats(static_fst_queue, static_sec_queue);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+
+        static_free(static_fst_queue);
+        static_free(static_sec_queue);
+
+        time_static += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+    }
+
+    printf("Average static worktime: %.6lf\n", (double)time_static / TIME_COMPARING_ITER);
+
+    for (size_t i = 0; i < TIME_COMPARING_ITER; i++)
+    {
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        list_service_no_stats(list_fst_queue, list_sec_queue);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+
+        list_free(list_fst_queue);
+        list_free(list_sec_queue);
+
+        time_list += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+    }
+
+    printf("Average list worktime: %.6lf\n", (double)time_list / TIME_COMPARING_ITER);
 }

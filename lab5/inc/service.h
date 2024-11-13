@@ -25,7 +25,14 @@
 #define MAX_PRCS_COUNT 1000
 #define INFO_PRCS_COUNT 100
 
+#define TIME_COMPARING_ITER 500
+
 double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue);
 double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue);
+
+void static_service_no_stats(static_queue_t *fst_queue, static_queue_t *sec_queue);
+void list_service_no_stats(list_queue_t *fst_queue, list_queue_t *sec_queue);
+
+void time_comparing(static_queue_t *static_fst_queue, static_queue_t *static_sec_queue, list_queue_t *list_fst_queue, list_queue_t *list_sec_queue);
 
 #endif
