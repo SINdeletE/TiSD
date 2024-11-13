@@ -6,6 +6,8 @@
 
 #include "service.h"
 
+#define STR_TABLE_SIZE 8
+
 #define EPS 1e-8
 
 double rand_get(double l, double r)
@@ -36,7 +38,6 @@ size_t static_push_by_delta(static_queue_t *queue, double *T, double delta, int 
     size_t total_pushes = 0;
     size_t additional_size_livetime = 0;
     size_t start_size = static_size(queue);
-
 
     while (delta - *T > -EPS)
     {
@@ -246,6 +247,9 @@ double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue)
     downtime = fst_in_model_time - fst_out_model_time;
     fst_model_time = downtime + fst_total_pop * (T3_AVG);
     printf("Error (out): %.6lf%% \n", 100.0 * fabs(fst_model_time - fst_in_model_time) / min(fst_model_time, fst_in_model_time));
+    
+    tmp = fst_total_push * (T1_AVG) + fst_total_pop * (T3_AVG);
+    printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - (fst_in_model_time + fst_out_model_time)) / min(tmp, fst_in_model_time + fst_out_model_time));
 
     // --------------------------
 
@@ -254,9 +258,17 @@ double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue)
 
     sec_model_time = max(sec_in_model_time, sec_out_model_time);
     printf("model time (2-st queue): %.6lf units\n", sec_model_time);
+
+    tmp = sec_in_model_time / (T2_AVG);
+    // printf("Calculated average elements count: %.6lf\n", tmp);
+    printf("Error (in): %.6lf%% \n", 100.0 * fabs(tmp - sec_total_push) / min(tmp, sec_total_push));
+
     downtime = sec_in_model_time - sec_out_model_time;
     sec_model_time = downtime + sec_total_pop * (T4_AVG);
     printf("Error (out): %.6lf%% \n", 100.0 * fabs(sec_model_time - sec_in_model_time) / min(sec_model_time, sec_in_model_time));
+
+    tmp = sec_total_push * (T2_AVG) + sec_total_pop * (T4_AVG);
+    printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - (sec_in_model_time + sec_out_model_time)) / min(tmp, sec_in_model_time + sec_out_model_time));
 
     // printf("\nModel time: %0.6lf units\n", model_time); // НО ТУТ ХЗ
 
@@ -557,6 +569,9 @@ double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue)
     downtime = fst_in_model_time - fst_out_model_time;
     fst_model_time = downtime + fst_total_pop * (T3_AVG);
     printf("Error (out): %.6lf%% \n", 100.0 * fabs(fst_model_time - fst_in_model_time) / min(fst_model_time, fst_in_model_time));
+    
+    tmp = fst_total_push * (T1_AVG) + fst_total_pop * (T3_AVG);
+    printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - (fst_in_model_time + fst_out_model_time)) / min(tmp, fst_in_model_time + fst_out_model_time));
 
     // --------------------------
 
@@ -565,9 +580,17 @@ double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue)
 
     sec_model_time = max(sec_in_model_time, sec_out_model_time);
     printf("model time (2-st queue): %.6lf units\n", sec_model_time);
+
+    tmp = sec_in_model_time / (T2_AVG);
+    // printf("Calculated average elements count: %.6lf\n", tmp);
+    printf("Error (in): %.6lf%% \n", 100.0 * fabs(tmp - sec_total_push) / min(tmp, sec_total_push));
+
     downtime = sec_in_model_time - sec_out_model_time;
     sec_model_time = downtime + sec_total_pop * (T4_AVG);
     printf("Error (out): %.6lf%% \n", 100.0 * fabs(sec_model_time - sec_in_model_time) / min(sec_model_time, sec_in_model_time));
+
+    tmp = sec_total_push * (T2_AVG) + sec_total_pop * (T4_AVG);
+    printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - (sec_in_model_time + sec_out_model_time)) / min(tmp, sec_in_model_time + sec_out_model_time));
 
     // printf("\nModel time: %0.6lf units\n", model_time); // НО ТУТ ХЗ
 
@@ -648,12 +671,27 @@ void list_service_no_stats(list_queue_t *fst_queue, list_queue_t *sec_queue)
 
 void time_comparing(static_queue_t *static_fst_queue, static_queue_t *static_sec_queue, list_queue_t *list_fst_queue, list_queue_t *list_sec_queue)
 {
+    double c = 0.0;
+
     long time_static = 0;
     long time_list = 0;
 
+    size_t ss_mem_size = 0, ls_mem_size = 0;
+    long ss_time_push = 0, ls_time_push = 0;
+    long ss_time_pop = 0, ls_time_pop = 0;
+
+    long ss_time_push_sum = 0, ls_time_push_sum = 0;
+    long ss_time_pop_sum = 0, ls_time_pop_sum = 0;
+    size_t elems = 0;
+
     struct timespec t_beg, t_end;
 
-    printf("TIMES (nsec)\n");
+    static_free(static_fst_queue);
+    static_free(static_sec_queue);
+    list_free(list_fst_queue);
+    list_free(list_sec_queue);
+
+    // TIME SERVICE
 
     for (size_t i = 0; i < TIME_COMPARING_ITER; i++)
     {
@@ -667,8 +705,6 @@ void time_comparing(static_queue_t *static_fst_queue, static_queue_t *static_sec
         time_static += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
     }
 
-    printf("Average static worktime: %.6lf\n", (double)time_static / TIME_COMPARING_ITER);
-
     for (size_t i = 0; i < TIME_COMPARING_ITER; i++)
     {
         clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
@@ -681,5 +717,138 @@ void time_comparing(static_queue_t *static_fst_queue, static_queue_t *static_sec
         time_list += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
     }
 
-    printf("Average list worktime: %.6lf\n", (double)time_list / TIME_COMPARING_ITER);
+    static_free(static_fst_queue);
+    static_free(static_sec_queue);
+    list_free(list_fst_queue);
+    list_free(list_sec_queue);
+
+    printf("\nSTATISTICS (time in nsec) (memory in bytes) (STATIC QUEUE SIZE IS %d)\n", MAX_QUEUE_SIZE);
+
+    printf("N count |");
+    printf("PUSH t (static) |");
+    printf(" POP t (static) |");
+    printf("  PUSH t (list) |");
+    printf("   POP t (list) |");
+    printf("Memory (static) |");
+    printf(" Memory (list)  |");
+    printf("  best t (PUSH) |");
+    printf("  best t (POP)  |");
+    printf("  best memory   |\n");
+
+    for (size_t n_elems = 2; n_elems < MAX_QUEUE_SIZE; n_elems *= 2)
+    {
+        ss_time_push = 0;
+        ls_time_push = 0;
+        ss_time_pop = 0;
+        ls_time_pop = 0;
+
+        ss_mem_size = sizeof(static_queue_t);
+        ls_mem_size = sizeof(list_queue_t) * n_elems + sizeof(list_queue_t *) + 2 * sizeof(queue_data_t);
+
+        // // Чтобы адреса не портили результаты статистики
+        // while (addresses_cap() < addresses_size() + n_elems)
+        //     addresses_realloc();
+
+        for (size_t i = 0; i < TIME_COMPARING_ITER; i++)
+        {
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+            for (size_t i = 0; i < n_elems; i++)
+                static_push('[', static_fst_queue);
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+            ss_time_push += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+            
+
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+            for (size_t i = 0; i < n_elems; i++)
+                static_pop(&c, static_fst_queue);
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+            ss_time_pop += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+            
+        }
+
+        ss_time_push /= TIME_COMPARING_ITER;
+        ss_time_pop /= TIME_COMPARING_ITER;
+
+        for (size_t i = 0; i < TIME_COMPARING_ITER; i++)
+        {
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+            for (size_t i = 0; i < n_elems; i++)
+                list_push('[', list_fst_queue);
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+            ls_time_push += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+            
+
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+            for (size_t i = 0; i < n_elems; i++)
+                list_pop(&c, list_fst_queue);
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+            ls_time_pop += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+            
+        }
+
+        ls_time_push /= TIME_COMPARING_ITER;
+        ls_time_pop /= TIME_COMPARING_ITER;
+
+        printf("%-*zu|", STR_TABLE_SIZE, n_elems);
+        printf("%-*ld|", STR_TABLE_SIZE * 2, ss_time_push);
+        printf("%-*ld|", STR_TABLE_SIZE * 2, ss_time_pop);
+        printf("%-*ld|", STR_TABLE_SIZE * 2, ls_time_push);
+        printf("%-*ld|", STR_TABLE_SIZE * 2, ls_time_pop);
+        printf("%-*zu|", STR_TABLE_SIZE * 2, ss_mem_size);
+        printf("%-*zu|", STR_TABLE_SIZE * 2, ls_mem_size);
+        if (ss_time_push < ls_time_push)
+            printf("     STATIC     |");
+        else if (ss_time_push > ls_time_push)
+            printf("      LIST      |");
+        else 
+            printf("      EQUAL     |");
+
+        if (ss_time_pop < ls_time_pop)
+            printf("     STATIC     |");
+        else if (ss_time_pop > ls_time_pop)
+            printf("      LIST      |");
+        else 
+            printf("      EQUAL     |");
+        
+        if (ss_mem_size < ls_mem_size)
+            printf("     STATIC     |");
+        else if (ss_mem_size > ls_mem_size)
+            printf("      LIST      |");
+        else 
+            printf("      EQUAL     |");
+        
+        printf("\n");
+
+        ss_time_push_sum += ss_time_push;
+        ss_time_pop_sum += ss_time_pop;
+
+        ls_time_push_sum += ls_time_push;
+        ls_time_pop_sum += ls_time_pop;
+
+        elems += n_elems;
+    }
+
+    printf("\nAverage service time (static): %0.6lf", (double)time_static / TIME_COMPARING_ITER);
+    printf("\nAverage push time (static): %0.6lf", (double)ss_time_push_sum / elems);
+    printf("\nAverage pop time (static):  %0.6lf", (double)ss_time_pop_sum / elems);
+    printf("\n\nAverage service time (list): %0.6lf", (double)time_list / TIME_COMPARING_ITER);
+    printf("\nAverage push time (list):  %0.6lf", (double)ls_time_push_sum / elems);
+    printf("\nAverage pop time (list): %0.6lf\n\n", (double)ls_time_pop_sum / elems);
+
+    if (ss_time_push_sum < ls_time_push_sum)
+        printf("Static PUSH time is better than list on: %0.6lf%%\n", (double)ls_time_push_sum / (double)ss_time_push_sum * 100.0);
+    else if (ss_time_push_sum < ls_time_push_sum)
+        printf("List PUSH time is better than static on: %0.6lf%%\n", (double)ss_time_push_sum / (double)ls_time_push_sum * 100.0);
+    else 
+        printf("List PUSH time and static PUSH time are equal\n");
+
+    if (ss_time_pop_sum < ls_time_pop_sum)
+        printf("Static POP time is better than list on: %0.6lf%%\n", (double)ls_time_pop_sum / (double)ss_time_pop_sum * 100.0);
+    else if (ss_time_pop_sum < ls_time_pop_sum)
+        printf("List POP time is better than static on: %0.6lf%%\n", (double)ss_time_pop_sum / (double)ls_time_pop_sum * 100.0);
+    else 
+        printf("List POP time and static POP time are equal\n");
+
+    static_free(static_fst_queue);
+    list_free(list_fst_queue);
 }

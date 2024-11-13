@@ -4,7 +4,7 @@
 
 #include <stddef.h>
 
-#define STACK_MAX_SIZE 40000
+#define STACK_MAX_SIZE 2049
 #define ITER_COUNT 1000
 
 #define CHECK_CORRECT 0

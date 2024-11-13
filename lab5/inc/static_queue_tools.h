@@ -4,7 +4,7 @@
 
 #include <stddef.h>
 
-#define MAX_QUEUE_SIZE 256
+#define MAX_QUEUE_SIZE 2049
 
 typedef struct
 {
