@@ -2,8 +2,8 @@
 #include <stddef.h>
 #include <ctype.h>
 #include <stdbool.h>
-#include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "static_queue_tools.h"
 #include "list_queue_tools.h"
@@ -97,7 +97,7 @@ int main(void)
                 printf("Enter T1_MAX (enter invalid value if you want to skip): ");
                 tmp = T1_MAX;
                 if (scanf("%lf", &T1_MAX) != 1){}
-                if (clear_buf(stdin) || T1_MAX - T1_MIN < -EPS)
+                if (clear_buf(stdin) || T1_MAX - T1_MIN < -EPS || (fabs(T1_MIN) < EPS && fabs(T1_MAX) < EPS))
                     T1_MAX = tmp;
 
                 printf("Enter T2_MIN (enter invalid value if you want to skip): ");
@@ -109,7 +109,7 @@ int main(void)
                 printf("Enter T2_MAX (enter invalid value if you want to skip): ");
                 tmp = T2_MAX;
                 if (scanf("%lf", &T2_MAX) != 1){}
-                if (clear_buf(stdin) || T2_MAX - T2_MIN < -EPS)
+                if (clear_buf(stdin) || T2_MAX - T2_MIN < -EPS || (fabs(T2_MIN) < EPS && fabs(T2_MAX) < EPS))
                     T2_MAX = tmp;
 
                 printf("Enter T3_MIN (enter invalid value if you want to skip): ");
@@ -121,7 +121,7 @@ int main(void)
                 printf("Enter T3_MAX (enter invalid value if you want to skip): ");
                 tmp = T3_MAX;
                 if (scanf("%lf", &T3_MAX) != 1){}
-                if (clear_buf(stdin) || T3_MAX - T3_MIN < -EPS)
+                if (clear_buf(stdin) || T3_MAX - T3_MIN < -EPS || (fabs(T3_MIN) < EPS && fabs(T3_MAX) < EPS))
                     T3_MAX = tmp;
 
                 printf("Enter T4_MIN (enter invalid value if you want to skip): ");
@@ -133,7 +133,7 @@ int main(void)
                 printf("Enter T4_MAX (enter invalid value if you want to skip): ");
                 tmp = T4_MAX;
                 if (scanf("%lf", &T4_MAX) != 1){}
-                if (clear_buf(stdin) || T4_MAX - T4_MIN < -EPS)
+                if (clear_buf(stdin) || T4_MAX - T4_MIN < -EPS || (fabs(T4_MIN) < EPS && fabs(T4_MAX) < EPS))
                     T4_MAX = tmp;
 
                 break;
