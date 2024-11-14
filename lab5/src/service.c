@@ -33,7 +33,7 @@ double min(double d1, double d2)
         return d2;
 }
 
-size_t static_push_by_delta(static_queue_t *queue, double *T, double delta, int T_min, int T_max, int T_prcs_min, int T_prcs_max, double *in_time, double *total_time, bool is_end)
+size_t static_push_by_delta(static_queue_t *queue, double *T, double delta, const double T_min, const double T_max, const double T_prcs_min, const double T_prcs_max, double *in_time, double *total_time, bool is_end)
 {
     size_t total_pushes = 0;
     size_t additional_size_livetime = 0;
@@ -64,12 +64,17 @@ size_t static_push_by_delta(static_queue_t *queue, double *T, double delta, int 
     return total_pushes;
 }
 
-double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue)
+double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue, double T1_MIN, double T1_MAX, double T2_MIN, double T2_MAX, double T3_MIN, double T3_MAX, double T4_MIN, double T4_MAX)
 {
     double tmp;
 
     bool flag = true;
     bool OA_is_empty = true;
+
+    const double T1_AVG = (T1_MAX + T1_MIN) / 2.0;
+    const double T2_AVG = (T2_MAX + T2_MIN) / 2.0;
+    const double T3_AVG = (T3_MAX + T3_MIN) / 2.0;
+    const double T4_AVG = (T4_MAX + T4_MIN) / 2.0;
 
     size_t fst_prcs_count = 0;
 
@@ -277,7 +282,7 @@ double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue)
     return total_time;
 }
 
-void static_push_by_delta_no_stats(static_queue_t *queue, double *T, double delta, int T_min, int T_max, int T_prcs_min, int T_prcs_max)
+void static_push_by_delta_no_stats(static_queue_t *queue, double *T, double delta, const double T_min, const double T_max, const double T_prcs_min, const double T_prcs_max)
 {
     while (delta - *T > -EPS)
     {
@@ -291,7 +296,7 @@ void static_push_by_delta_no_stats(static_queue_t *queue, double *T, double delt
     *T -= delta;
 }
 
-void static_service_no_stats(static_queue_t *fst_queue, static_queue_t *sec_queue)
+void static_service_no_stats(static_queue_t *fst_queue, static_queue_t *sec_queue, double T1_MIN, double T1_MAX, double T2_MIN, double T2_MAX, double T3_MIN, double T3_MAX, double T4_MIN, double T4_MAX)
 {
     bool flag = true;
     bool OA_is_empty = true;
@@ -356,7 +361,7 @@ void static_service_no_stats(static_queue_t *fst_queue, static_queue_t *sec_queu
 
 
 
-size_t list_push_by_delta_with_addresses(list_queue_t *queue, double *T, double delta, int T_min, int T_max, int T_prcs_min, int T_prcs_max, double *in_time, double *total_time, bool is_end)
+size_t list_push_by_delta_with_addresses(list_queue_t *queue, double *T, double delta, const double T_min, const double T_max, const double T_prcs_min, const double T_prcs_max, double *in_time, double *total_time, bool is_end)
 {
     size_t total_pushes = 0;
     size_t additional_size_livetime = 0;
@@ -386,12 +391,17 @@ size_t list_push_by_delta_with_addresses(list_queue_t *queue, double *T, double 
     return total_pushes;
 }
 
-double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue)
+double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue, double T1_MIN, double T1_MAX, double T2_MIN, double T2_MAX, double T3_MIN, double T3_MAX, double T4_MIN, double T4_MAX)
 {
     double tmp;
 
     bool flag = true;
     bool OA_is_empty = true;
+
+    const double T1_AVG = (T1_MAX + T1_MIN) / 2.0;
+    const double T2_AVG = (T2_MAX + T2_MIN) / 2.0;
+    const double T3_AVG = (T3_MAX + T3_MIN) / 2.0;
+    const double T4_AVG = (T4_MAX + T4_MIN) / 2.0;
 
     size_t fst_prcs_count = 0;
 
@@ -599,7 +609,7 @@ double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue)
     return total_time;
 }
 
-void list_push_by_delta_no_stats(list_queue_t *queue, double *T, double delta, int T_min, int T_max, int T_prcs_min, int T_prcs_max)
+void list_push_by_delta_no_stats(list_queue_t *queue, double *T, double delta, const double T_min, const double T_max, const double T_prcs_min, const double T_prcs_max)
 {
     while (delta - *T > -EPS)
     {
@@ -612,7 +622,7 @@ void list_push_by_delta_no_stats(list_queue_t *queue, double *T, double delta, i
     *T -= delta;
 }
 
-void list_service_no_stats(list_queue_t *fst_queue, list_queue_t *sec_queue)
+void list_service_no_stats(list_queue_t *fst_queue, list_queue_t *sec_queue, double T1_MIN, double T1_MAX, double T2_MIN, double T2_MAX, double T3_MIN, double T3_MAX, double T4_MIN, double T4_MAX)
 {
     bool flag = true;
     bool OA_is_empty = true;
@@ -669,7 +679,7 @@ void list_service_no_stats(list_queue_t *fst_queue, list_queue_t *sec_queue)
     }
 }
 
-void time_comparing(static_queue_t *static_fst_queue, static_queue_t *static_sec_queue, list_queue_t *list_fst_queue, list_queue_t *list_sec_queue)
+void time_comparing(static_queue_t *static_fst_queue, static_queue_t *static_sec_queue, list_queue_t *list_fst_queue, list_queue_t *list_sec_queue, double T1_MIN, double T1_MAX, double T2_MIN, double T2_MAX, double T3_MIN, double T3_MAX, double T4_MIN, double T4_MAX)
 {
     double c = 0.0;
 
@@ -696,7 +706,7 @@ void time_comparing(static_queue_t *static_fst_queue, static_queue_t *static_sec
     for (size_t i = 0; i < TIME_COMPARING_ITER; i++)
     {
         clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
-        static_service_no_stats(static_fst_queue, static_sec_queue);
+        static_service_no_stats(static_fst_queue, static_sec_queue, T1_MIN, T1_MAX, T2_MIN, T2_MAX, T3_MIN, T3_MAX, T4_MIN, T4_MAX);
         clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
 
         static_free(static_fst_queue);
@@ -708,7 +718,7 @@ void time_comparing(static_queue_t *static_fst_queue, static_queue_t *static_sec
     for (size_t i = 0; i < TIME_COMPARING_ITER; i++)
     {
         clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
-        list_service_no_stats(list_fst_queue, list_sec_queue);
+        list_service_no_stats(list_fst_queue, list_sec_queue, T1_MIN, T1_MAX, T2_MIN, T2_MAX, T3_MIN, T3_MAX, T4_MIN, T4_MAX);
         clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
 
         list_free(list_fst_queue);
