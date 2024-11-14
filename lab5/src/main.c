@@ -12,6 +12,8 @@
 
 #define _POSIX_C_SOURCE 200809L
 
+#define EPS 1e-8
+
 #define IO_OK 0
 #define IO_ERR_INVALID_DATA 1
 
@@ -89,49 +91,49 @@ int main(void)
                 printf("Enter T1_MIN (enter invalid value if you want to skip): ");
                 tmp = T1_MIN;
                 if (scanf("%lf", &T1_MIN) != 1){}
-                if (clear_buf(stdin))
+                if (clear_buf(stdin) || T1_MIN < -EPS)
                     T1_MIN = tmp;
 
                 printf("Enter T1_MAX (enter invalid value if you want to skip): ");
                 tmp = T1_MAX;
                 if (scanf("%lf", &T1_MAX) != 1){}
-                if (clear_buf(stdin))
+                if (clear_buf(stdin) || T1_MAX - T1_MIN < -EPS)
                     T1_MAX = tmp;
 
                 printf("Enter T2_MIN (enter invalid value if you want to skip): ");
                 tmp = T2_MIN;
                 if (scanf("%lf", &T2_MIN) != 1){}
-                if (clear_buf(stdin))
+                if (clear_buf(stdin) || T2_MIN < -EPS)
                     T2_MIN = tmp;
 
                 printf("Enter T2_MAX (enter invalid value if you want to skip): ");
                 tmp = T2_MAX;
                 if (scanf("%lf", &T2_MAX) != 1){}
-                if (clear_buf(stdin))
+                if (clear_buf(stdin) || T2_MAX - T2_MIN < -EPS)
                     T2_MAX = tmp;
 
                 printf("Enter T3_MIN (enter invalid value if you want to skip): ");
                 tmp = T3_MIN;
                 if (scanf("%lf", &T3_MIN) != 1){}
-                if (clear_buf(stdin))
+                if (clear_buf(stdin) || T3_MIN < -EPS)
                     T3_MIN = tmp;
 
                 printf("Enter T3_MAX (enter invalid value if you want to skip): ");
                 tmp = T3_MAX;
                 if (scanf("%lf", &T3_MAX) != 1){}
-                if (clear_buf(stdin))
+                if (clear_buf(stdin) || T3_MAX - T3_MIN < -EPS)
                     T3_MAX = tmp;
 
                 printf("Enter T4_MIN (enter invalid value if you want to skip): ");
                 tmp = T4_MIN;
                 if (scanf("%lf", &T4_MIN) != 1){}
-                if (clear_buf(stdin))
+                if (clear_buf(stdin) || T4_MIN < -EPS)
                     T4_MIN = tmp;
 
                 printf("Enter T4_MAX (enter invalid value if you want to skip): ");
                 tmp = T4_MAX;
                 if (scanf("%lf", &T4_MAX) != 1){}
-                if (clear_buf(stdin))
+                if (clear_buf(stdin) || T4_MAX - T4_MIN < -EPS)
                     T4_MAX = tmp;
 
                 break;
