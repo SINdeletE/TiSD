@@ -242,8 +242,14 @@ double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue, doub
     printf("\nTotal pushed (1-st queue): %zu elements\n", fst_total_push);
     printf("Total popped (1-st queue): %zu elements\n", fst_total_pop);
 
-    fst_model_time = max(fst_in_model_time, fst_out_model_time);
+    if (T1_AVG - T3_AVG > -EPS)
+        fst_model_time = fst_in_model_time;
+    else
+        fst_model_time = fst_out_model_time;
     printf("model time (1-st queue): %.6lf units\n", fst_model_time);
+
+    if (fst_in_model_time > fst_out_model_time)
+        printf("Downtime: %.6lf\n", fst_in_model_time - fst_out_model_time);
 
     tmp = fst_in_model_time / (T1_AVG);
     // printf("Calculated average elements count: %.6lf\n", tmp);
@@ -253,16 +259,29 @@ double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue, doub
     fst_model_time = downtime + fst_total_pop * (T3_AVG);
     printf("Error (out): %.6lf%% \n", 100.0 * fabs(fst_model_time - fst_in_model_time) / min(fst_model_time, fst_in_model_time));
     
-    tmp = fst_total_push * (T1_AVG) + fst_total_pop * (T3_AVG);
-    printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - (fst_in_model_time + fst_out_model_time)) / min(tmp, fst_in_model_time + fst_out_model_time));
+    if (T1_AVG - T3_AVG > -EPS)
+    {
+        tmp = fst_total_push * (T1_AVG);
+        printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - fst_in_model_time) / fst_in_model_time);
+    }
+    else
+    {
+        tmp = fst_total_pop * (T3_AVG);
+        printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - fst_out_model_time) / fst_out_model_time);
+    }
 
     // --------------------------
 
     printf("\nTotal pushed (2-st queue): %zu elements\n", sec_total_push);
     printf("Total popped (2-st queue): %zu elements\n", sec_total_pop);
 
-    sec_model_time = max(sec_in_model_time, sec_out_model_time);
+    if (T2_AVG - T4_AVG > -EPS)
+        sec_model_time = sec_in_model_time;
+    else
+        sec_model_time = sec_out_model_time;
     printf("model time (2-st queue): %.6lf units\n", sec_model_time);
+    if (sec_in_model_time > sec_out_model_time)
+        printf("Downtime: %.6lf\n", sec_in_model_time - sec_out_model_time);
 
     tmp = sec_in_model_time / (T2_AVG);
     // printf("Calculated average elements count: %.6lf\n", tmp);
@@ -272,8 +291,16 @@ double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue, doub
     sec_model_time = downtime + sec_total_pop * (T4_AVG);
     printf("Error (out): %.6lf%% \n", 100.0 * fabs(sec_model_time - sec_in_model_time) / min(sec_model_time, sec_in_model_time));
 
-    tmp = sec_total_push * (T2_AVG) + sec_total_pop * (T4_AVG);
-    printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - (sec_in_model_time + sec_out_model_time)) / min(tmp, sec_in_model_time + sec_out_model_time));
+    if (T2_AVG - T4_AVG > -EPS)
+    {
+        tmp = sec_total_push * (T2_AVG);
+        printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - sec_in_model_time) / sec_in_model_time);
+    }
+    else
+    {
+        tmp = sec_total_pop * (T4_AVG);
+        printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - sec_out_model_time) / sec_out_model_time);
+    }
 
     // printf("\nModel time: %0.6lf units\n", model_time); // НО ТУТ ХЗ
 
@@ -569,8 +596,14 @@ double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue, double T1_
     printf("\nTotal pushed (1-st queue): %zu elements\n", fst_total_push);
     printf("Total popped (1-st queue): %zu elements\n", fst_total_pop);
 
-    fst_model_time = max(fst_in_model_time, fst_out_model_time);
+    if (T1_AVG - T3_AVG > -EPS)
+        fst_model_time = fst_in_model_time;
+    else
+        fst_model_time = fst_out_model_time;
     printf("model time (1-st queue): %.6lf units\n", fst_model_time);
+
+    if (fst_in_model_time > fst_out_model_time)
+        printf("Downtime: %.6lf\n", fst_in_model_time - fst_out_model_time);
 
     tmp = fst_in_model_time / (T1_AVG);
     // printf("Calculated average elements count: %.6lf\n", tmp);
@@ -580,16 +613,29 @@ double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue, double T1_
     fst_model_time = downtime + fst_total_pop * (T3_AVG);
     printf("Error (out): %.6lf%% \n", 100.0 * fabs(fst_model_time - fst_in_model_time) / min(fst_model_time, fst_in_model_time));
     
-    tmp = fst_total_push * (T1_AVG) + fst_total_pop * (T3_AVG);
-    printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - (fst_in_model_time + fst_out_model_time)) / min(tmp, fst_in_model_time + fst_out_model_time));
+    if (T1_AVG - T3_AVG > -EPS)
+    {
+        tmp = fst_total_push * (T1_AVG);
+        printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - fst_in_model_time) / fst_in_model_time);
+    }
+    else
+    {
+        tmp = fst_total_pop * (T3_AVG);
+        printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - fst_out_model_time) / fst_out_model_time);
+    }
 
     // --------------------------
 
     printf("\nTotal pushed (2-st queue): %zu elements\n", sec_total_push);
     printf("Total popped (2-st queue): %zu elements\n", sec_total_pop);
 
-    sec_model_time = max(sec_in_model_time, sec_out_model_time);
+    if (T2_AVG - T4_AVG > -EPS)
+        sec_model_time = sec_in_model_time;
+    else
+        sec_model_time = sec_out_model_time;
     printf("model time (2-st queue): %.6lf units\n", sec_model_time);
+    if (sec_in_model_time > sec_out_model_time)
+        printf("Downtime: %.6lf\n", sec_in_model_time - sec_out_model_time);
 
     tmp = sec_in_model_time / (T2_AVG);
     // printf("Calculated average elements count: %.6lf\n", tmp);
@@ -599,8 +645,16 @@ double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue, double T1_
     sec_model_time = downtime + sec_total_pop * (T4_AVG);
     printf("Error (out): %.6lf%% \n", 100.0 * fabs(sec_model_time - sec_in_model_time) / min(sec_model_time, sec_in_model_time));
 
-    tmp = sec_total_push * (T2_AVG) + sec_total_pop * (T4_AVG);
-    printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - (sec_in_model_time + sec_out_model_time)) / min(tmp, sec_in_model_time + sec_out_model_time));
+    if (T2_AVG - T4_AVG > -EPS)
+    {
+        tmp = sec_total_push * (T2_AVG);
+        printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - sec_in_model_time) / sec_in_model_time);
+    }
+    else
+    {
+        tmp = sec_total_pop * (T4_AVG);
+        printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - sec_out_model_time) / sec_out_model_time);
+    }
 
     // printf("\nModel time: %0.6lf units\n", model_time); // НО ТУТ ХЗ
 
@@ -694,6 +748,8 @@ void time_comparing(static_queue_t *static_fst_queue, static_queue_t *static_sec
     long ss_time_pop_sum = 0, ls_time_pop_sum = 0;
     size_t elems = 0;
 
+    long rand_time = 0.0;
+
     struct timespec t_beg, t_end;
 
     static_free(static_fst_queue);
@@ -702,6 +758,15 @@ void time_comparing(static_queue_t *static_fst_queue, static_queue_t *static_sec
     list_free(list_sec_queue);
 
     // TIME SERVICE
+
+    for (size_t i = 0; i < TIME_COMPARING_ITER; i++)
+    {
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        c = rand_get(0, 1);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+
+        rand_time += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+    }
 
     for (size_t i = 0; i < TIME_COMPARING_ITER; i++)
     {
@@ -838,12 +903,16 @@ void time_comparing(static_queue_t *static_fst_queue, static_queue_t *static_sec
         elems += n_elems;
     }
 
-    printf("\nAverage service time (static): %0.6lf", (double)time_static / TIME_COMPARING_ITER);
-    printf("\nAverage push time (static): %0.6lf", (double)ss_time_push_sum / elems);
-    printf("\nAverage pop time (static):  %0.6lf", (double)ss_time_pop_sum / elems);
-    printf("\n\nAverage service time (list): %0.6lf", (double)time_list / TIME_COMPARING_ITER);
-    printf("\nAverage push time (list):  %0.6lf", (double)ls_time_push_sum / elems);
-    printf("\nAverage pop time (list): %0.6lf\n\n", (double)ls_time_pop_sum / elems);
+    printf("\nAverage service time (static): %.6lf", (double)time_static / TIME_COMPARING_ITER);
+    printf("\nAverage push time (static): %.6lf", (double)ss_time_push_sum / elems);
+    printf("\nAverage pop time (static):  %.6lf", (double)ss_time_pop_sum / elems);
+    printf("\n\nAverage service time (list): %.6lf", (double)time_list / TIME_COMPARING_ITER);
+    printf("\nAverage push time (list):  %.6lf", (double)ls_time_push_sum / elems);
+    printf("\nAverage pop time (list): %.6lf\n", (double)ls_time_pop_sum / elems);
+
+    printf("\nRand time: %ld\n\n", rand_time / TIME_COMPARING_ITER);
+
+    
 
     if (ss_time_push_sum < ls_time_push_sum)
         printf("Static PUSH time is better than list on: %0.6lf%%\n", (double)ls_time_push_sum / (double)ss_time_push_sum * 100.0);
