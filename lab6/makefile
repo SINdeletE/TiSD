@@ -72,3 +72,5 @@ clean:
 	rm -rf ./*.gcda
 	rm -rf ./*.c.gcov
 	rm -f ./func_tests/scripts/*.txt
+	rm -f TreeVisual.gv
+	rm -f graph.png
