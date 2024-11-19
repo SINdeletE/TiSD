@@ -162,7 +162,10 @@ static void node_print_dot_null(FILE *f, const char *data, int nullcount)
     // Описание "отсутствующей" вершины
     fprintf(f, "  null%d [shape=point];\n", nullcount);
     
-    fprintf(f, "  %s -> null%d;\n", data, nullcount);
+    fprintf(f, "  \"");
+    fputs(data, f);
+    fprintf(f, "\" -> ");
+    fprintf(f, "null%d;\n", nullcount);
 }
 
 
@@ -173,7 +176,11 @@ static void node_print_dot_aux(FILE *f, node_t *node)
 
     if (node->left)
     {
-        fprintf(f, "  %s -> %s;\n", node->data, node->left->data);
+        fprintf(f, "  \"");
+        fputs(node->data, f);
+        fprintf(f, "\" -> \"");
+        fputs(node->left->data, f);
+        fprintf(f, "\";\n");
         node_print_dot_aux(f, node->left);
     }
     else
@@ -181,7 +188,11 @@ static void node_print_dot_aux(FILE *f, node_t *node)
 
     if (node->right)
     {
-        fprintf(f, "  %s -> %s;\n", node->data, node->right->data);
+        fprintf(f, "  \"");
+        fputs(node->data, f);
+        fprintf(f, "\" -> \"");
+        fputs(node->right->data, f);
+        fprintf(f, "\";\n");
         node_print_dot_aux(f, node->right);
     }
     else
@@ -191,13 +202,19 @@ static void node_print_dot_aux(FILE *f, node_t *node)
 
 void node_export_to_dot_eli(FILE *f, const char *node_data, node_t *node)
 {
-    fprintf(f, "digraph %s {\n", node_data);
+    fprintf(f, "digraph \"");
+    fputs(node_data, f);
+    fprintf(f, "\" {\n");
     fprintf(f, "  node [fontdata=\"Arial\"];\n");
 
     if (!node)
         fprintf(f, "\n");
     else if (!node->right && !node->left)
-        fprintf(f, "  %s;\n", node->data);
+    {
+        fprintf(f, "  \"");
+        fputs(node->data, f);
+        fprintf(f, "\";\n");
+    }
     else
         node_print_dot_aux(f, node);
 
@@ -245,8 +262,7 @@ int node_read_by_file(char *filedata, node_t **root)
         tmp->data = word;
         root_tmp = node_add(root_tmp, tmp);
 
-        word = NULL;
-        size = 0;
+        str_unpin(&word, &size);
     }
 
     str_free(&word, &size);

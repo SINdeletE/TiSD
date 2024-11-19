@@ -12,6 +12,13 @@ void str_free(char **str, size_t *size)
     *size = 0;
 }
 
+void str_unpin(char **str, size_t *size)
+{
+    *str = NULL;
+
+    *size = 0;
+}
+
 int file_is_correct(char *filename)
 {
     FILE *f = NULL;

@@ -32,6 +32,13 @@ int main(void)
 
     char *tmp = NULL;
 
+    char *data = NULL;
+    size_t data_size = 0;
+
+    // ADD
+    node_t *add_tmp = NULL;
+    // ADD
+
     // VISUAL
     FILE *f = NULL;
     // VISUAL
@@ -102,6 +109,111 @@ int main(void)
                 str_free(&filename, &filename_size);
 
                 break;
+            case CODE_ADD:
+                printf("Enter str value: ");
+                if (getline(&data, &data_size, stdin) == -1)
+                {
+                    printf("\nINVALID INPUT\n");
+
+                    break;
+                }
+
+                if ((tmp = strchr(data, '\n')))
+                {
+                    *tmp = '\0';
+                    tmp = NULL;
+                }
+
+                add_tmp = node_alloc(data);
+                if (! add_tmp)
+                {
+                    printf("\nINVALID ALLOC\n");
+                    str_free(&data, &data_size);
+
+                    break;
+                }
+
+                add_tmp->data = data;
+                
+                if (node_search(tree, data))
+                {
+                    node_free(add_tmp);
+                    str_unpin(&data, &data_size);
+
+                    printf("\nTHIS VALUE IS ALREADY IN TREE\n");
+                    break;
+                }
+
+                tree = node_add(tree, add_tmp);
+                str_unpin(&data, &data_size);
+
+                printf("\nDATA WAS ADDED SUCCESSFULLY\n");
+
+                break;
+            case CODE_REMOVE:
+                if (! tree)
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+
+                printf("Enter str value: ");
+                if (getline(&data, &data_size, stdin) == -1)
+                {
+                    printf("\nINVALID INPUT\n");
+
+                    break;
+                }
+
+                if ((tmp = strchr(data, '\n')))
+                {
+                    *tmp = '\0';
+                    tmp = NULL;
+                }
+
+                if (node_search(tree, data))
+                {
+                    node_delete(&tree, data);
+
+                    printf("\nDATA WAS DELETED SUCCESSFULLY\n");
+                }
+                else
+                    printf("\nELEMENT IS NOT FOUND\n");
+
+                str_free(&data, &data_size);
+
+                break;
+            case CODE_SEARCH:
+                if (! tree)
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+
+                printf("Enter str value: ");
+                if (getline(&data, &data_size, stdin) == -1)
+                {
+                    printf("\nINVALID INPUT\n");
+
+                    break;
+                }
+
+                if ((tmp = strchr(data, '\n')))
+                {
+                    *tmp = '\0';
+                    tmp = NULL;
+                }
+
+                if (node_search(tree, data))
+                    printf("\nDATA WAS FOUNDED SUCCESSFULLY\n");
+                else
+                    printf("\nELEMENT IS NOT FOUND\n");
+
+                str_free(&data, &data_size);
+
+                break;
             case CODE_PRE_ORDER:
                 if (! tree)
                 {
@@ -159,6 +271,7 @@ int main(void)
             case CODE_EXIT:
                 tree = node_free(tree);
                 str_free(&filename, &filename_size);
+                str_free(&data, &data_size);
 
                 flag = false;
 

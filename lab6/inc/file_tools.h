@@ -10,6 +10,7 @@
 #define PRCS_ERR_NO_DATA 3
 
 void str_free(char **str, size_t *size);
+void str_unpin(char **str, size_t *size);
 int file_is_correct(char *filename);
 
 #endif
