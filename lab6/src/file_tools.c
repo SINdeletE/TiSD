@@ -1,8 +1,16 @@
 #include <stdio.h>
-#include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "file_tools.h"
+
+void str_free(char **str, size_t *size)
+{
+    free(*str);
+    *str = NULL;
+
+    *size = 0;
+}
 
 int file_is_correct(char *filename)
 {
@@ -11,20 +19,19 @@ int file_is_correct(char *filename)
     size_t size = 0;
 
     int has_data = 0;
-    char *tmp = NULL;
-
-    if (tmp = strchr(filename, '\n'))
-    {
-        *tmp = '\0';
-        tmp = NULL;
-    }
 
     f = fopen(filename, "r");
     if (! f)
         return PRCS_ERR_INVALID_FILENAME;
 
     while (getline(&word, &size, f) != -1)
+    {
         has_data = 1;
+
+        str_free(&word, &size);
+    }
+
+    str_free(&word, &size);
 
     if (! feof(f) && ferror(f))
     {
@@ -34,6 +41,9 @@ int file_is_correct(char *filename)
     }
 
     fclose(f);
+
+    if (! has_data)
+        return PRCS_ERR_NO_DATA;
     
     return PRCS_OK;
 }

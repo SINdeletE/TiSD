@@ -1,0 +1,22 @@
+digraph TREE {
+  node [fontdata="Arial"];
+  8 -> 5;
+  5 -> 1;
+  1 -> 0;
+  null35 [shape=point];
+  0 -> null35;
+  null36 [shape=point];
+  0 -> null36;
+  null37 [shape=point];
+  1 -> null37;
+  5 -> 6;
+  null38 [shape=point];
+  6 -> null38;
+  null39 [shape=point];
+  6 -> null39;
+  8 -> 9;
+  null40 [shape=point];
+  9 -> null40;
+  null41 [shape=point];
+  9 -> null41;
+}
