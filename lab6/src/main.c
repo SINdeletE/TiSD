@@ -20,6 +20,7 @@
 #define CODE_PRE_ORDER 5
 #define CODE_IN_ORDER 6
 #define CODE_POST_ORDER 7
+#define CODE_FIRST_IS_CHAR 8
 #define CODE_EXIT 9
 
 int clear_buf(FILE *f);
@@ -43,6 +44,11 @@ int main(void)
     FILE *f = NULL;
     // VISUAL
 
+    // FIRST_IS_CHAR
+    char beg = 0;
+    size_t count;
+    // FIRST_IS_CHAR
+
     bool flag = true;
     int code;
     // int func_code = 0;
@@ -58,6 +64,7 @@ int main(void)
         printf("5. Output tree (with pre-order) + Graphviz visualization\n");
         printf("6. Output tree (with in-order) + Graphviz visualization\n");
         printf("7. Output tree (with post-order) + Graphviz visualization\n");
+        printf("8. Find elements by char and color it\n");
 
         printf("\n9. Exit program\n");
         printf("\n--------------------------------\n");
@@ -266,6 +273,21 @@ int main(void)
                 fclose(f);
 
                 system("dot -Tpng TreeVisual.gv -o graph.png");
+
+                break;
+            case CODE_FIRST_IS_CHAR:
+                printf("Enter char: ");
+                if (scanf("%c", &beg) != 1)
+                {
+                    printf("\nINVALID INPUT\n");
+
+                    break;
+                }
+
+                count = node_count_and_color(tree, beg);
+
+                printf("\nTotal count: %zu\n", count);
+                printf("Nodes were colored\n");
 
                 break;
             case CODE_EXIT:

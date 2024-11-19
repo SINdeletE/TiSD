@@ -174,6 +174,12 @@ static void node_print_dot_aux(FILE *f, node_t *node)
     // Счетчик "отсутсвующих" вершин (идентификатор)
     static int nullcount = 0;
 
+    if (node->color == RED)
+    {
+        fputs(node->data, f);
+        fprintf(f, " [color=red];\n");
+    }
+
     if (node->left)
     {
         fprintf(f, "  \"");
@@ -219,6 +225,19 @@ void node_export_to_dot_eli(FILE *f, const char *node_data, node_t *node)
         node_print_dot_aux(f, node);
 
     fprintf(f, "}\n");
+}
+
+size_t node_count_and_color(node_t *head, char c)
+{
+    if (! head)
+        return 0;
+
+    if (*head->data == c)
+    {
+        head->color = RED;
+    }
+
+    return (*head->data == c) + node_count_and_color(head->left, c) + node_count_and_color(head->right, c);
 }
 
 // ----------
