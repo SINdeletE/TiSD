@@ -1,8 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "file_tools.h"
 #include "node_tools.h"
+
+#define EPS 1e-8
 
 node_t *node_free(node_t *node)
 {
@@ -176,7 +179,9 @@ static void node_print_dot_aux(FILE *f, node_t *node)
 
     if (node->color == RED)
     {
+        fprintf(f, "  \"");
         fputs(node->data, f);
+        fprintf(f, "\"");
         fprintf(f, " [color=red];\n");
     }
 
@@ -240,6 +245,58 @@ size_t node_count_and_color(node_t *head, char c)
     return (*head->data == c) + node_count_and_color(head->left, c) + node_count_and_color(head->right, c);
 }
 
+int node_statistics(char *filename, char c)
+{
+    node_t *tree = NULL;
+
+    size_t tmp = 0;
+    double time_tree_count_and_color = 0.0;
+    double time_file_count_and_color = 0.0;
+
+    struct timespec t_beg, t_end;
+
+    if (file_is_correct(filename))
+        return STAT_ERR_INVALID_FILE;
+
+    if (node_read_by_file(filename, &tree))
+        return STAT_ERR_INVALID_READ;
+
+    for (size_t i = 0; i < MAX_ITER_COUNT; i++)
+    {
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        tmp = node_count_and_color(tree, c);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+
+        time_tree_count_and_color += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+    }
+
+    for (size_t i = 0; i < MAX_ITER_COUNT; i++)
+    {
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        tmp = file_search_by_char(filename, c);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+
+        time_file_count_and_color += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+    }
+
+    tmp = tmp + 1; // Чтобы компилятор не ругался
+
+    printf("\n");
+    printf("Average tree search: %.6lf\n", time_tree_count_and_color / MAX_ITER_COUNT);
+    printf("Average file search: %.6lf\n", time_file_count_and_color / MAX_ITER_COUNT);
+
+    if (time_tree_count_and_color - time_file_count_and_color < -EPS)
+        printf("tree method is faster than file method on %.6lf%%\n", time_file_count_and_color / time_tree_count_and_color * 100.0);
+    else if (time_tree_count_and_color - time_file_count_and_color > EPS)
+        printf("file method is faster than tree method on %.6lf%%\n", time_tree_count_and_color / time_file_count_and_color * 100.0);
+    else
+        printf("file method and tree method has same times");
+
+    tree = node_free(tree);
+
+    return STAT_OK;
+}
+
 // ----------
 
 int node_read_by_file(char *filedata, node_t **root)
@@ -279,7 +336,13 @@ int node_read_by_file(char *filedata, node_t **root)
         }
 
         tmp->data = word;
-        root_tmp = node_add(root_tmp, tmp);
+
+        if (node_search(root_tmp, word))
+            node_free(tmp);
+        else
+        {
+            root_tmp = node_add(root_tmp, tmp);
+        }
 
         str_unpin(&word, &size);
     }

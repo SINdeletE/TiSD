@@ -54,3 +54,29 @@ int file_is_correct(char *filename)
     
     return PRCS_OK;
 }
+
+size_t file_search_by_char(char *filedata, char c)
+{
+    FILE *f = NULL;
+
+    char *word = NULL;
+    size_t size = 0;
+
+    size_t count = 0;
+
+    f = fopen(filedata, "r");
+
+    while (getline(&word, &size, f) != -1)
+    {
+        if (*word == c)
+            count++;
+
+        str_free(&word, &size);
+    }
+
+    str_free(&word, &size);
+
+    fclose(f);
+
+    return count;
+}

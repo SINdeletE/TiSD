@@ -21,7 +21,8 @@
 #define CODE_IN_ORDER 6
 #define CODE_POST_ORDER 7
 #define CODE_FIRST_IS_CHAR 8
-#define CODE_EXIT 9
+#define CODE_STATISTICS 9
+#define CODE_EXIT 10
 
 int clear_buf(FILE *f);
 
@@ -65,8 +66,9 @@ int main(void)
         printf("6. Output tree (with in-order) + Graphviz visualization\n");
         printf("7. Output tree (with post-order) + Graphviz visualization\n");
         printf("8. Find elements by char and color it\n");
+        printf("\n9. Get statistics\n");
 
-        printf("\n9. Exit program\n");
+        printf("\n10. Exit program\n");
         printf("\n--------------------------------\n");
 
         printf("Code: ");
@@ -288,6 +290,51 @@ int main(void)
 
                 printf("\nTotal count: %zu\n", count);
                 printf("Nodes were colored\n");
+
+                break;
+            case CODE_STATISTICS:
+                printf("Enter char: ");
+                if (scanf("%c", &beg) != 1)
+                {
+                    printf("\nINVALID INPUT\n");
+
+                    break;
+                }
+
+                if (clear_buf(stdin))
+                {
+                    printf("\nINVALID INPUT\n");
+
+                    break;
+                }
+
+                printf("Enter filename (with extension): ");
+                if (getline(&filename, &filename_size, stdin) == -1)
+                {
+                    printf("\nINVALID INPUT\n");
+
+                    break;
+                }
+
+                if ((tmp = strchr(filename, '\n')))
+                {
+                    *tmp = '\0';
+                    tmp = NULL;
+                }
+
+                switch (node_statistics(filename, beg))
+                {
+                    case STAT_ERR_INVALID_FILE:
+                        printf("\nINVALID FILE\n");
+
+                        break;
+                    case STAT_ERR_INVALID_READ:
+                        printf("\nINVALID READ\n");
+
+                        break;
+                }
+
+                str_free(&filename, &filename_size);
 
                 break;
             case CODE_EXIT:

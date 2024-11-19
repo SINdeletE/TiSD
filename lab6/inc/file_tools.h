@@ -11,6 +11,8 @@
 
 void str_free(char **str, size_t *size);
 void str_unpin(char **str, size_t *size);
+
 int file_is_correct(char *filename);
+size_t file_search_by_char(char *filedata, char c);
 
 #endif

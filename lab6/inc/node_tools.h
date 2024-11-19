@@ -9,6 +9,12 @@
 #define READ_ERR_INVALID_ALLOC 2
 #define READ_ERR_INVALID_FILE 3
 
+#define STAT_OK 0
+#define STAT_ERR_INVALID_FILE 1
+#define STAT_ERR_INVALID_READ 2
+
+#define MAX_ITER_COUNT 1000
+
 typedef enum {NONE, RED, GREEN, BLUE} color_t;
 
 typedef struct node node_t;
@@ -34,6 +40,7 @@ void node_output_post_order(node_t *node, FILE *f);
 void node_export_to_dot_eli(FILE *f, const char *node_data, node_t *node);
 
 size_t node_count_and_color(node_t *head, char c);
+int node_statistics(char *filename, char c);
 
 int node_read_by_file(char *filename, node_t **root);
 
