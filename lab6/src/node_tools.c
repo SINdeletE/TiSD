@@ -53,9 +53,9 @@ node_t *node_add(node_t *node, node_t *elem)
     if (strcmp(node->data, elem->data) == 0)
         return node;
     else if (strcmp(node->data, elem->data) < 0)
-        node->left = node_add(node->left, elem);
-    else
         node->right = node_add(node->right, elem);
+    else
+        node->left = node_add(node->left, elem);
 
     return node;
 }
@@ -171,18 +171,18 @@ static void node_print_dot_aux(FILE *f, node_t *node)
     // Счетчик "отсутсвующих" вершин (идентификатор)
     static int nullcount = 0;
 
-    if (node->right)
-    {
-        fprintf(f, "  %s -> %s;\n", node->data, node->right->data);
-        node_print_dot_aux(f, node->right);
-    }
-    else
-        node_print_dot_null(f, node->data, nullcount++);
-
     if (node->left)
     {
         fprintf(f, "  %s -> %s;\n", node->data, node->left->data);
         node_print_dot_aux(f, node->left);
+    }
+    else
+        node_print_dot_null(f, node->data, nullcount++);
+
+    if (node->right)
+    {
+        fprintf(f, "  %s -> %s;\n", node->data, node->right->data);
+        node_print_dot_aux(f, node->right);
     }
     else
         node_print_dot_null(f, node->data, nullcount++);
