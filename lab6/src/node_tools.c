@@ -2,11 +2,14 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include <ctype.h>
 
 #include "file_tools.h"
 #include "node_tools.h"
 
 #define EPS 1e-8
+
+#define STR_TABLE_SIZE 8
 
 #define MAX_RAND_ELEM 8192
 #define MIN_RAND_ELEM 0
@@ -124,17 +127,31 @@ void node_delete(node_t **node, char *data)
     }
 }
 
-node_t *node_search(node_t *node, char *data)
+node_t *node_search(node_t *node, char *data, int *compares)
 {
     if (! node)
+    {
+        (*compares)++;
+
         return NULL;
+    }
 
     if (strcmp(data, node->data) == 0)
+    {
+        (*compares) += 2;
+
         return node;
+    }
     else if (strcmp(data, node->data) < 0)
-        return node_search(node->left, data);
-    else
-        return node_search(node->right, data);
+    {
+        (*compares) += 3;
+
+        return node_search(node->left, data, compares);
+    }
+    
+    (*compares) += 3;
+
+    return node_search(node->right, data, compares);
 }
 
 void node_output_pre_order(node_t *node, FILE *f)
@@ -345,10 +362,39 @@ node_t *node_max_height_element(node_t *node)
         return node_max_height_element(node->right);
 }
 
-void node_ideal_create(node_t **node, int base_data, int height)
+node_t *node_alloc_with_num(int num, int max_decs)
 {
     node_t *tmp = NULL;
     char *data = NULL;
+    char *p = NULL;
+
+    data = calloc(max_decs + 1, sizeof(char));
+    if (! data)
+        return NULL;
+
+    sprintf(data, "%*d", max_decs, num);
+    p = data;
+    while (isspace(*p))
+    {
+        *p = 'a' - 1;
+        
+        p++;
+    }
+
+    tmp = node_alloc(data);
+    if (! tmp)
+    {
+        free(data);
+
+        return NULL;
+    }
+
+    return tmp;
+}
+
+void node_ideal_create(node_t **node, int base_data, int max_decs, int height)
+{
+    node_t *tmp = NULL;
 
     if (! height)
     {
@@ -357,65 +403,231 @@ void node_ideal_create(node_t **node, int base_data, int height)
         return;
     }
 
-    data = malloc(sizeof(char) * decs(base_data) + sizeof(char));
-    if (! data)
-    {
-        *node = NULL;
-
-        return;
-    }
-
-    sprintf(data, "%d", base_data);
-
-    tmp = node_alloc(data);
+    tmp = node_alloc_with_num(base_data, max_decs);
     if (! tmp)
-    {
-        free(data);
-        *node = NULL;
-
         return;
-    }
 
     *node = tmp;
 
-    node_ideal_create(&tmp->left, *data - my_pow(2, height - 1), height - 1);
-    node_ideal_create(&tmp->right, *data + my_pow(2, height - 1), height - 1);
+    height--;
+    node_ideal_create(&tmp->left, base_data - my_pow(2, height - 1), max_decs, height);
+    node_ideal_create(&tmp->right, base_data + my_pow(2, height - 1), max_decs, height);
 }
 
-node_t *node_ideal_tree(node_t **searched_element, int *tree_h, int elements)
+node_t *node_ideal_tree(node_t **searched_element, int elements)
 {
     node_t *tmp = NULL;
     int required_height;
 
     required_height = (int)(log(elements + 1) / log(2)); 
 
-    srand(time(NULL));
-
-    node_ideal_create(&tmp, my_pow(2, required_height - 1), required_height);
+    node_ideal_create(&tmp, my_pow(2, required_height - 1), decs(elements), required_height);
 
     *searched_element = node_max_height_element(tmp);
-    *tree_h = node_height(tmp);
     
     return tmp;
 }
 
-node_t *node_linked_list_tree(node_t **searched_element, int *tree_h, int elements)
+node_t *node_linked_list_tree(node_t **searched_element, int elements)
 {
+    node_t *tree = NULL;
+    node_t *tmp = NULL;
+
+    size_t index = 0;
+    char str[512] = {0};
+
+    char *data = NULL;
+
+    int i = 0;
+
+    srand(time(NULL));
+
+    str[index] = 'a';
+    while (i < elements)
+    {
+        if (str[index] == 'z')
+        {
+            index++;
+
+            str[index] = 'a';
+        }
+        else
+            str[index]++;
+
+        data = calloc((strlen(str) + 1), sizeof(char));
+        strcpy(data, str);
+
+        tmp = node_alloc(data);
+        if (! tmp)
+        {
+            free(data);
+
+            break;
+        }
+
+        tree = node_add(tree, tmp);
+
+        i++;
+    }
+
+    *searched_element = node_max_height_element(tmp);
     
+    return tree;
 }
 
 //------------------------------
 
-
 int node_statistics(char *filename, char c)
 {
-    node_t *tree = NULL;
+    FILE *f = NULL;
+    char graphname[256] = "";
+    char pngname[256] = "";
+    char command[2024] = "";
 
-    size_t tmp = 0;
+    node_t *tree = NULL;
+    node_t *tree_tmp = NULL;
+    int tmp = 0;
+
     double time_tree_count_and_color = 0.0;
     double time_file_count_and_color = 0.0;
 
+    // -----
+
+    double time_ideal_tree_sort = 0.0;
+    double time_linked_list_tree_sort = 0.0;
+
+    node_t *max_depth_element = NULL;
+    double time_ideal_tree_search = 0.0;
+    double time_linked_list_tree_search = 0.0;
+
+    int compares = 0;
+    int total_ideal_tree_compares = 0;
+    int total_linked_list_tree_compares = 0;
+
+    // -----
+
     struct timespec t_beg, t_end;
+
+    printf("\nSTATISTICS (time in nsec)\n");
+    printf("n count |");
+    printf("h IDEAL |");
+    printf("h WORST |");
+    printf("TREE SORT(IDEAL)|");
+    printf("TREE SORT(WORST)|");
+    printf("TREE FIND(IDEAL)|");
+    printf("TREE FIND(WORST)|");
+    printf("COMPARES (IDEAL)|");
+    printf("COMPARES (WORST)|");
+    printf("  best t (SORT) |");
+    printf("  best t (FIND) |\n");
+
+    for (int n = 4; n <= MAX_ELEMS_COUNT; n *= 2)
+    {
+        for (int i = 0; i < MAX_ITER_COUNT; i++)
+        {
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+            tree = node_ideal_tree(&max_depth_element, n);
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+
+            tree = node_free(tree);
+
+            time_ideal_tree_sort += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+        }
+
+        tree = node_ideal_tree(&max_depth_element, n);
+
+        sprintf(graphname, "Graph_ideal%d.gv", n);
+        sprintf(pngname, "Graph_ideal%d.png", n);
+        
+        sprintf(command, "dot -Tpng ");
+        strcat(command, graphname);
+        strcat(command, " -o ");
+        strcat(command, pngname);
+
+        f = fopen(graphname, "w");
+        node_export_to_dot_eli(f, "graph", tree);
+        fclose(f);
+        system(command);
+
+        for (int i = 0; i < MAX_ITER_COUNT; i++)
+        {
+            compares = 0;
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+            tree_tmp = node_search(tree, max_depth_element->data, &compares);
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+
+            time_ideal_tree_search += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+            total_ideal_tree_compares = compares;
+        }
+
+        tree = node_free(tree);
+
+        for (int i = 0; i < MAX_ITER_COUNT; i++)
+        {
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+            tree = node_linked_list_tree(&max_depth_element, n);
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+
+            tree = node_free(tree);
+
+            time_linked_list_tree_sort += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+        }
+
+        tree = node_linked_list_tree(&max_depth_element, n);
+
+        sprintf(graphname, "Graph_linked_list%d.gv", n);
+        sprintf(pngname, "Graph_linked_list%d.png", n);
+
+        sprintf(command, "dot -Tpng ");
+        strcat(command, graphname);
+        strcat(command, " -o ");
+        strcat(command, pngname);
+
+        f = fopen(graphname, "w");
+        node_export_to_dot_eli(f, "graph", tree);
+        fclose(f);
+        system(command);
+
+        for (int i = 0; i < MAX_ITER_COUNT; i++)
+        {
+            compares = 0;
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+            tree_tmp = node_search(tree, max_depth_element->data, &compares);
+            clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+
+            time_linked_list_tree_search += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+            total_linked_list_tree_compares = compares;
+        }
+
+        tree = node_free(tree);
+
+        tree_tmp++;
+
+        printf("%-*d|", STR_TABLE_SIZE, n - 1);
+        printf("%-*d|", STR_TABLE_SIZE, (int)(log(n - 1) / log(2)));
+        printf("%-*d|", STR_TABLE_SIZE, n - 1);
+        printf("%-*lf|", STR_TABLE_SIZE * 2, time_ideal_tree_sort / MAX_ITER_COUNT);
+        printf("%-*lf|", STR_TABLE_SIZE * 2, time_linked_list_tree_sort / MAX_ITER_COUNT);
+        printf("%-*lf|", STR_TABLE_SIZE * 2, time_ideal_tree_search / MAX_ITER_COUNT);
+        printf("%-*lf|", STR_TABLE_SIZE * 2, time_linked_list_tree_search / MAX_ITER_COUNT);
+        printf("%-*d|", STR_TABLE_SIZE * 2, total_ideal_tree_compares);
+        printf("%-*d|", STR_TABLE_SIZE * 2, total_linked_list_tree_compares);
+        if (time_ideal_tree_sort < time_linked_list_tree_sort)
+            printf("      IDEAL     |");
+        else if (time_ideal_tree_sort > time_linked_list_tree_sort)
+            printf("      WORST     |");
+        else 
+            printf("      EQUAL     |");
+
+        if (time_ideal_tree_search < time_linked_list_tree_search)
+            printf("      IDEAL     |");
+        else if (time_ideal_tree_search > time_linked_list_tree_search)
+            printf("      WORST     |");
+        else 
+            printf("      EQUAL     |");
+
+        printf("\n");
+    }
 
     if (file_is_correct(filename))
         return STAT_ERR_INVALID_FILE;
@@ -473,6 +685,7 @@ int node_read_by_file(char *filedata, node_t **root)
 
     node_t *root_tmp = NULL;
     node_t *tmp = NULL;
+    int comp = 0;
 
     if ((code = file_is_correct(filedata)))
         return READ_ERR_INVALID_FILE;
@@ -499,7 +712,7 @@ int node_read_by_file(char *filedata, node_t **root)
 
         tmp->data = word;
 
-        if (node_search(root_tmp, word))
+        if (node_search(root_tmp, word, &comp))
             node_free(tmp);
         else
         {

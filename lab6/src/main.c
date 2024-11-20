@@ -41,6 +41,10 @@ int main(void)
     node_t *add_tmp = NULL;
     // ADD
 
+    // SEARCH
+    int compares = 0;
+    // SEARCH
+
     // VISUAL
     FILE *f = NULL;
     // VISUAL
@@ -145,7 +149,7 @@ int main(void)
 
                 add_tmp->data = data;
                 
-                if (node_search(tree, data))
+                if (node_search(tree, data, &compares))
                 {
                     node_free(add_tmp);
                     str_unpin(&data, &data_size);
@@ -182,7 +186,7 @@ int main(void)
                     tmp = NULL;
                 }
 
-                if (node_search(tree, data))
+                if (node_search(tree, data, &compares))
                 {
                     node_delete(&tree, data);
 
@@ -216,10 +220,13 @@ int main(void)
                     tmp = NULL;
                 }
 
-                if (node_search(tree, data))
+                compares = 0;
+                if (node_search(tree, data, &compares))
                     printf("\nDATA WAS FOUNDED SUCCESSFULLY\n");
                 else
                     printf("\nELEMENT IS NOT FOUND\n");
+
+                printf("Total compares: %d\n", compares);
 
                 str_free(&data, &data_size);
 
@@ -309,7 +316,7 @@ int main(void)
                     break;
                 }
 
-                printf("Enter filename (with extension): ");
+                printf("Enter filename for comparing (with extension): ");
                 if (getline(&filename, &filename_size, stdin) == -1)
                 {
                     printf("\nINVALID INPUT\n");
@@ -326,11 +333,11 @@ int main(void)
                 switch (node_statistics(filename, beg))
                 {
                     case STAT_ERR_INVALID_FILE:
-                        printf("\nINVALID FILE\n");
+                        printf("\nINVALID FILE TO CONTINUE STATISTICS\n");
 
                         break;
                     case STAT_ERR_INVALID_READ:
-                        printf("\nINVALID READ\n");
+                        printf("\nINVALID READ TO CONTINUE STATISTICS\n");
 
                         break;
                 }

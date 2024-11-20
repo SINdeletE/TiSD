@@ -33,11 +33,11 @@ $(OUT_DIR)/%.o: %.c
 # -----
 
 app.exe: out_dir_check | $(BUILD_OBJS)
-	$(CC) $(LFLAGS) -o "$@" $(BUILD_OBJS)
+	$(CC) -o "$@" $(BUILD_OBJS) $(LFLAGS)
 
 .PHONY: debug
 debug: out_dir_check | $(BUILD_OBJS)
-	$(CC) $(LFLAGS) -o "app.exe" $(BUILD_OBJS) 
+	$(CC) -o "app.exe" $(BUILD_OBJS) $(LFLAGS)
 
 # -----
 
@@ -72,5 +72,5 @@ clean:
 	rm -rf ./*.gcda
 	rm -rf ./*.c.gcov
 	rm -f ./func_tests/scripts/*.txt
-	rm -f TreeVisual.gv
-	rm -f graph.png
+	rm -f ./*.gv
+	rm -f ./*.png

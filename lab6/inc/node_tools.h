@@ -13,6 +13,7 @@
 #define STAT_ERR_INVALID_FILE 1
 #define STAT_ERR_INVALID_READ 2
 
+#define MAX_ELEMS_COUNT 1024
 #define MAX_ITER_COUNT 1000
 
 typedef enum {NONE, RED, GREEN, BLUE} color_t;
@@ -32,7 +33,7 @@ node_t *node_free(node_t *node);
 node_t *node_alloc(char *data);
 node_t *node_add(node_t *node, node_t *elem);
 void node_delete(node_t **node, char *data);
-node_t *node_search(node_t *head, char *data);
+node_t *node_search(node_t *node, char *data, int *compares);
 void node_output_pre_order(node_t *node, FILE *f);
 void node_output_in_order(node_t *node, FILE *f);
 void node_output_post_order(node_t *node, FILE *f);
