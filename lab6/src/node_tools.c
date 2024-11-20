@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 #include "file_tools.h"
 #include "node_tools.h"
@@ -281,6 +282,33 @@ int max(int a, int b)
     return b;
 }
 
+int my_pow(int a, int n)
+{
+    int res = 1;
+
+    for (int i = 0; i < n; i++)
+        res *= a;
+
+    return res;
+}
+
+int decs(int a)
+{
+    int s = 0;
+
+    if (a == 0)
+        return 1;
+
+    while (a > 0)
+    {
+        a /= 10;
+
+        s++;
+    }
+
+    return s;
+}
+
 int node_height(node_t *node)
 {
     int max_h, left, right;
@@ -317,38 +345,64 @@ node_t *node_max_height_element(node_t *node)
         return node_max_height_element(node->right);
 }
 
-node_t *node_random_tree(node_t **searched_element ,int *tree_h, int *tree_power)
+void node_ideal_create(node_t **node, int base_data, int height)
 {
-    FILE *f = NULL;
-    int rand_count;
-    int rand_tmp = MIN_RAND_ELEM - 1;
-
     node_t *tmp = NULL;
+    char *data = NULL;
+
+    if (! height)
+    {
+        *node = NULL;
+
+        return;
+    }
+
+    data = malloc(sizeof(char) * decs(base_data) + sizeof(char));
+    if (! data)
+    {
+        *node = NULL;
+
+        return;
+    }
+
+    sprintf(data, "%d", base_data);
+
+    tmp = node_alloc(data);
+    if (! tmp)
+    {
+        free(data);
+        *node = NULL;
+
+        return;
+    }
+
+    *node = tmp;
+
+    node_ideal_create(&tmp->left, *data - my_pow(2, height - 1), height - 1);
+    node_ideal_create(&tmp->right, *data + my_pow(2, height - 1), height - 1);
+}
+
+node_t *node_ideal_tree(node_t **searched_element, int *tree_h, int elements)
+{
+    node_t *tmp = NULL;
+    int required_height;
+
+    required_height = (int)(log(elements + 1) / log(2)); 
 
     srand(time(NULL));
 
-    f = fopen("temper.txt", "w");
-
-    rand_count = rand_get(MIN_RAND_SIZE, MAX_RAND_SIZE);
-    for (int i = 0; i < rand_count; i++)
-    {
-        rand_tmp = rand_get(MIN_RAND_ELEM, MAX_RAND_ELEM);
-
-        fprintf(f, "%d\n", rand_tmp);
-    }
-
-    fclose(f);
-
-    if (node_read_by_file("temper.txt", &tmp))
-        return NULL;
+    node_ideal_create(&tmp, my_pow(2, required_height - 1), required_height);
 
     *searched_element = node_max_height_element(tmp);
     *tree_h = node_height(tmp);
-    *tree_power = 2;
     
     return tmp;
 }
 
+node_t *node_linked_list_tree(node_t **searched_element, int *tree_h, int elements)
+{
+    
+}
 
 //------------------------------
 

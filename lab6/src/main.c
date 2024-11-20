@@ -113,6 +113,7 @@ int main(void)
                         break;
                     default:
                         printf("\nTREE WAS READED SUCCESSFULLY\n");
+                        printf("tree height: %d", node_height(tree));
                 }
 
                 str_free(&filename, &filename_size);
