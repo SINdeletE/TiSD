@@ -7,6 +7,12 @@
 
 #define EPS 1e-8
 
+#define MAX_RAND_ELEM 8192
+#define MIN_RAND_ELEM 0
+
+#define MAX_RAND_SIZE 1024
+#define MIN_RAND_SIZE 8
+
 node_t *node_free(node_t *node)
 {
     if (! node)
@@ -42,10 +48,15 @@ node_t *node_alloc(char *data)
 void node_data_swap(node_t *node_a, node_t *node_b)
 {
     char *tmp = NULL;
+    color_t col;
 
     tmp = node_a->data;
     node_a->data = node_b->data;
     node_b->data = tmp;
+
+    col = node_a->color;
+    node_a->color = node_b->color;
+    node_b->color = col;
 }
 
 node_t *node_add(node_t *node, node_t *elem)
@@ -244,6 +255,103 @@ size_t node_count_and_color(node_t *head, char c)
 
     return (*head->data == c) + node_count_and_color(head->left, c) + node_count_and_color(head->right, c);
 }
+
+
+// ------------------------------
+
+double rand_chance(double l, double r)
+{
+    double random_num = (double)rand() / RAND_MAX;
+
+    return (random_num * (r - l)) + l;
+}
+
+int rand_get(int l, int r)
+{
+    int random_num = rand();
+
+    return random_num % (r - l) + l;
+}
+
+int max(int a, int b)
+{
+    if (a >= b)
+        return a;
+    
+    return b;
+}
+
+int node_height(node_t *node)
+{
+    int max_h, left, right;
+
+    if (! node)
+        return -1;
+
+    left = node_height(node->left);
+    right = node_height(node->right);
+
+    max_h = max(left, right);
+
+    return max_h + 1;
+}
+
+node_t *node_max_height_element(node_t *node)
+{
+    int max_h, left, right;
+
+    if (! node)
+        return NULL;
+
+    left = node_height(node->left);
+    right = node_height(node->right);
+
+    if (left == -1 && right == -1)
+        return node;
+
+    max_h = max(left, right);
+
+    if (max_h == left)
+        return node_max_height_element(node->left);
+    else
+        return node_max_height_element(node->right);
+}
+
+node_t *node_random_tree(node_t **searched_element ,int *tree_h, int *tree_power)
+{
+    FILE *f = NULL;
+    int rand_count;
+    int rand_tmp = MIN_RAND_ELEM - 1;
+
+    node_t *tmp = NULL;
+
+    srand(time(NULL));
+
+    f = fopen("temper.txt", "w");
+
+    rand_count = rand_get(MIN_RAND_SIZE, MAX_RAND_SIZE);
+    for (int i = 0; i < rand_count; i++)
+    {
+        rand_tmp = rand_get(MIN_RAND_ELEM, MAX_RAND_ELEM);
+
+        fprintf(f, "%d\n", rand_tmp);
+    }
+
+    fclose(f);
+
+    if (node_read_by_file("temper.txt", &tmp))
+        return NULL;
+
+    *searched_element = node_max_height_element(tmp);
+    *tree_h = node_height(tmp);
+    *tree_power = 2;
+    
+    return tmp;
+}
+
+
+//------------------------------
+
 
 int node_statistics(char *filename, char c)
 {
