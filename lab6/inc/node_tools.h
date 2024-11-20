@@ -32,7 +32,6 @@ node_t *node_free(node_t *node);
 node_t *node_alloc(char *data);
 node_t *node_add(node_t *node, node_t *elem);
 void node_delete(node_t **node, char *data);
-void node_delete(node_t **node, char *data);
 node_t *node_search(node_t *head, char *data);
 void node_output_pre_order(node_t *node, FILE *f);
 void node_output_in_order(node_t *node, FILE *f);
