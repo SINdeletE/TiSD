@@ -142,16 +142,16 @@ node_t *node_search(node_t *node, char *data, int *compares)
 
         return node;
     }
-    else if (strcmp(data, node->data) < 0)
+    else if (strcmp(data, node->data) > 0)
     {
         (*compares) += 3;
 
-        return node_search(node->left, data, compares);
+        return node_search(node->right, data, compares);
     }
     
-    (*compares) += 3;
+    (*compares) += 4;
 
-    return node_search(node->right, data, compares);
+    return node_search(node->left, data, compares);
 }
 
 void node_output_pre_order(node_t *node, FILE *f)
