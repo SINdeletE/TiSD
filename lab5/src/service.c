@@ -309,6 +309,22 @@ double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue, doub
     return total_time;
 }
 
+static double static_fst_total_model_times = 0;
+static double static_sec_total_model_times = 0;
+
+static size_t static_fst_total_push = 0;
+static size_t static_sec_total_push = 0;
+
+static size_t static_fst_total_pop = 0;
+static size_t static_sec_total_pop = 0;
+
+static double static_fst_total_request_lifetime = 0;
+static double static_fst_total_requests = 0;
+static double static_sec_total_request_lifetime = 0;
+static double static_sec_total_requests = 0;
+
+static size_t static_max_byte_size = sizeof(static_queue_t);
+
 void static_push_by_delta_no_stats(static_queue_t *queue, double *T, double delta, const double T_min, const double T_max, const double T_prcs_min, const double T_prcs_max)
 {
     while (delta - *T > -EPS)
@@ -663,6 +679,22 @@ double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue, double T1_
     return total_time;
 }
 
+static double list_fst_total_model_times = 0;
+static double list_sec_total_model_times = 0;
+
+static size_t list_fst_total_push = 0;
+static size_t list_sec_total_push = 0;
+
+static size_t list_fst_total_pop = 0;
+static size_t list_sec_total_pop = 0;
+
+static double list_fst_total_request_lifetime = 0;
+static double list_fst_total_requests = 0;
+static double list_sec_total_request_lifetime = 0;
+static double list_sec_total_requests = 0;
+
+static size_t list_max_byte_size = 0;
+
 void list_push_by_delta_no_stats(list_queue_t *queue, double *T, double delta, const double T_min, const double T_max, const double T_prcs_min, const double T_prcs_max)
 {
     while (delta - *T > -EPS)
@@ -911,8 +943,6 @@ void time_comparing(static_queue_t *static_fst_queue, static_queue_t *static_sec
     printf("\nAverage pop time (list): %.6lf\n", (double)ls_time_pop_sum / elems);
 
     printf("\nRand time: %ld\n\n", rand_time / TIME_COMPARING_ITER);
-
-    
 
     if (ss_time_push_sum < ls_time_push_sum)
         printf("Static PUSH time is better than list on: %0.6lf%%\n", (double)ls_time_push_sum / (double)ss_time_push_sum * 100.0);
