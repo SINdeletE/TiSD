@@ -376,7 +376,7 @@ node_t *node_alloc_with_num(int num, int max_decs)
     p = data;
     while (isspace(*p))
     {
-        *p = 'a' - 1;
+        *p = '0';
         
         p++;
     }
@@ -397,21 +397,17 @@ void node_ideal_create(node_t **node, int base_data, int max_decs, int height)
     node_t *tmp = NULL;
 
     if (! height)
-    {
-        *node = NULL;
-
         return;
-    }
 
     tmp = node_alloc_with_num(base_data, max_decs);
     if (! tmp)
         return;
 
-    *node = tmp;
+    *node = node_add(*node, tmp);
 
     height--;
-    node_ideal_create(&tmp->left, base_data - my_pow(2, height - 1), max_decs, height);
-    node_ideal_create(&tmp->right, base_data + my_pow(2, height - 1), max_decs, height);
+    node_ideal_create(node, base_data - my_pow(2, height - 1), max_decs, height);
+    node_ideal_create(node, base_data + my_pow(2, height - 1), max_decs, height);
 }
 
 node_t *node_ideal_tree(node_t **searched_element, int elements)
@@ -433,37 +429,16 @@ node_t *node_linked_list_tree(node_t **searched_element, int elements)
     node_t *tree = NULL;
     node_t *tmp = NULL;
 
-    size_t index = 0;
-    char str[512] = {0};
+    int max_decs;
+    int i = 1;
 
-    char *data = NULL;
+    max_decs = decs(elements);
 
-    int i = 0;
-
-    srand(time(NULL));
-
-    str[index] = 'a';
-    while (i < elements)
+    while (i <= elements)
     {
-        if (str[index] == 'z')
-        {
-            index++;
-
-            str[index] = 'a';
-        }
-        else
-            str[index]++;
-
-        data = calloc((strlen(str) + 1), sizeof(char));
-        strcpy(data, str);
-
-        tmp = node_alloc(data);
+        tmp = node_alloc_with_num(i, max_decs);
         if (! tmp)
-        {
-            free(data);
-
             break;
-        }
 
         tree = node_add(tree, tmp);
 
