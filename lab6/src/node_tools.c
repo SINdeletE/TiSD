@@ -392,9 +392,11 @@ node_t *node_alloc_with_num(int num, int max_decs)
     return tmp;
 }
 
-void node_ideal_create(node_t **node, int base_data, int max_decs, int height)
+void node_ideal_create(node_t **node, int base_data, int max_decs, int height, double *time)
 {
     node_t *tmp = NULL;
+
+    struct timespec t_beg, t_end;
 
     if (! height)
         return;
@@ -403,34 +405,43 @@ void node_ideal_create(node_t **node, int base_data, int max_decs, int height)
     if (! tmp)
         return;
 
+    // ---
+
+    clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
     *node = node_add(*node, tmp);
+    clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+    *time += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+
+    // ---
 
     height--;
-    node_ideal_create(node, base_data - my_pow(2, height - 1), max_decs, height);
-    node_ideal_create(node, base_data + my_pow(2, height - 1), max_decs, height);
+    node_ideal_create(node, base_data - my_pow(2, height - 1), max_decs, height, time);
+    node_ideal_create(node, base_data + my_pow(2, height - 1), max_decs, height, time);
 }
 
-node_t *node_ideal_tree(node_t **searched_element, int elements)
+node_t *node_ideal_tree(node_t **searched_element, int elements, double *time)
 {
     node_t *tmp = NULL;
     int required_height;
 
     required_height = (int)(log(elements + 1) / log(2)); 
 
-    node_ideal_create(&tmp, my_pow(2, required_height - 1), decs(elements), required_height);
+    node_ideal_create(&tmp, my_pow(2, required_height - 1), decs(elements), required_height, time);
 
     *searched_element = node_max_height_element(tmp);
     
     return tmp;
 }
 
-node_t *node_linked_list_tree(node_t **searched_element, int elements)
+node_t *node_linked_list_tree(node_t **searched_element, int elements, double *time)
 {
     node_t *tree = NULL;
     node_t *tmp = NULL;
 
     int max_decs;
     int i = 1;
+
+    struct timespec t_beg, t_end;
 
     max_decs = decs(elements);
 
@@ -441,7 +452,14 @@ node_t *node_linked_list_tree(node_t **searched_element, int elements)
         if (! tmp)
             break;
 
+        // ---
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
         tree = node_add(tree, tmp);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+        *time += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+
+        // ---
 
         i++;
     }
@@ -469,6 +487,8 @@ int node_statistics(char *filename, char c)
 
     // -----
 
+    double time_tmp = 0.0;
+
     double time_ideal_tree_sort = 0.0;
     double time_linked_list_tree_sort = 0.0;
 
@@ -484,7 +504,7 @@ int node_statistics(char *filename, char c)
 
     struct timespec t_beg, t_end;
 
-    printf("\nSTATISTICS (time in nsec)\n");
+    printf("\nSTATISTICS (time in nsec) (total iteration: %d)\n", MAX_ITER_COUNT);
     printf("n count |");
     printf("h IDEAL |");
     printf("h WORST |");
@@ -501,16 +521,12 @@ int node_statistics(char *filename, char c)
     {
         for (int i = 0; i < MAX_ITER_COUNT; i++)
         {
-            clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
-            tree = node_ideal_tree(&max_depth_element, n);
-            clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+            tree = node_ideal_tree(&max_depth_element, n, &time_ideal_tree_sort);
 
             tree = node_free(tree);
-
-            time_ideal_tree_sort += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
         }
 
-        tree = node_ideal_tree(&max_depth_element, n);
+        tree = node_ideal_tree(&max_depth_element, n, &time_tmp);
 
         sprintf(graphname, "Graph_ideal%d.gv", n - 1);
         sprintf(pngname, "Graph_ideal%d.png", n - 1);
@@ -540,16 +556,12 @@ int node_statistics(char *filename, char c)
 
         for (int i = 0; i < MAX_ITER_COUNT; i++)
         {
-            clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
-            tree = node_linked_list_tree(&max_depth_element, n);
-            clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+            tree = node_linked_list_tree(&max_depth_element, n, &time_linked_list_tree_sort);
 
             tree = node_free(tree);
-
-            time_linked_list_tree_sort += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
         }
 
-        tree = node_linked_list_tree(&max_depth_element, n);
+        tree = node_linked_list_tree(&max_depth_element, n, &time_tmp);
 
         sprintf(graphname, "Graph_linked_list%d.gv", n - 1);
         sprintf(pngname, "Graph_linked_list%d.png", n - 1);
