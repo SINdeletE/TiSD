@@ -434,6 +434,7 @@ node_t *node_linked_list_tree(node_t **searched_element, int elements)
 
     max_decs = decs(elements);
 
+    elements--;
     while (i <= elements)
     {
         tmp = node_alloc_with_num(i, max_decs);
@@ -511,8 +512,8 @@ int node_statistics(char *filename, char c)
 
         tree = node_ideal_tree(&max_depth_element, n);
 
-        sprintf(graphname, "Graph_ideal%d.gv", n);
-        sprintf(pngname, "Graph_ideal%d.png", n);
+        sprintf(graphname, "Graph_ideal%d.gv", n - 1);
+        sprintf(pngname, "Graph_ideal%d.png", n - 1);
         
         sprintf(command, "dot -Tpng ");
         strcat(command, graphname);
@@ -550,8 +551,8 @@ int node_statistics(char *filename, char c)
 
         tree = node_linked_list_tree(&max_depth_element, n);
 
-        sprintf(graphname, "Graph_linked_list%d.gv", n);
-        sprintf(pngname, "Graph_linked_list%d.png", n);
+        sprintf(graphname, "Graph_linked_list%d.gv", n - 1);
+        sprintf(pngname, "Graph_linked_list%d.png", n - 1);
 
         sprintf(command, "dot -Tpng ");
         strcat(command, graphname);
