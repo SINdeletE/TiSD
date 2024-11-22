@@ -99,7 +99,9 @@ double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue, doub
     // ---
 
     double fst_sum_request_livetime = 0.0;
+    double fst_total_lifetime = 0.0;
     double sec_sum_request_livetime = 0.0;
+    double sec_total_lifetime = 0.0;
 
     size_t fst_total_push = 0;
     size_t fst_total_pop = 0;
@@ -186,6 +188,9 @@ double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue, doub
             sec_total_push += sec_hundred_push;
             sec_total_pop += sec_hundred_pop;
 
+            fst_total_lifetime += fst_sum_request_livetime / fst_hundred_push;
+            sec_total_lifetime += sec_sum_request_livetime / sec_hundred_push;
+
             fst_hundred_push = 0;
             fst_hundred_pop = 0;
             sec_hundred_push = 0;
@@ -236,11 +241,12 @@ double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue, doub
     }
 
     printf("\nTOTAL DATA\n\n");
-    printf("Required size: %zu bytes\n", max_requests * sizeof(list_queue_t));
+    printf("Required size: %zu bytes\n", sizeof(static_queue_t));
     printf("Total time: %.6lf units\n", total_time);
 
     printf("\nTotal pushed (1-st queue): %zu elements\n", fst_total_push);
     printf("Total popped (1-st queue): %zu elements\n", fst_total_pop);
+    printf("Average lifetime %.6lf\n", fst_total_lifetime / 10);
 
     if (T1_AVG - T3_AVG > -EPS)
         fst_model_time = fst_in_model_time;
@@ -262,18 +268,19 @@ double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue, doub
     if (T1_AVG - T3_AVG > -EPS)
     {
         tmp = fst_total_push * (T1_AVG);
-        printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - fst_in_model_time) / fst_in_model_time);
+        printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - fst_model_time) / fst_model_time);
     }
     else
     {
         tmp = fst_total_pop * (T3_AVG);
-        printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - fst_out_model_time) / fst_out_model_time);
+        printf("Error: %.6lf%% \n", 100.0 * fabs(tmp - fst_model_time) / fst_model_time);
     }
 
     // --------------------------
 
     printf("\nTotal pushed (2-st queue): %zu elements\n", sec_total_push);
     printf("Total popped (2-st queue): %zu elements\n", sec_total_pop);
+    printf("Average lifetime %.6lf\n", sec_total_lifetime / 10);
 
     if (T2_AVG - T4_AVG > -EPS)
         sec_model_time = sec_in_model_time;
@@ -308,22 +315,6 @@ double static_service(static_queue_t *fst_queue, static_queue_t *sec_queue, doub
 
     return total_time;
 }
-
-static double static_fst_total_model_times = 0;
-static double static_sec_total_model_times = 0;
-
-static size_t static_fst_total_push = 0;
-static size_t static_sec_total_push = 0;
-
-static size_t static_fst_total_pop = 0;
-static size_t static_sec_total_pop = 0;
-
-static double static_fst_total_request_lifetime = 0;
-static double static_fst_total_requests = 0;
-static double static_sec_total_request_lifetime = 0;
-static double static_sec_total_requests = 0;
-
-static size_t static_max_byte_size = sizeof(static_queue_t);
 
 void static_push_by_delta_no_stats(static_queue_t *queue, double *T, double delta, const double T_min, const double T_max, const double T_prcs_min, const double T_prcs_max)
 {
@@ -468,6 +459,9 @@ double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue, double T1_
 
     // ---
 
+    double fst_total_lifetime = 0.0;
+    double sec_total_lifetime = 0.0;
+
     double fst_sum_request_livetime = 0.0;
     double sec_sum_request_livetime = 0.0;
 
@@ -556,6 +550,9 @@ double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue, double T1_
             sec_total_push += sec_hundred_push;
             sec_total_pop += sec_hundred_pop;
 
+            fst_total_lifetime += fst_sum_request_livetime / fst_hundred_push;
+            sec_total_lifetime += sec_sum_request_livetime / sec_hundred_push;
+
             fst_hundred_push = 0;
             fst_hundred_pop = 0;
             sec_hundred_push = 0;
@@ -606,11 +603,12 @@ double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue, double T1_
     }
 
     printf("\nTOTAL DATA\n\n");
-    printf("Required size: %zu bytes\n", max_requests * sizeof(list_queue_t));
+    printf("Required size: %zu bytes\n", max_requests * sizeof(queue_data_t) + sizeof(list_queue_t));
     printf("Total time: %.6lf units\n", total_time);
 
     printf("\nTotal pushed (1-st queue): %zu elements\n", fst_total_push);
     printf("Total popped (1-st queue): %zu elements\n", fst_total_pop);
+    printf("Average lifetime %.6lf\n", fst_total_lifetime / 10);
 
     if (T1_AVG - T3_AVG > -EPS)
         fst_model_time = fst_in_model_time;
@@ -644,6 +642,7 @@ double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue, double T1_
 
     printf("\nTotal pushed (2-st queue): %zu elements\n", sec_total_push);
     printf("Total popped (2-st queue): %zu elements\n", sec_total_pop);
+    printf("Average lifetime %.6lf\n", sec_total_lifetime / 10);
 
     if (T2_AVG - T4_AVG > -EPS)
         sec_model_time = sec_in_model_time;
@@ -678,22 +677,6 @@ double list_service(list_queue_t *fst_queue, list_queue_t *sec_queue, double T1_
 
     return total_time;
 }
-
-static double list_fst_total_model_times = 0;
-static double list_sec_total_model_times = 0;
-
-static size_t list_fst_total_push = 0;
-static size_t list_sec_total_push = 0;
-
-static size_t list_fst_total_pop = 0;
-static size_t list_sec_total_pop = 0;
-
-static double list_fst_total_request_lifetime = 0;
-static double list_fst_total_requests = 0;
-static double list_sec_total_request_lifetime = 0;
-static double list_sec_total_requests = 0;
-
-static size_t list_max_byte_size = 0;
 
 void list_push_by_delta_no_stats(list_queue_t *queue, double *T, double delta, const double T_min, const double T_max, const double T_prcs_min, const double T_prcs_max)
 {

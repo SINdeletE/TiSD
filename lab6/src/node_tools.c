@@ -130,26 +130,14 @@ void node_delete(node_t **node, char *data)
 node_t *node_search(node_t *node, char *data, int *compares)
 {
     if (! node)
-    {
-        (*compares)++;
-
         return NULL;
-    }
+
+    (*compares)++;
 
     if (strcmp(data, node->data) == 0)
-    {
-        (*compares) += 2;
-
         return node;
-    }
     else if (strcmp(data, node->data) > 0)
-    {
-        (*compares) += 3;
-
         return node_search(node->right, data, compares);
-    }
-    
-    (*compares) += 4;
 
     return node_search(node->left, data, compares);
 }
@@ -519,6 +507,12 @@ int node_statistics(char *filename, char c)
 
     for (int n = 4; n <= MAX_ELEMS_COUNT; n *= 2)
     {
+        time_ideal_tree_sort = 0;
+        time_linked_list_tree_sort = 0;
+
+        time_ideal_tree_search = 0.0;
+        time_linked_list_tree_search = 0.0;
+
         for (int i = 0; i < MAX_ITER_COUNT; i++)
         {
             tree = node_ideal_tree(&max_depth_element, n, &time_ideal_tree_sort);
