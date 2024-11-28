@@ -16,14 +16,11 @@
 #define MAX_ELEMS_COUNT 1024
 #define MAX_ITER_COUNT 1000
 
-typedef enum {NONE, RED, GREEN, BLUE} color_t;
-
 typedef struct node node_t;
 
 struct node
 {
     char *data;
-    color_t color;
 
     node_t *left;
     node_t *right;
@@ -33,6 +30,7 @@ struct node
 
 node_t *node_free(node_t *node);
 node_t *node_alloc(char *data);
+int node_height(node_t *node);
 node_t *node_add(node_t *node, node_t *elem);
 void node_delete(node_t **node, char *data);
 node_t *node_search(node_t *node, char *data, int *compares);
@@ -40,12 +38,17 @@ void node_output_pre_order(node_t *node, FILE *f);
 void node_output_in_order(node_t *node, FILE *f);
 void node_output_post_order(node_t *node, FILE *f);
 void node_export_to_dot_eli(FILE *f, const char *node_data, node_t *node);
+node_t *node_cpy(node_t *node);
 
-size_t node_count_and_color(node_t *head, char c);
+node_t *node_left_max(node_t *node);
+node_t *node_right_min(node_t *node);
+void node_data_swap(node_t *node_a, node_t *node_b);
 
-int node_height(node_t *node);
-node_t *node_random_tree(node_t **searched_element ,int *tree_h, int *tree_power);
-int node_statistics(char *filename, char c);
+// size_t node_count_and_color(node_t *head, char c);
+
+// int node_height(node_t *node);
+// node_t *node_random_tree(node_t **searched_element ,int *tree_h, int *tree_power);
+// int node_statistics(char *filename, char c);
 
 int node_read_by_file(char *filename, node_t **root);
 
