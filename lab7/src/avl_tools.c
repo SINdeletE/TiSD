@@ -102,6 +102,9 @@ node_t *node_big_rotate_right(node_t *node)
 
 node_t *avl_node_balance(node_t *node)
 {
+    if (! node)
+        return node;
+
     node_height_set(node);
     if (node_height_diff(node) == -2)
     {
@@ -151,30 +154,22 @@ void avl_node_delete(node_t **node, char *data)
             tmp = node_left_max((*node)->left);
 
             node_data_swap(tmp, *node);
-            node_delete(&(*node)->left, data);
-            (*node)->left->height--;
+            avl_node_delete(&(*node)->left, data);
         }
         else if ((*node)->right)
         {
             tmp = node_right_min((*node)->right);
 
             node_data_swap(tmp, *node);
-            node_delete(&(*node)->right, data);
-            (*node)->right->height--;
+            avl_node_delete(&(*node)->right, data);
         }
         else
             *node = node_free(*node);
     }
     else if (strcmp((*node)->data, data) > 0)
-    {
-        node_delete(&(*node)->left, data);
-        (*node)->left->height--;
-    }
+        avl_node_delete(&(*node)->left, data);
     else
-    {
-        node_delete(&(*node)->right, data);
-        (*node)->right->height--;
-    }
+        avl_node_delete(&(*node)->right, data);
 
     *node = avl_node_balance(*node);
 }
