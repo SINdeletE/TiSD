@@ -45,5 +45,6 @@ open_hash_table_t *open_hash_table_init(void);
 int open_hash_table_add(open_hash_table_t *hash_table, char *str);
 int open_hash_table_delete(open_hash_table_t *hash_table, char *str);
 int open_hash_table_search(open_hash_table_t *hash_table, char *str);
+void open_hash_table_output(open_hash_table_t *hash_table);
 
 #endif

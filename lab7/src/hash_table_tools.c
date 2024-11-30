@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -163,3 +164,26 @@ int open_hash_table_search(open_hash_table_t *hash_table, char *str)
 }
 
 // --------------------------------------------------
+
+void data_output(data_t *data, size_t hash)
+{
+    printf("Hash: %zu | ", hash);
+
+    for (data_t *cur = data; cur; cur = cur->next)
+    {
+        fputs(cur->str, stdout);
+
+        printf(" ");
+    }
+
+    printf("\n");
+}
+
+void open_hash_table_output(open_hash_table_t *hash_table)
+{
+    printf("HASH TABLE:\n\n");
+
+    for (size_t i = 0; i < TABLE_MAX_SIZE; i++)
+        if (hash_table->data[i])
+            data_output(hash_table->data[i], i);
+}

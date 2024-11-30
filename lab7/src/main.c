@@ -33,6 +33,12 @@
 #define CODE_AVL_POST_ORDER 15
 #define CODE_AVL_FIRST_IS_CHAR 16
 
+#define CODE_HASH_READ 17
+#define CODE_HASH_ADD 18
+#define CODE_HASH_REMOVE 19
+#define CODE_HASH_SEARCH 20
+#define CODE_HASH_PRE_ORDER 21
+
 #define CODE_EXIT 30
 
 int clear_buf(FILE *f);
