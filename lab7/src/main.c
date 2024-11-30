@@ -8,11 +8,12 @@
 #include "file_tools.h"
 #include "node_tools.h"
 #include "avl_tools.h"
+#include "hash_table_tools.h"
 
 #define _POSIX_C_SOURCE 200809L
 
 #define IO_OK 0
-#define IO_ERR_INVALID_DATA 1
+#define IO_ERR_MEM 1
 
 #define CODE_READ 1
 #define CODE_ADD 2
@@ -39,9 +40,9 @@ int clear_buf(FILE *f);
 int main(void)
 {
     node_t *tree = NULL;
-    // AVL
     node_t *avl_tree = NULL;
-    // AVL
+    open_hash_table_t *open_hash_table = NULL;
+    
 
     char *filename = NULL;
     size_t filename_size = 0;
@@ -72,6 +73,13 @@ int main(void)
     int code;
     // int func_code = 0;
 
+    if (! (open_hash_table = open_hash_table_init()))
+    {
+        printf("\nCOMNPUTER CAN'T CREATE OPEN ADDRESS HASH TABLE\n");
+
+        return IO_ERR_MEM;
+    }
+
     while (flag)
     {   
         printf("\n--------------------------------\n");
@@ -95,6 +103,13 @@ int main(void)
         printf("14. Output tree (with in-order) + Graphviz visualization\n");
         printf("15. Output tree (with post-order) + Graphviz visualization\n");
         printf("16. Find elements by char and delete it\n");
+
+        printf("\nOPEN ADDRESS HASH TABLE\n");
+        printf("17. Read hash table (from file)\n");
+        printf("18. Add element to hash table\n");
+        printf("19. Delete element to hash table\n");
+        printf("20. Search element to hash table\n");
+        printf("21. Find elements by char and delete it\n");
 
         // printf("\n9. Get statistics\n");
 
