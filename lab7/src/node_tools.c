@@ -327,11 +327,10 @@ int node_read_by_file(char *filedata, node_t **root)
     }
 
     str_free(&word, &size);
+    fclose(f);
 
     if (! root_tmp)
         return READ_ERR_NO_DATA;
-
-    fclose(f);
 
     *root = root_tmp;
 
