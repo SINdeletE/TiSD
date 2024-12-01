@@ -38,7 +38,6 @@
 #define CODE_OPEN_HASH_REMOVE 19
 #define CODE_OPEN_HASH_SEARCH 20
 #define CODE_OPEN_HASH_OUTPUT 21
-#define CODE_OPEN_HASH_FIRST_IS_CHAR 22
 
 #define CODE_EXIT 30
 
@@ -82,13 +81,6 @@ int main(void)
     int code;
     // int func_code = 0;
 
-    if (! (open_hash_table = open_hash_table_init()))
-    {
-        printf("\nCOMPUTER CAN'T CREATE OPEN ADDRESS HASH TABLE\n");
-
-        return IO_ERR_MEM;
-    }
-
     while (flag)
     {   
         printf("\n--------------------------------\n");
@@ -114,12 +106,19 @@ int main(void)
         printf("16. Find elements by char and delete it\n");
 
         printf("\nOPEN ADDRESS HASH TABLE\n");
+        if (open_hash_table)
+        {
+            printf("size: %zu\n", open_hash_table->size);
+            if (open_hash_function == binary_poly_hash_function)
+                printf("hash function: binary\n");
+            else if (open_hash_function == ternary_poly_hash_function)
+                printf("hash function: ternary\n");
+        }
         printf("17. Read hash table (from file)\n");
         printf("18. Add element to hash table\n");
         printf("19. Delete element to hash table\n");
         printf("20. Search element to hash table\n");
         printf("21. Output hash table\n");
-        printf("22. Find elements by char and delete it\n");
 
         // printf("\n9. Get statistics\n");
 
@@ -543,7 +542,10 @@ int main(void)
 
                 break;
             case CODE_OPEN_HASH_READ:
-                open_hash_table_size = open_hash_table->size;
+                if (open_hash_table)
+                {
+                    open_hash_table_size = open_hash_table->size;
+                }
 
                 open_hash_table_free(&open_hash_table);
 
@@ -591,6 +593,13 @@ int main(void)
 
                 break;
             case CODE_OPEN_HASH_ADD:
+                if (! open_hash_table && ! (open_hash_table = open_hash_table_init()))
+                {
+                    printf("\nCOMPUTER CAN'T CREATE OPEN ADDRESS HASH TABLE\n");
+
+                    break;
+                }
+
                 printf("Enter str value: ");
                 if (getline(&data, &data_size, stdin) == -1)
                 {
@@ -625,6 +634,13 @@ int main(void)
 
                 break;
             case CODE_OPEN_HASH_REMOVE:
+                if (! open_hash_table)
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+
                 printf("Enter str value: ");
                 if (getline(&data, &data_size, stdin) == -1)
                 {
@@ -655,6 +671,13 @@ int main(void)
 
                 break;
             case CODE_OPEN_HASH_SEARCH:
+                if (! open_hash_table)
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+
                 printf("Enter str value: ");
                 if (getline(&data, &data_size, stdin) == -1)
                 {
@@ -681,6 +704,13 @@ int main(void)
 
                 break;
             case CODE_OPEN_HASH_OUTPUT:
+                if (! open_hash_table)
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+
                 open_hash_table_output(open_hash_table);
 
                 break;

@@ -47,6 +47,7 @@ struct open_hash_table
 // ---
 
 size_t binary_poly_hash_function(char *str, size_t size);
+size_t ternary_poly_hash_function(char *str, size_t size);
 
 void open_hash_table_free(open_hash_table_t **hash_table);
 open_hash_table_t *open_hash_table_init(void);

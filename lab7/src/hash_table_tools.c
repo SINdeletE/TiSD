@@ -24,7 +24,7 @@ size_t binary_poly_hash_function(char *str, size_t size)
     return hash;
 }
 
-size_t ternary_hash_function(char *str, size_t size)
+size_t ternary_poly_hash_function(char *str, size_t size)
 {
     size_t p = 1;
     size_t hash = 0;
@@ -74,7 +74,7 @@ void open_hash_table_free(open_hash_table_t **hash_table)
 {
     open_hash_table_t *table = *hash_table;
 
-    if (! hash_table)
+    if (! hash_table || ! *hash_table)
         return;
 
     for (size_t i = 0; i < TABLE_MAX_SIZE; i++)
@@ -290,3 +290,4 @@ int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table, 
 
     return READ_OK;
 }
+
