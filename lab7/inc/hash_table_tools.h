@@ -46,15 +46,16 @@ struct open_hash_table
 
 // ---
 
-
+size_t binary_poly_hash_function(char *str, size_t size);
 
 void open_hash_table_free(open_hash_table_t **hash_table);
 open_hash_table_t *open_hash_table_init(void);
 
-int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table);
-int open_hash_table_add(open_hash_table_t *hash_table, char *str);
-int open_hash_table_delete(open_hash_table_t *hash_table, char *str);
-int open_hash_table_search(open_hash_table_t *hash_table, char *str);
+int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table, size_t (*open_hash_function)(char *, size_t ));
+int open_hash_table_add(open_hash_table_t *hash_table, size_t (*open_hash_function)(char *, size_t ), char *str);
+int open_hash_table_delete(open_hash_table_t *hash_table, size_t (*open_hash_function)(char *, size_t ), char *str);
+int open_hash_table_search(open_hash_table_t *hash_table, size_t (*open_hash_function)(char *, size_t ), char *str, int *comp);
 void open_hash_table_output(open_hash_table_t *hash_table);
+void open_hash_table_delete_by_char(open_hash_table_t *hash_table, size_t (*open_hash_function)(char *, size_t ), char c);
 
 #endif

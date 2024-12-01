@@ -48,8 +48,10 @@ int main(void)
 {
     node_t *tree = NULL;
     node_t *avl_tree = NULL;
+
     open_hash_table_t *open_hash_table = NULL;
     size_t open_hash_table_size = TABLE_INIT_SIZE;
+    size_t (*open_hash_function)(char *, size_t ) = binary_poly_hash_function;
     
 
     char *filename = NULL;
@@ -73,8 +75,7 @@ int main(void)
     // VISUAL
 
     // // FIRST_IS_CHAR
-    // char beg = 0;
-    // size_t count;
+    char beg = 0;
     // // FIRST_IS_CHAR
 
     bool flag = true;
@@ -335,21 +336,20 @@ int main(void)
                 system("dot -Tpng TreeVisual.gv -o graph.png");
 
                 break;
-            // case CODE_FIRST_IS_CHAR:
-            //     printf("Enter char: ");
-            //     if (scanf("%c", &beg) != 1)
-            //     {
-            //         printf("\nINVALID INPUT\n");
+            case CODE_FIRST_IS_CHAR:
+                printf("Enter char: ");
+                if (scanf("%c", &beg) != 1)
+                {
+                    printf("\nINVALID INPUT\n");
 
-            //         break;
-            //     }
+                    break;
+                }
 
-            //     count = node_count_and_color(tree, beg);
+                node_delete_by_char(&tree, beg);
 
-            //     printf("\nTotal count: %zu\n", count);
-            //     printf("Nodes were colored\n");
+                printf("\nNodes were deleted successfully\n");
 
-            //     break;
+                break;
             case CODE_AVL_CPY:
                 if (! tree)
                 {
@@ -528,6 +528,20 @@ int main(void)
                 system("dot -Tpng TreeVisual.gv -o graph.png");
 
                 break;
+            case CODE_AVL_FIRST_IS_CHAR:
+                printf("Enter char: ");
+                if (scanf("%c", &beg) != 1)
+                {
+                    printf("\nINVALID INPUT\n");
+
+                    break;
+                }
+
+                avl_node_delete_by_char(&avl_tree, beg);
+
+                printf("\nNodes were deleted successfully\n");
+
+                break;
             case CODE_OPEN_HASH_READ:
                 open_hash_table_size = open_hash_table->size;
 
@@ -555,7 +569,7 @@ int main(void)
                     tmp = NULL;
                 }
 
-                switch(open_hash_table_read_by_file(filename, open_hash_table))
+                switch(open_hash_table_read_by_file(filename, open_hash_table, open_hash_function))
                 {
                     case READ_ERR_NO_DATA:
                         printf("\nNO DATA IN FILE\n");
@@ -591,7 +605,7 @@ int main(void)
                     tmp = NULL;
                 }
 
-                switch (open_hash_table_add(open_hash_table, data))
+                switch (open_hash_table_add(open_hash_table, open_hash_function, data))
                 {
                 case HASH_PRCS_ERR_ALLOC:
                     printf("\nINVALID ALLOCATE\n");
@@ -611,13 +625,6 @@ int main(void)
 
                 break;
             case CODE_OPEN_HASH_REMOVE:
-                if (! tree)
-                {
-                    printf("\nNO DATA\n");
-
-                    break;
-                }
-
                 printf("Enter str value: ");
                 if (getline(&data, &data_size, stdin) == -1)
                 {
@@ -632,26 +639,22 @@ int main(void)
                     tmp = NULL;
                 }
 
-                if (node_search(tree, data, &compares))
+                switch (open_hash_table_delete(open_hash_table, open_hash_function, data))
                 {
-                    node_delete(&tree, data);
+                case HASH_PRCS_ERR_NO_DATA:
+                    printf("\nDATA IS NOT FOUND\n");
 
+                    break;
+                default:
                     printf("\nDATA WAS DELETED SUCCESSFULLY\n");
+
+                    break;
                 }
-                else
-                    printf("\nELEMENT IS NOT FOUND\n");
 
                 str_free(&data, &data_size);
 
                 break;
             case CODE_OPEN_HASH_SEARCH:
-                if (! tree)
-                {
-                    printf("\nNO DATA\n");
-
-                    break;
-                }
-
                 printf("Enter str value: ");
                 if (getline(&data, &data_size, stdin) == -1)
                 {
@@ -667,7 +670,7 @@ int main(void)
                 }
 
                 compares = 0;
-                if (node_search(tree, data, &compares))
+                if (! open_hash_table_search(open_hash_table, open_hash_function, data, &compares))
                     printf("\nDATA WAS FOUNDED SUCCESSFULLY\n");
                 else
                     printf("\nELEMENT IS NOT FOUND\n");

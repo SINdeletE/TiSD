@@ -264,18 +264,17 @@ void node_export_to_dot_eli(FILE *f, const char *node_data, node_t *node)
     fprintf(f, "}\n");
 }
 
-// size_t node_count_and_color(node_t *head, char c)
-// {
-//     if (! head)
-//         return 0;
+void node_delete_by_char(node_t **node, char c)
+{
+    if (! node || ! *node)
+        return;
 
-//     if (*head->data == c)
-//     {
-//         head->color = RED;
-//     }
+    node_delete_by_char(&(*node)->left, c);
+    node_delete_by_char(&(*node)->right, c);
 
-//     return (*head->data == c) + node_count_and_color(head->left, c) + node_count_and_color(head->right, c);
-// }
+    if (*(*node)->data == c)
+        node_delete(node, (*node)->data);
+}
 
 int node_read_by_file(char *filedata, node_t **root)
 {

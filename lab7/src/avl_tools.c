@@ -174,6 +174,38 @@ void avl_node_delete(node_t **node, char *data)
     *node = avl_node_balance(*node);
 }
 
+char *avl_node_search_by_char(node_t *node, char c)
+{
+    char *left;
+    char *right;
+
+    if (! node)
+        return NULL;
+
+    left = avl_node_search_by_char(node->left, c);
+    right = avl_node_search_by_char(node->right, c);
+
+    if (left)
+        return left;
+    else if (right)
+        return right;
+    else if (*node->data == c)
+        return node->data;
+
+    return NULL;
+}
+
+void avl_node_delete_by_char(node_t **node, char c)
+{
+    char *tmp = NULL;
+
+    if (! node || ! *node)
+        return;
+
+    while ((tmp = avl_node_search_by_char(*node, c)))
+        avl_node_delete(node, tmp);
+}
+
 int tree_to_avl_cpy(node_t *node, node_t **avl_tree)
 {
     node_t *tmp = NULL;

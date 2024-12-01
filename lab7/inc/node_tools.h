@@ -38,6 +38,8 @@ void node_output_pre_order(node_t *node, FILE *f);
 void node_output_in_order(node_t *node, FILE *f);
 void node_output_post_order(node_t *node, FILE *f);
 void node_export_to_dot_eli(FILE *f, const char *node_data, node_t *node);
+void node_delete_by_char(node_t **node, char c);
+
 node_t *node_cpy(node_t *node);
 
 node_t *node_left_max(node_t *node);
