@@ -90,6 +90,7 @@ open_hash_table_t *open_hash_table_init(void)
 
     tmp = calloc(1, sizeof(struct open_hash_table));
     tmp->size = TABLE_INIT_SIZE;
+    tmp->hash_function = binary_poly_hash_function;
 
     return tmp;
 }
@@ -124,11 +125,11 @@ int data_add(data_t **data, char *str)
     return HASH_PRCS_OK;
 }
 
-int open_hash_table_add(open_hash_table_t *hash_table, size_t (*open_hash_function)(char *, size_t ), char *str)
+int open_hash_table_add(open_hash_table_t *hash_table, char *str)
 {
     size_t hash = 0;
 
-    hash = open_hash_function(str, hash_table->size);
+    hash = hash_table->hash_function(str, hash_table->size);
 
     return data_add(&hash_table->data[hash], str);
 }
@@ -158,11 +159,11 @@ int data_delete(data_t **data, char *str)
     return HASH_PRCS_OK;
 }
 
-int open_hash_table_delete(open_hash_table_t *hash_table, size_t (*open_hash_function)(char *, size_t ), char *str)
+int open_hash_table_delete(open_hash_table_t *hash_table, char *str)
 {
     size_t hash = 0;
 
-    hash = open_hash_function(str, hash_table->size);
+    hash = hash_table->hash_function(str, hash_table->size);
     
     return data_delete(&hash_table->data[hash], str);
 }
@@ -182,11 +183,11 @@ int data_search(data_t *data, char *str, int *comp)
     return HASH_PRCS_ERR_NO_DATA;
 }
 
-int open_hash_table_search(open_hash_table_t *hash_table, size_t (*open_hash_function)(char *, size_t ), char *str, int *comp)
+int open_hash_table_search(open_hash_table_t *hash_table, char *str, int *comp)
 {
     size_t hash = 0;
 
-    hash = open_hash_function(str, hash_table->size);
+    hash = hash_table->hash_function(str, hash_table->size);
     
     return data_search(hash_table->data[hash], str, comp);
 }
@@ -218,7 +219,14 @@ void open_hash_table_output(open_hash_table_t *hash_table)
 
 // --------------------------------------------------
 
-// void open_hash_table_delete_by_char(open_hash_table_t *hash_table, size_t (*open_hash_function)(char *, size_t ), char c)
+int open_hash_table_restruct(open_hash_table_t **hash_table, size_t new_size, size_t (*hash_function)(char *, size_t))
+{
+    
+}
+
+// --------------------------------------------------
+
+// void open_hash_table_delete_by_char(open_hash_table_t *hash_table, char c)
 // {
 //     data_t *cur = NULL;
 //     data_t *tmp = NULL;
@@ -233,7 +241,7 @@ void open_hash_table_output(open_hash_table_t *hash_table)
 //                 tmp = cur;
 //                 cur = cur->next;
 
-//                 open_hash_table_delete(hash_table, open_hash_function, tmp->str);
+//                 open_hash_table_delete(hash_table, hash_function, tmp->str);
 //             }
 //             else
 //                 cur = cur->next;
@@ -242,7 +250,7 @@ void open_hash_table_output(open_hash_table_t *hash_table)
 
 // --------------------------------------------------
 
-int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table, size_t (*open_hash_function)(char *, size_t ))
+int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table)
 {
     FILE *f = NULL;
     int flag = 0;
@@ -265,7 +273,7 @@ int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table, 
             word_tmp = NULL;
         }
 
-        switch (open_hash_table_add(hash_table, open_hash_function, word))
+        switch (open_hash_table_add(hash_table, word))
         {
         case HASH_PRCS_ERR_ALLOC:
             str_free(&word, &size);
@@ -302,7 +310,10 @@ int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table, 
 
 void close_hash_table_free(close_hash_table_t **hash_table)
 {
-    for (size_t i = 0; i < (*hash_table)->size; i++)
+    if (! hash_table || ! *hash_table)
+        return;
+
+    for (size_t i = 0; i < TABLE_MAX_SIZE; i++)
         free((*hash_table)->data[i]);
 
     free(*hash_table);
@@ -314,17 +325,19 @@ close_hash_table_t *close_hash_table_init(void)
     close_hash_table_t *tmp = NULL;
 
     tmp = calloc(1, sizeof(close_hash_table_t));
+    tmp->size = TABLE_INIT_SIZE;
+    tmp->hash_function = binary_poly_hash_function;
 
     return tmp;
 }
 
-int close_hash_table_add(close_hash_table_t *hash_table, size_t (*close_hash_function)(char *, size_t ), char *str)
+int close_hash_table_add(close_hash_table_t *hash_table, char *str)
 {
     size_t hash = 0;
     size_t i = 0;
     int flag = 0;
 
-    hash = close_hash_function(str, hash_table->size);
+    hash = hash_table->hash_function(str, hash_table->size);
 
     i = hash;
     while (hash_table->data[i])
@@ -349,7 +362,7 @@ int close_hash_table_add(close_hash_table_t *hash_table, size_t (*close_hash_fun
     return HASH_PRCS_OK;
 }
 
-int close_hash_table_delete(close_hash_table_t *hash_table, size_t (*close_hash_function)(char *, size_t ), char *str)
+int close_hash_table_delete(close_hash_table_t *hash_table, char *str)
 {
     size_t hash = 0;
     size_t i = 0;
@@ -357,13 +370,13 @@ int close_hash_table_delete(close_hash_table_t *hash_table, size_t (*close_hash_
 
     size_t tmp = 0;
 
-    hash = close_hash_function(str, hash_table->size);
+    hash = hash_table->hash_function(str, hash_table->size);
 
-    if (! hash_table->data[i])
+    if (! hash_table->data[hash])
         return HASH_PRCS_ERR_NO_DATA;
 
     i = hash;
-    while (hash_table->data[i] && ! strcmp(hash_table->data[i], str))
+    while (hash_table->data[i] && strcmp(hash_table->data[i], str))
     {
         if (i == hash_table->size - 1)
         {
@@ -382,19 +395,20 @@ int close_hash_table_delete(close_hash_table_t *hash_table, size_t (*close_hash_
     return HASH_PRCS_OK;
 }
 
-int close_hash_table_search(close_hash_table_t *hash_table, size_t (*close_hash_function)(char *, size_t ), char *str)
+int close_hash_table_search(close_hash_table_t *hash_table, char *str, int *comp)
 {
     size_t hash = 0;
     size_t i = 0;
     int flag = 0;
 
-    hash = close_hash_function(str, hash_table->size);
+    hash = hash_table->hash_function(str, hash_table->size);
 
-    if (! hash_table->data[i])
+    if (! hash_table->data[hash])
         return HASH_PRCS_ERR_NO_DATA;
 
+    (*comp)++;
     i = hash;
-    while (hash_table->data[i] && ! strcmp(hash_table->data[i], str))
+    while (hash_table->data[i] && strcmp(hash_table->data[i], str))
     {
         if (i == hash_table->size - 1)
         {
@@ -404,6 +418,7 @@ int close_hash_table_search(close_hash_table_t *hash_table, size_t (*close_hash_
         else
             i++;
 
+        (*comp)++;
         if (! hash_table->data[i] || (flag && i == hash))
             return HASH_PRCS_ERR_NO_DATA;
     }
@@ -424,7 +439,7 @@ void close_hash_table_output(close_hash_table_t *hash_table)
         }
 }
 
-int close_hash_table_read_by_file(char *filedata, close_hash_table_t *hash_table, size_t (*close_hash_function)(char *, size_t ))
+int close_hash_table_read_by_file(char *filedata, close_hash_table_t *hash_table)
 {
     FILE *f = NULL;
     int flag = 0;
@@ -447,7 +462,7 @@ int close_hash_table_read_by_file(char *filedata, close_hash_table_t *hash_table
             word_tmp = NULL;
         }
 
-        switch (close_hash_table_add(hash_table, close_hash_function, word))
+        switch (close_hash_table_add(hash_table, word))
         {
         case HASH_PRCS_ERR_SAME_DATA:
             str_free(&word, &size);

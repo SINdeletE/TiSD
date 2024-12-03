@@ -33,11 +33,19 @@
 #define CODE_AVL_POST_ORDER 15
 #define CODE_AVL_FIRST_IS_CHAR 16
 
-#define CODE_OPEN_HASH_READ 17
-#define CODE_OPEN_HASH_ADD 18
-#define CODE_OPEN_HASH_REMOVE 19
-#define CODE_OPEN_HASH_SEARCH 20
-#define CODE_OPEN_HASH_OUTPUT 21
+#define CODE_OPEN_RESTRUCT_SIZE 17
+#define CODE_OPEN_HASH_READ 18
+#define CODE_OPEN_HASH_ADD 19
+#define CODE_OPEN_HASH_REMOVE 20
+#define CODE_OPEN_HASH_SEARCH 21
+#define CODE_OPEN_HASH_OUTPUT 22
+
+#define CODE_CLOSE_RESTRUCT_SIZE 23
+#define CODE_CLOSE_HASH_READ 24
+#define CODE_CLOSE_HASH_ADD 25
+#define CODE_CLOSE_HASH_REMOVE 26
+#define CODE_CLOSE_HASH_SEARCH 27
+#define CODE_CLOSE_HASH_OUTPUT 28
 
 #define CODE_EXIT 30
 
@@ -48,10 +56,17 @@ int main(void)
     node_t *tree = NULL;
     node_t *avl_tree = NULL;
 
+    int restruct_limit_tmp;
+
     open_hash_table_t *open_hash_table = NULL;
     size_t open_hash_table_size = TABLE_INIT_SIZE;
     size_t (*open_hash_function)(char *, size_t ) = binary_poly_hash_function;
+    int open_restruct_limit = 3;
     
+    close_hash_table_t *close_hash_table = NULL;
+    size_t close_hash_table_size = TABLE_INIT_SIZE;
+    size_t (*close_hash_function)(char *, size_t ) = binary_poly_hash_function;
+    int close_restruct_limit = 3;
 
     char *filename = NULL;
     size_t filename_size = 0;
@@ -85,7 +100,7 @@ int main(void)
     {   
         printf("\n--------------------------------\n");
         printf("\nEnter a number of command:\n");
-        printf("\nUSUAL TREE OPERATIONS\n");
+        printf("\nUSUAL TREE\n");
         printf("1. Read tree (from file)\n");
         printf("2. Add tree element by data\n");
         printf("3. Remove tree element by data\n");
@@ -113,12 +128,33 @@ int main(void)
                 printf("hash function: binary\n");
             else if (open_hash_function == ternary_poly_hash_function)
                 printf("hash function: ternary\n");
+
+            printf("restruct limit: %d\n", open_restruct_limit);
         }
-        printf("17. Read hash table (from file)\n");
-        printf("18. Add element to hash table\n");
-        printf("19. Delete element to hash table\n");
-        printf("20. Search element to hash table\n");
-        printf("21. Output hash table\n");
+        printf("17. Enter restruct limit\n");
+        printf("18. Read hash table (from file)\n");
+        printf("19. Add element to hash table\n");
+        printf("20. Delete element to hash table\n");
+        printf("21. Search element to hash table\n");
+        printf("22. Output hash table\n");
+
+        printf("\nCLOSE ADDRESS HASH TABLE\n");
+        if (close_hash_table)
+        {
+            printf("size: %zu\n", close_hash_table->size);
+            if (close_hash_function == binary_poly_hash_function)
+                printf("hash function: binary\n");
+            else if (close_hash_function == ternary_poly_hash_function)
+                printf("hash function: ternary\n");
+
+            printf("restruct limit: %d\n", close_restruct_limit);
+        }
+        printf("23. Enter restruct limit\n");
+        printf("24. Read hash table (from file)\n");
+        printf("25. Add element to hash table\n");
+        printf("26. Delete element to hash table\n");
+        printf("27. Search element to hash table\n");
+        printf("28. Output hash table\n");
 
         // printf("\n9. Get statistics\n");
 
@@ -349,6 +385,9 @@ int main(void)
                 printf("\nNodes were deleted successfully\n");
 
                 break;
+
+// AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL AVL
+
             case CODE_AVL_CPY:
                 if (! tree)
                 {
@@ -541,12 +580,23 @@ int main(void)
                 printf("\nNodes were deleted successfully\n");
 
                 break;
-            case CODE_OPEN_HASH_READ:
-                if (open_hash_table)
+
+// OPEN HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH
+
+            case CODE_OPEN_RESTRUCT_SIZE:
+                if (! open_hash_table)
                 {
-                    open_hash_table_size = open_hash_table->size;
+                    printf("\nNO HASH TABLE\n");
+
+                    break;
                 }
 
+                printf("Enter restruct value (> 1) (or enter invalid value to skip changes): ");
+                if (scanf("%d", &restruct_limit_tmp) == 1 && restruct_limit_tmp > 1)
+                    open_restruct_limit = restruct_limit_tmp;
+
+                break;
+            case CODE_OPEN_HASH_READ:
                 open_hash_table_free(&open_hash_table);
 
                 if (! (open_hash_table = open_hash_table_init()))
@@ -556,6 +606,7 @@ int main(void)
                     break;
                 }
                 open_hash_table->size = open_hash_table_size;
+                open_hash_table->hash_function = open_hash_function;
 
                 printf("Enter filename (with extension): ");
                 if (getline(&filename, &filename_size, stdin) == -1)
@@ -571,7 +622,7 @@ int main(void)
                     tmp = NULL;
                 }
 
-                switch(open_hash_table_read_by_file(filename, open_hash_table, open_hash_function))
+                switch(open_hash_table_read_by_file(filename, open_hash_table))
                 {
                     case READ_ERR_NO_DATA:
                         printf("\nNO DATA IN FILE\n");
@@ -614,7 +665,7 @@ int main(void)
                     tmp = NULL;
                 }
 
-                switch (open_hash_table_add(open_hash_table, open_hash_function, data))
+                switch (open_hash_table_add(open_hash_table, data))
                 {
                 case HASH_PRCS_ERR_ALLOC:
                     printf("\nINVALID ALLOCATE\n");
@@ -655,7 +706,7 @@ int main(void)
                     tmp = NULL;
                 }
 
-                switch (open_hash_table_delete(open_hash_table, open_hash_function, data))
+                switch (open_hash_table_delete(open_hash_table, data))
                 {
                 case HASH_PRCS_ERR_NO_DATA:
                     printf("\nDATA IS NOT FOUND\n");
@@ -693,7 +744,7 @@ int main(void)
                 }
 
                 compares = 0;
-                if (! open_hash_table_search(open_hash_table, open_hash_function, data, &compares))
+                if (! open_hash_table_search(open_hash_table, data, &compares))
                     printf("\nDATA WAS FOUNDED SUCCESSFULLY\n");
                 else
                     printf("\nELEMENT IS NOT FOUND\n");
@@ -714,10 +765,201 @@ int main(void)
                 open_hash_table_output(open_hash_table);
 
                 break;
+
+// CLOSE HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH HASH
+            
+            case CODE_CLOSE_RESTRUCT_SIZE:
+                if (! close_hash_table)
+                {
+                    printf("\nNO HASH TABLE\n");
+
+                    break;
+                }
+
+                printf("Enter restruct value (> 1) (or enter invalid value to skip changes): ");
+                if (scanf("%d", &restruct_limit_tmp) == 1 && restruct_limit_tmp > 1)
+                    close_restruct_limit = restruct_limit_tmp;
+
+                break;
+            case CODE_CLOSE_HASH_READ:
+                if (close_hash_table)
+                {
+                    close_hash_table_size = close_hash_table->size;
+                    close_hash_function = close_hash_table->hash_function;
+                }
+
+                close_hash_table_free(&close_hash_table);
+
+                if (! (close_hash_table = close_hash_table_init()))
+                {
+                    printf("\nCOMPUTER CAN'T CREATE CLOSE ADDRESS HASH TABLE\n");
+
+                    break;
+                }
+                close_hash_table->size = close_hash_table_size;
+                close_hash_table->hash_function = close_hash_function;
+
+                printf("Enter filename (with extension): ");
+                if (getline(&filename, &filename_size, stdin) == -1)
+                {
+                    printf("\nINVALID INPUT\n");
+
+                    break;
+                }
+
+                if ((tmp = strchr(filename, '\n')))
+                {
+                    *tmp = '\0';
+                    tmp = NULL;
+                }
+
+                switch(close_hash_table_read_by_file(filename, close_hash_table))
+                {
+                    case READ_ERR_NO_DATA:
+                        printf("\nNO DATA IN FILE\n");
+
+                        break;
+                    case READ_ERR_INVALID_FILE:
+                        printf("\nINVALID FILE\n");
+
+                        break;
+                    default:
+                        printf("\nCLOSE HASH TABLE WAS READ SUCCESSFULLY\n");
+                }
+
+                str_free(&filename, &filename_size);
+
+                break;
+            case CODE_CLOSE_HASH_ADD:
+                if (! close_hash_table && ! (close_hash_table = close_hash_table_init()))
+                {
+                    printf("\nCOMPUTER CAN'T CREATE CLOSE ADDRESS HASH TABLE\n");
+
+                    break;
+                }
+
+                printf("Enter str value: ");
+                if (getline(&data, &data_size, stdin) == -1)
+                {
+                    printf("\nINVALID INPUT\n");
+
+                    break;
+                }
+
+                if ((tmp = strchr(data, '\n')))
+                {
+                    *tmp = '\0';
+                    tmp = NULL;
+                }
+
+                switch (close_hash_table_add(close_hash_table, data))
+                {
+                case HASH_PRCS_ERR_ALLOC:
+                    printf("\nINVALID ALLOCATE\n");
+                    str_free(&data, &data_size);
+
+                    break;
+                case HASH_PRCS_ERR_SAME_DATA:
+                    printf("\nDATA IS ALREADY EXIST\n");
+                    str_free(&data, &data_size);
+
+                    break;
+                default:
+                    printf("\nDATA WAS ADDED SUCCESSFULLY\n");
+                }
+
+                str_unpin(&data, &data_size);
+
+                break;
+            case CODE_CLOSE_HASH_REMOVE:
+                if (! close_hash_table)
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+
+                printf("Enter str value: ");
+                if (getline(&data, &data_size, stdin) == -1)
+                {
+                    printf("\nINVALID INPUT\n");
+
+                    break;
+                }
+
+                if ((tmp = strchr(data, '\n')))
+                {
+                    *tmp = '\0';
+                    tmp = NULL;
+                }
+
+                switch (close_hash_table_delete(close_hash_table, data))
+                {
+                case HASH_PRCS_ERR_NO_DATA:
+                    printf("\nDATA IS NOT FOUND\n");
+
+                    break;
+                default:
+                    printf("\nDATA WAS DELETED SUCCESSFULLY\n");
+
+                    break;
+                }
+
+                str_free(&data, &data_size);
+
+                break;
+            case CODE_CLOSE_HASH_SEARCH:
+                if (! close_hash_table)
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+
+                printf("Enter str value: ");
+                if (getline(&data, &data_size, stdin) == -1)
+                {
+                    printf("\nINVALID INPUT\n");
+
+                    break;
+                }
+
+                if ((tmp = strchr(data, '\n')))
+                {
+                    *tmp = '\0';
+                    tmp = NULL;
+                }
+
+                compares = 0;
+                if (! close_hash_table_search(close_hash_table, data, &compares))
+                    printf("\nDATA WAS FOUNDED SUCCESSFULLY\n");
+                else
+                    printf("\nELEMENT IS NOT FOUND\n");
+
+                printf("Total compares: %d\n", compares);
+
+                str_free(&data, &data_size);
+
+                break;
+            case CODE_CLOSE_HASH_OUTPUT:
+                if (! close_hash_table)
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+
+                close_hash_table_output(close_hash_table);
+
+                break;
+
+// EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT
+
             case CODE_EXIT:
                 tree = node_free(tree);
                 avl_tree = node_free(avl_tree);
                 open_hash_table_free(&open_hash_table);
+                close_hash_table_free(&close_hash_table);
 
                 str_free(&filename, &filename_size);
                 str_free(&data, &data_size);
