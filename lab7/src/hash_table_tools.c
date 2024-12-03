@@ -106,14 +106,18 @@ data_t *data_alloc(void)
     return tmp;
 }
 
-int data_add(data_t **data, char *str)
+int data_add(data_t **data, char *str, int *comp)
 {
     data_t *tmp = NULL;
     data_t **cur = NULL;
 
     for (cur = data; *cur; cur = &((*cur)->next))
+    {
+        (*comp)++;
+
         if (! strcmp((*cur)->str, str))
             return HASH_PRCS_ERR_SAME_DATA;
+    }
     
     tmp = data_alloc();
     if (! tmp)
@@ -125,13 +129,13 @@ int data_add(data_t **data, char *str)
     return HASH_PRCS_OK;
 }
 
-int open_hash_table_add(open_hash_table_t *hash_table, char *str)
+int open_hash_table_add(open_hash_table_t *hash_table, char *str, int *comp)
 {
     size_t hash = 0;
 
     hash = hash_table->hash_function(str, hash_table->size);
 
-    return data_add(&hash_table->data[hash], str);
+    return data_add(&hash_table->data[hash], str, comp);
 }
 
 // --------------------------------------------------
@@ -200,7 +204,9 @@ void data_output(data_t *data, size_t hash)
 
     for (data_t *cur = data; cur; cur = cur->next)
     {
+        printf("\"");
         fputs(cur->str, stdout);
+        printf("\"");
 
         printf(" ");
     }
@@ -219,9 +225,37 @@ void open_hash_table_output(open_hash_table_t *hash_table)
 
 // --------------------------------------------------
 
-int open_hash_table_restruct(open_hash_table_t **hash_table, size_t new_size, size_t (*hash_function)(char *, size_t))
+int open_hash_table_restruct(open_hash_table_t **hash_table, size_t new_size, size_t (*new_hash_function)(char *, size_t))
 {
+    int compares = 0;
+
+    open_hash_table_t *new_hash_table = NULL;
+
+    new_hash_table = open_hash_table_init();
+    if (! new_hash_table)
+        return HASH_PRCS_ERR_ALLOC;
+
+    new_hash_table->size = new_size;
+    new_hash_table->hash_function = new_hash_function;
+
+    for (size_t i = 0; i < (*hash_table)->size; i++)
+        for (data_t *cur = (*hash_table)->data[i]; cur; cur = cur->next)
+        {
+            if (open_hash_table_add(new_hash_table, cur->str, &compares))
+            {
+                open_hash_table_free(&new_hash_table);
+                open_hash_table_free(hash_table);
+
+                return HASH_PRCS_ERR_ALLOC;
+            }
+
+            cur->str = NULL;
+        }
     
+    open_hash_table_free(hash_table);
+    *hash_table = new_hash_table;
+
+    return PRCS_OK;
 }
 
 // --------------------------------------------------
@@ -257,6 +291,8 @@ int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table)
 
     char *word = NULL;
     size_t size = 0;
+
+    int compares = 0;
     
     char *word_tmp = NULL;
 
@@ -273,7 +309,7 @@ int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table)
             word_tmp = NULL;
         }
 
-        switch (open_hash_table_add(hash_table, word))
+        switch (open_hash_table_add(hash_table, word, &compares))
         {
         case HASH_PRCS_ERR_ALLOC:
             str_free(&word, &size);
@@ -306,7 +342,7 @@ int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table)
 
 
 
-
+// --------------------------------------------------
 
 void close_hash_table_free(close_hash_table_t **hash_table)
 {
@@ -331,7 +367,9 @@ close_hash_table_t *close_hash_table_init(void)
     return tmp;
 }
 
-int close_hash_table_add(close_hash_table_t *hash_table, char *str)
+// --------------------------------------------------
+
+int close_hash_table_add(close_hash_table_t *hash_table, char *str, int *comp)
 {
     size_t hash = 0;
     size_t i = 0;
@@ -339,6 +377,7 @@ int close_hash_table_add(close_hash_table_t *hash_table, char *str)
 
     hash = hash_table->hash_function(str, hash_table->size);
 
+    (*comp)++;
     i = hash;
     while (hash_table->data[i])
     {
@@ -355,12 +394,16 @@ int close_hash_table_add(close_hash_table_t *hash_table, char *str)
 
         if (flag && i == hash)
             return HASH_PRCS_ERR_MAX_SIZE;
+
+        (*comp)++;
     }
 
     hash_table->data[i] = str;
 
     return HASH_PRCS_OK;
 }
+
+// --------------------------------------------------
 
 int close_hash_table_delete(close_hash_table_t *hash_table, char *str)
 {
@@ -395,6 +438,8 @@ int close_hash_table_delete(close_hash_table_t *hash_table, char *str)
     return HASH_PRCS_OK;
 }
 
+// --------------------------------------------------
+
 int close_hash_table_search(close_hash_table_t *hash_table, char *str, int *comp)
 {
     size_t hash = 0;
@@ -426,6 +471,8 @@ int close_hash_table_search(close_hash_table_t *hash_table, char *str, int *comp
     return HASH_PRCS_OK;
 }
 
+// --------------------------------------------------
+
 void close_hash_table_output(close_hash_table_t *hash_table)
 {
     printf("HASH TABLE:\n\n");
@@ -434,10 +481,43 @@ void close_hash_table_output(close_hash_table_t *hash_table)
         if (hash_table->data[i])
         {
             printf("Hash: %zu | ", i);
+            printf("\"");
             fputs(hash_table->data[i], stdout);
+            printf("\"");
             printf("\n");
         }
 }
+
+// --------------------------------------------------
+
+int close_hash_table_restruct(close_hash_table_t **hash_table, size_t new_size, size_t (*new_hash_function)(char *, size_t))
+{
+    int compares = 0;
+
+    close_hash_table_t *new_hash_table = NULL;
+
+    new_hash_table = close_hash_table_init();
+    if (! new_hash_table)
+        return HASH_PRCS_ERR_ALLOC;
+
+    new_hash_table->size = new_size;
+    new_hash_table->hash_function = new_hash_function;
+
+    for (size_t i = 0; i < (*hash_table)->size; i++)
+        if ((*hash_table)->data[i])
+        {
+            close_hash_table_add(new_hash_table, (*hash_table)->data[i], &compares);
+
+            (*hash_table)->data[i] = NULL;
+        }
+
+    close_hash_table_free(hash_table);
+    *hash_table = new_hash_table;
+
+    return PRCS_OK;
+}
+
+// --------------------------------------------------
 
 int close_hash_table_read_by_file(char *filedata, close_hash_table_t *hash_table)
 {
@@ -446,6 +526,8 @@ int close_hash_table_read_by_file(char *filedata, close_hash_table_t *hash_table
 
     char *word = NULL;
     size_t size = 0;
+
+    int compares = 0;
     
     char *word_tmp = NULL;
 
@@ -462,7 +544,7 @@ int close_hash_table_read_by_file(char *filedata, close_hash_table_t *hash_table
             word_tmp = NULL;
         }
 
-        switch (close_hash_table_add(hash_table, word))
+        switch (close_hash_table_add(hash_table, word, &compares))
         {
         case HASH_PRCS_ERR_SAME_DATA:
             str_free(&word, &size);

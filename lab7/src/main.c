@@ -47,6 +47,8 @@
 #define CODE_CLOSE_HASH_SEARCH 27
 #define CODE_CLOSE_HASH_OUTPUT 28
 
+#define CODE_STAT 29
+
 #define CODE_EXIT 30
 
 int clear_buf(FILE *f);
@@ -56,6 +58,8 @@ int main(void)
     node_t *tree = NULL;
     node_t *avl_tree = NULL;
 
+    size_t new_size;
+    size_t (*new_hash_function)(char *, size_t ) = NULL;
     int restruct_limit_tmp;
 
     open_hash_table_t *open_hash_table = NULL;
@@ -124,9 +128,9 @@ int main(void)
         if (open_hash_table)
         {
             printf("size: %zu\n", open_hash_table->size);
-            if (open_hash_function == binary_poly_hash_function)
+            if (open_hash_table->hash_function == binary_poly_hash_function)
                 printf("hash function: binary\n");
-            else if (open_hash_function == ternary_poly_hash_function)
+            else if (open_hash_table->hash_function == ternary_poly_hash_function)
                 printf("hash function: ternary\n");
 
             printf("restruct limit: %d\n", open_restruct_limit);
@@ -142,9 +146,9 @@ int main(void)
         if (close_hash_table)
         {
             printf("size: %zu\n", close_hash_table->size);
-            if (close_hash_function == binary_poly_hash_function)
+            if (close_hash_table->hash_function == binary_poly_hash_function)
                 printf("hash function: binary\n");
-            else if (close_hash_function == ternary_poly_hash_function)
+            else if (close_hash_table->hash_function == ternary_poly_hash_function)
                 printf("hash function: ternary\n");
 
             printf("restruct limit: %d\n", close_restruct_limit);
@@ -156,7 +160,7 @@ int main(void)
         printf("27. Search element to hash table\n");
         printf("28. Output hash table\n");
 
-        // printf("\n9. Get statistics\n");
+        printf("\n29. Get statistics\n");
 
         printf("\n30. Exit program\n");
         printf("\n--------------------------------\n");
@@ -665,7 +669,8 @@ int main(void)
                     tmp = NULL;
                 }
 
-                switch (open_hash_table_add(open_hash_table, data))
+                compares = 0;
+                switch (open_hash_table_add(open_hash_table, data, &compares))
                 {
                 case HASH_PRCS_ERR_ALLOC:
                     printf("\nINVALID ALLOCATE\n");
@@ -679,6 +684,23 @@ int main(void)
                     break;
                 default:
                     printf("\nDATA WAS ADDED SUCCESSFULLY\n");
+                    printf("Total compares: %d\n", compares);
+
+                    if (compares > open_restruct_limit)
+                    {
+                        printf("Restructing hash table\n");
+                        if (open_hash_table->size * 2 > TABLE_MAX_SIZE)
+                            new_size = TABLE_MAX_SIZE;
+                        else
+                            new_size = open_hash_table->size * 2;
+                        
+                        new_hash_function = ternary_poly_hash_function;
+
+                        if (open_hash_table_restruct(&open_hash_table, new_size, new_hash_function))
+                            printf("\nINVALID RESTRUCT. HASH TABLE WAS DELETED\n");
+                        else
+                            printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
+                    }
                 }
 
                 str_unpin(&data, &data_size);
@@ -745,11 +767,31 @@ int main(void)
 
                 compares = 0;
                 if (! open_hash_table_search(open_hash_table, data, &compares))
+                {
                     printf("\nDATA WAS FOUNDED SUCCESSFULLY\n");
-                else
-                    printf("\nELEMENT IS NOT FOUND\n");
+                    printf("Total compares: %d\n", compares);
 
-                printf("Total compares: %d\n", compares);
+                    if (compares > open_restruct_limit)
+                    {
+                        printf("Restructing hash table\n");
+                        if (open_hash_table->size * 2 > TABLE_MAX_SIZE)
+                            new_size = TABLE_MAX_SIZE;
+                        else
+                            new_size = open_hash_table->size * 2;
+                        
+                        new_hash_function = ternary_poly_hash_function;
+
+                        if (open_hash_table_restruct(&open_hash_table, new_size, new_hash_function))
+                            printf("\nINVALID RESTRUCT\n");
+                        else
+                            printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
+                    }
+                }
+                else
+                {
+                    printf("\nELEMENT IS NOT FOUND\n");
+                    printf("Total compares: %d\n", compares);
+                }
 
                 str_free(&data, &data_size);
 
@@ -852,7 +894,8 @@ int main(void)
                     tmp = NULL;
                 }
 
-                switch (close_hash_table_add(close_hash_table, data))
+                compares = 0;
+                switch (close_hash_table_add(close_hash_table, data, &compares))
                 {
                 case HASH_PRCS_ERR_ALLOC:
                     printf("\nINVALID ALLOCATE\n");
@@ -866,6 +909,23 @@ int main(void)
                     break;
                 default:
                     printf("\nDATA WAS ADDED SUCCESSFULLY\n");
+                    printf("Total compares: %d\n", compares);
+
+                    if (compares > close_restruct_limit)
+                    {
+                        printf("Restructing hash table\n");
+                        if (close_hash_table->size * 2 > TABLE_MAX_SIZE)
+                            new_size = TABLE_MAX_SIZE;
+                        else
+                            new_size = close_hash_table->size * 2;
+                        
+                        new_hash_function = ternary_poly_hash_function;
+
+                        if (close_hash_table_restruct(&close_hash_table, new_size, new_hash_function))
+                            printf("\nINVALID RESTRUCT\n");
+                        else
+                            printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
+                    }
                 }
 
                 str_unpin(&data, &data_size);
@@ -932,11 +992,31 @@ int main(void)
 
                 compares = 0;
                 if (! close_hash_table_search(close_hash_table, data, &compares))
+                {
                     printf("\nDATA WAS FOUNDED SUCCESSFULLY\n");
-                else
-                    printf("\nELEMENT IS NOT FOUND\n");
+                    printf("Total compares: %d\n", compares);
 
-                printf("Total compares: %d\n", compares);
+                    if (compares > close_restruct_limit)
+                    {
+                        printf("Restructing hash table\n");
+                        if (close_hash_table->size * 2 > TABLE_MAX_SIZE)
+                            new_size = TABLE_MAX_SIZE;
+                        else
+                            new_size = close_hash_table->size * 2;
+                        
+                        new_hash_function = ternary_poly_hash_function;
+
+                        if (close_hash_table_restruct(&close_hash_table, new_size, new_hash_function))
+                            printf("\nINVALID RESTRUCT\n");
+                        else
+                            printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
+                    }
+                }
+                else
+                {
+                    printf("\nELEMENT IS NOT FOUND\n");
+                    printf("Total compares: %d\n", compares);
+                }
 
                 str_free(&data, &data_size);
 
@@ -952,6 +1032,10 @@ int main(void)
                 close_hash_table_output(close_hash_table);
 
                 break;
+
+// STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS
+
+
 
 // EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT
 
