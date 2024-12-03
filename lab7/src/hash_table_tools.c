@@ -265,7 +265,7 @@ int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table, 
             word_tmp = NULL;
         }
 
-        switch (open_hash_table_add(hash_table, open_hash_function,word))
+        switch (open_hash_table_add(hash_table, open_hash_function, word))
         {
         case HASH_PRCS_ERR_ALLOC:
             str_free(&word, &size);
@@ -291,3 +291,186 @@ int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table, 
     return READ_OK;
 }
 
+
+
+
+
+
+
+
+
+
+void close_hash_table_free(close_hash_table_t **hash_table)
+{
+    for (size_t i = 0; i < (*hash_table)->size; i++)
+        free((*hash_table)->data[i]);
+
+    free(*hash_table);
+    *hash_table = NULL;
+}
+
+close_hash_table_t *close_hash_table_init(void)
+{
+    close_hash_table_t *tmp = NULL;
+
+    tmp = calloc(1, sizeof(close_hash_table_t));
+
+    return tmp;
+}
+
+int close_hash_table_add(close_hash_table_t *hash_table, size_t (*close_hash_function)(char *, size_t ), char *str)
+{
+    size_t hash = 0;
+    size_t i = 0;
+    int flag = 0;
+
+    hash = close_hash_function(str, hash_table->size);
+
+    i = hash;
+    while (hash_table->data[i])
+    {
+        if (! strcmp(hash_table->data[i], str))
+            return HASH_PRCS_ERR_SAME_DATA;
+
+        if (i == hash_table->size - 1)
+        {
+            i = 0;
+            flag = 1;
+        }
+        else
+            i++;
+
+        if (flag && i == hash)
+            return HASH_PRCS_ERR_MAX_SIZE;
+    }
+
+    hash_table->data[i] = str;
+
+    return HASH_PRCS_OK;
+}
+
+int close_hash_table_delete(close_hash_table_t *hash_table, size_t (*close_hash_function)(char *, size_t ), char *str)
+{
+    size_t hash = 0;
+    size_t i = 0;
+    int flag = 0;
+
+    size_t tmp = 0;
+
+    hash = close_hash_function(str, hash_table->size);
+
+    if (! hash_table->data[i])
+        return HASH_PRCS_ERR_NO_DATA;
+
+    i = hash;
+    while (hash_table->data[i] && ! strcmp(hash_table->data[i], str))
+    {
+        if (i == hash_table->size - 1)
+        {
+            i = 0;
+            flag = 1;
+        }
+        else
+            i++;
+
+        if (! hash_table->data[i] || (flag && i == hash))
+            return HASH_PRCS_ERR_NO_DATA;
+    }
+
+    str_free(&hash_table->data[i], &tmp);
+
+    return HASH_PRCS_OK;
+}
+
+int close_hash_table_search(close_hash_table_t *hash_table, size_t (*close_hash_function)(char *, size_t ), char *str)
+{
+    size_t hash = 0;
+    size_t i = 0;
+    int flag = 0;
+
+    size_t tmp = 0;
+
+    hash = close_hash_function(str, hash_table->size);
+
+    if (! hash_table->data[i])
+        return HASH_PRCS_ERR_NO_DATA;
+
+    i = hash;
+    while (hash_table->data[i] && ! strcmp(hash_table->data[i], str))
+    {
+        if (i == hash_table->size - 1)
+        {
+            i = 0;
+            flag = 1;
+        }
+        else
+            i++;
+
+        if (! hash_table->data[i] || (flag && i == hash))
+            return HASH_PRCS_ERR_NO_DATA;
+    }
+
+    return HASH_PRCS_OK;
+}
+
+void close_hash_table_output(close_hash_table_t *hash_table)
+{
+    printf("HASH TABLE:\n\n");
+
+    for (size_t i = 0; i < hash_table->size; i++)
+        if (hash_table->data[i])
+        {
+            printf("Hash: %zu | ", i);
+            fputs(hash_table->data[i], stdout);
+            printf("\n");
+        }
+}
+
+int close_hash_table_read_by_file(char *filedata, close_hash_table_t *hash_table, size_t (*close_hash_function)(char *, size_t ))
+{
+    FILE *f = NULL;
+    int flag = 0;
+
+    char *word = NULL;
+    size_t size = 0;
+    
+    char *word_tmp = NULL;
+
+    if (file_is_correct(filedata))
+        return READ_ERR_INVALID_FILE;
+
+    f = fopen(filedata, "r");
+
+    while (getline(&word, &size, f) != -1)
+    {
+        if ((word_tmp = strchr(word, '\n')))
+        {
+            *word_tmp = '\0';
+            word_tmp = NULL;
+        }
+
+        switch (close_hash_table_add(hash_table, close_hash_function, word))
+        {
+        case HASH_PRCS_ERR_SAME_DATA:
+            str_free(&word, &size);
+
+            break;
+        case HASH_PRCS_ERR_MAX_SIZE:
+            str_free(&word, &size);
+
+            break;
+        case HASH_PRCS_OK:
+            flag = 1;
+        } 
+
+        str_unpin(&word, &size);
+    }
+
+    str_free(&word, &size);
+    fclose(f);
+
+    if (! flag)
+        return READ_ERR_NO_DATA;
+
+    return READ_OK;
+}
