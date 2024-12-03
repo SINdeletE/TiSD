@@ -388,8 +388,6 @@ int close_hash_table_search(close_hash_table_t *hash_table, size_t (*close_hash_
     size_t i = 0;
     int flag = 0;
 
-    size_t tmp = 0;
-
     hash = close_hash_function(str, hash_table->size);
 
     if (! hash_table->data[i])
