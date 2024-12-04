@@ -361,3 +361,18 @@ node_t *node_cpy(node_t *node)
 
     return tmp;
 }
+
+size_t node_size(node_t *node)
+{
+    size_t total_size = 0;
+
+    if (! node)
+        return 0;
+
+    total_size += sizeof(node_t);
+    total_size += (strlen(node->data) + 1) * sizeof(char);
+    total_size += node_size(node->left);
+    total_size += node_size(node->right);
+
+    return total_size;
+}

@@ -9,6 +9,7 @@
 #include "node_tools.h"
 #include "avl_tools.h"
 #include "hash_table_tools.h"
+#include "statistics.h"
 
 #define _POSIX_C_SOURCE 200809L
 
@@ -1035,7 +1036,11 @@ int main(void)
 
 // STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS
 
+            case CODE_STAT:
+                hashstat();
+                avl_hash_stat();
 
+                break;
 
 // EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT EXIT
 

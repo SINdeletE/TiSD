@@ -41,6 +41,7 @@ void node_export_to_dot_eli(FILE *f, const char *node_data, node_t *node);
 void node_delete_by_char(node_t **node, char c);
 
 node_t *node_cpy(node_t *node);
+size_t node_size(node_t *node);
 
 node_t *node_left_max(node_t *node);
 node_t *node_right_min(node_t *node);

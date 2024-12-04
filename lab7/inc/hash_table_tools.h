@@ -64,6 +64,10 @@ void open_hash_table_output(open_hash_table_t *hash_table);
 // void open_hash_table_delete_by_char(open_hash_table_t *hash_table, char c);
 int open_hash_table_restruct(open_hash_table_t **hash_table, size_t new_size, size_t (*new_hash_function)(char *, size_t));
 
+int data_add(data_t **data, char *str, int *comp);
+void open_hash_table_data_free(data_t **data);
+size_t open_hash_table_size(open_hash_table_t *hash_table);
+
 // ------
 
 void close_hash_table_free(close_hash_table_t **hash_table);
@@ -74,5 +78,9 @@ int close_hash_table_delete(close_hash_table_t *hash_table, char *str);
 void close_hash_table_output(close_hash_table_t *hash_table);
 int close_hash_table_search(close_hash_table_t *hash_table, char *str, int *comp);
 int close_hash_table_restruct(close_hash_table_t **hash_table, size_t new_size, size_t (*new_hash_function)(char *, size_t));
+
+int close_hash_table_data_add(close_hash_table_t *hash_table, size_t hash, char *str, int *comp);
+void close_hashstat_data_clear(close_hash_table_t *hash_table);
+size_t close_hash_table_size(close_hash_table_t *hash_table);
 
 #endif

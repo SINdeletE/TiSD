@@ -89,6 +89,9 @@ open_hash_table_t *open_hash_table_init(void)
     open_hash_table_t *tmp = NULL;
 
     tmp = calloc(1, sizeof(struct open_hash_table));
+    if (! tmp)
+        return tmp;
+        
     tmp->size = TABLE_INIT_SIZE;
     tmp->hash_function = binary_poly_hash_function;
 
@@ -260,6 +263,22 @@ int open_hash_table_restruct(open_hash_table_t **hash_table, size_t new_size, si
 
 // --------------------------------------------------
 
+size_t open_hash_table_size(open_hash_table_t *hash_table)
+{
+    size_t total_size = sizeof(hash_table);
+
+    total_size += sizeof(open_hash_table_t);
+
+    for (size_t i = 0; i < TABLE_MAX_SIZE; i++)
+        if (hash_table->data[i])
+            for (data_t *cur = hash_table->data[i]; cur; cur = cur->next)
+                total_size += sizeof(data_t) + (strlen(hash_table->data[i]->str) + 1) * sizeof(char);
+    
+    return total_size;
+}
+
+// --------------------------------------------------
+
 // void open_hash_table_delete_by_char(open_hash_table_t *hash_table, char c)
 // {
 //     data_t *cur = NULL;
@@ -356,11 +375,23 @@ void close_hash_table_free(close_hash_table_t **hash_table)
     *hash_table = NULL;
 }
 
+void close_hashstat_data_clear(close_hash_table_t *hash_table)
+{
+    for (size_t i = 0; i < TABLE_MAX_SIZE; i++)
+    {
+        free(hash_table->data[i]);
+        hash_table->data[i] = NULL;
+    }
+}
+
 close_hash_table_t *close_hash_table_init(void)
 {
     close_hash_table_t *tmp = NULL;
 
     tmp = calloc(1, sizeof(close_hash_table_t));
+    if (! tmp)
+        return tmp;
+
     tmp->size = TABLE_INIT_SIZE;
     tmp->hash_function = binary_poly_hash_function;
 
@@ -369,13 +400,10 @@ close_hash_table_t *close_hash_table_init(void)
 
 // --------------------------------------------------
 
-int close_hash_table_add(close_hash_table_t *hash_table, char *str, int *comp)
+int close_hash_table_data_add(close_hash_table_t *hash_table, size_t hash, char *str, int *comp)
 {
-    size_t hash = 0;
     size_t i = 0;
     int flag = 0;
-
-    hash = hash_table->hash_function(str, hash_table->size);
 
     (*comp)++;
     i = hash;
@@ -401,6 +429,15 @@ int close_hash_table_add(close_hash_table_t *hash_table, char *str, int *comp)
     hash_table->data[i] = str;
 
     return HASH_PRCS_OK;
+}
+
+int close_hash_table_add(close_hash_table_t *hash_table, char *str, int *comp)
+{
+    size_t hash = 0;
+
+    hash = hash_table->hash_function(str, hash_table->size);
+
+    return close_hash_table_data_add(hash_table, hash, str, comp);
 }
 
 // --------------------------------------------------
@@ -515,6 +552,21 @@ int close_hash_table_restruct(close_hash_table_t **hash_table, size_t new_size, 
     *hash_table = new_hash_table;
 
     return PRCS_OK;
+}
+
+// --------------------------------------------------
+
+size_t close_hash_table_size(close_hash_table_t *hash_table)
+{
+    size_t total_size = sizeof(hash_table);
+
+    total_size += sizeof(close_hash_table_t);
+
+    for (size_t i = 0; i < TABLE_MAX_SIZE; i++)
+        if (hash_table->data[i])
+            total_size += (strlen(hash_table->data[i]) + 1) * sizeof(char);
+    
+    return total_size;
 }
 
 // --------------------------------------------------
