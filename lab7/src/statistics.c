@@ -371,6 +371,7 @@ void avl_hash_stat(void)
     close_hash_table_t *close_hash_table = NULL;
 
     char hash_searching_data[HASHSTAT_STR_SIZE] = "Searchable";
+    char avl_searching_data[HASHSTAT_STR_SIZE] = {0};
 
     node_t *tmp = NULL;
 
@@ -470,23 +471,24 @@ void avl_hash_stat(void)
 
         // ---
 
+        hashstat_data_str_create(avl_searching_data, 0);
         avl_data_add(&avl_tree, coll_count);
         for (size_t i = 0; i < ITER_COUNT; i++)
         {
             clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
-            avl_node_delete(&avl_tree, hash_searching_data);
+            avl_node_delete(&avl_tree, avl_searching_data);
             clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
 
             AVL_time_delete += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
 
             str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
-            strcpy(str, hash_searching_data);
+            strcpy(str, avl_searching_data);
             tmp = node_alloc(str);
             avl_tree = avl_node_add(avl_tree, tmp);
 
             str_unpin(&str, &size);
         }
-        tmp = node_search(avl_tree, hash_searching_data, &compares);
+        tmp = node_search(avl_tree, avl_searching_data, &compares);
         AVL_time_delete_compares = compares;
         compares = 0;
 
