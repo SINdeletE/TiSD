@@ -739,10 +739,11 @@ void total_stat_search(void)
         AVL_time_search_compares = 0;
         open_time_search_compares = 0;
         close_time_search_compares = 0;
+
+        worst_tree = node_free(worst_tree);
+        avl_tree = node_free(avl_tree);
     }
 
     open_hash_table_free(&open_hash_table);
     close_hash_table_free(&close_hash_table);
-
-    node_free(avl_tree);
 }
