@@ -114,6 +114,7 @@ int data_add(data_t **data, char *str, int *comp)
     data_t *tmp = NULL;
     data_t **cur = NULL;
 
+    (*comp)++;
     for (cur = data; *cur; cur = &((*cur)->next))
     {
         (*comp)++;

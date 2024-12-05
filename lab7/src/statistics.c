@@ -633,7 +633,7 @@ void total_stat_search(void)
 
     // ---
 
-    printf("\nTOTAL STATISTICS: SEARCH (time in nsec) (total iteration: %d)\n", ITER_COUNT);
+    printf("\nTOTAL STATISTICS: SEARCHING MAX ELEMENT (time in nsec) (total iteration: %d)\n", ITER_COUNT);
     printf("(P.S. count is (collision count + 1) for hash tables)\n");
 
     printf("\nBINARY HASH FUNCTION; SIZE = %zu\n", open_hash_table->size);
@@ -740,6 +740,48 @@ void total_stat_search(void)
         open_time_search_compares = 0;
         close_time_search_compares = 0;
 
+        worst_tree = node_free(worst_tree);
+        avl_tree = node_free(avl_tree);
+    }
+
+    printf("\nTOTAL STATISTICS: SIZES\n");
+
+    printf(" count |");
+    printf("  WORTH SIZE  |");
+    printf("    AVL SIZE  |");
+    printf("   OPEN SIZE  |");
+    printf("  CLOSE SIZE  |\n");
+    for (size_t coll_count = MIN_COLL_COUNT; coll_count < MAX_COLL_COUNT; coll_count *= COLL_STEP)
+    {
+        hash_searching_data[0] = ZERO_CHAR + coll_count;
+
+        // ---
+
+        open_hashstat_data_add(open_hash_table, open_hash_table->hash_function(hash_searching_data, open_hash_table->size), coll_count, hash_searching_data);
+
+        // ---
+
+        close_hashstat_data_add(close_hash_table, close_hash_table->hash_function(hash_searching_data, close_hash_table->size), coll_count, hash_searching_data);
+
+        // ---
+
+        worst_tree = node_linked_list_tree(&max_depth_element, coll_count, &time_tmp);
+
+        // ---
+
+        avl_data_add(&avl_tree, coll_count);
+
+        printf("%-*zu|", STR_TABLE_SIZE + 1 - 2, coll_count);
+        printf("%-*zu|", STR_TABLE_SIZE * 2 - 2, sizeof(worst_tree) + node_size(worst_tree));
+        printf("%-*zu|", STR_TABLE_SIZE * 2 - 2, sizeof(avl_tree) + node_size(avl_tree));
+        printf("%-*zu|", STR_TABLE_SIZE * 2 - 2, open_hash_table_size(open_hash_table));
+        printf("%-*zu|", STR_TABLE_SIZE * 2 - 2, close_hash_table_size(close_hash_table));
+
+        printf("\n");
+
+        for (size_t i = 0; i < open_hash_table->size; i++)
+            open_hash_table_data_free(&open_hash_table->data[i]);
+        close_hashstat_data_clear(close_hash_table);
         worst_tree = node_free(worst_tree);
         avl_tree = node_free(avl_tree);
     }
