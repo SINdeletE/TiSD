@@ -1041,6 +1041,7 @@ int main(void)
                 avl_hash_stat();
                 
                 total_stat_search();
+                total_stat_compares();
 
                 break;
 

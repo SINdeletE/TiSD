@@ -377,9 +377,21 @@ size_t node_size(node_t *node)
     return total_size;
 }
 
+size_t node_compares(node_t *node, node_t *root)
+{
+    size_t total_comp = 0;
+    int comp = 0;
 
+    if (! node || ! root)
+        return 0;
 
+    total_comp += node_compares(node->left, root);
+    total_comp += node_compares(node->right, root);
+    
+    node_search(root, node->data, &comp);
 
+    return total_comp + comp;
+}
 
 
 

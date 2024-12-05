@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <inttypes.h>
+#include <limits.h>
 
 #include "statistics.h"
 
@@ -88,6 +90,147 @@ void avl_data_add(node_t **node, size_t count)
         str_unpin(&str, &size);
     }
 }
+
+// ---
+
+void str_rand(char *str, size_t size)
+{
+    char r_num = 1;
+
+    for (size_t i = 0; i < size; i++)
+    {
+        while (! (r_num = rand() % (CHAR_MAX - 2) + 1));
+        str[i] = r_num;
+    }
+}
+
+double open_average_compare(size_t count)
+{
+    open_hash_table_t *hash_table = NULL;
+
+    char *str = NULL;
+    int comp = 0;
+    size_t size = 0;
+
+    double total_comp = 0.0;
+
+    hash_table = open_hash_table_init();
+
+    for (size_t i = 0; i < count; i++)
+    {
+        str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
+        str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
+        while (open_hash_table_add(hash_table, str, &comp))
+            str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
+        
+
+        str_unpin(&str, &size);
+
+        total_comp += comp;
+        comp = 0;
+    }
+
+    open_hash_table_free(&hash_table);
+
+    return total_comp / count;
+}
+
+double close_average_compare(size_t count)
+{
+    close_hash_table_t *hash_table = NULL;
+
+    char *str = NULL;
+    int comp = 0;
+    size_t size = 0;
+
+    double total_comp = 0.0;
+
+    hash_table = close_hash_table_init();
+
+    for (size_t i = 0; i < (count > TABLE_INIT_SIZE ? TABLE_INIT_SIZE : count); i++)
+    {
+        str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
+        str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
+        while (close_hash_table_add(hash_table, str, &comp))
+            str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
+
+        str_unpin(&str, &size);
+
+        total_comp += comp;
+        comp = 0;
+    }
+
+    close_hashstat_data_clear(hash_table);
+    close_hash_table_free(&hash_table);
+
+    return total_comp / count;
+}
+
+double node_average_compare(size_t count)
+{
+    node_t *tree = NULL;
+    node_t *tmp = NULL;
+
+    char *str = NULL;
+    size_t size = 0;
+
+    double total_comp = 0.0;
+
+    int cmp = 0;
+
+    for (size_t i = 0; i < count; i++)
+    {
+        str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
+        str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
+        while (node_search(tree, str, &cmp))
+            str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
+
+        tmp = node_alloc(str);
+        tree = node_add(tree, tmp);
+
+        str_unpin(&str, &size);
+    }
+
+    total_comp = node_compares(tree, tree);
+
+    tree = node_free(tree);
+
+    return total_comp / count;
+}
+
+double avl_node_average_compare(size_t count)
+{
+    node_t *tree = NULL;
+    node_t *tmp = NULL;
+
+    char *str = NULL;
+    size_t size = 0;
+
+    double total_comp = 0.0;
+
+    int cmp = 0;
+
+    for (size_t i = 0; i < count; i++)
+    {
+        str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
+        str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
+        while (node_search(tree, str, &cmp))
+            str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
+
+        tmp = node_alloc(str);
+        tree = avl_node_add(tree, tmp);
+
+        str_unpin(&str, &size);
+    }
+
+    total_comp = node_compares(tree, tree);
+
+    tree = node_free(tree);
+
+    return total_comp / count;
+}
+
+// ---
 
 void hashstat(void)
 {
@@ -788,4 +931,38 @@ void total_stat_search(void)
 
     open_hash_table_free(&open_hash_table);
     close_hash_table_free(&close_hash_table);
+}
+
+
+
+
+
+
+
+
+
+void total_stat_compares(void)
+{
+    printf("\nTOTAL STATISTICS: AVERAGE COMPARES FROM RANDOM DATA (time in nsec) (total iteration: %d)\n", ITER_COUNT);
+    printf("(P.S. count is (collision count + 1) for hash tables)\n");
+
+    printf("\nBINARY HASH FUNCTION; SIZE = %d\n", TABLE_INIT_SIZE);
+    printf(" count |");
+    printf("  USUAL COMP  |");
+    printf("    AVL COMP  |");
+    printf("   OPEN COMP  |");
+    printf("  CLOSE COMP  |\n");
+
+    srand(time(NULL));
+
+    for (size_t i = MIN_COLL_COUNT; i < MAX_COLL_COUNT * 4; i *= 2)
+    {
+        printf("%-*zu|", STR_TABLE_SIZE + 1 - 2, i);
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, node_average_compare(i));
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, avl_node_average_compare(i));
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, open_average_compare(i));
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, close_average_compare(i));
+
+        printf("\n");
+    }
 }
