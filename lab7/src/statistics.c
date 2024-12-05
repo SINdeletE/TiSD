@@ -121,7 +121,11 @@ double open_average_compare(size_t count)
         str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
         str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
         while (open_hash_table_add(hash_table, str, &comp))
+        {
             str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
+
+            comp = 0;
+        }
         
 
         str_unpin(&str, &size);
@@ -152,7 +156,11 @@ double close_average_compare(size_t count)
         str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
         str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
         while (close_hash_table_add(hash_table, str, &comp))
+        {
             str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
+
+            comp = 0;
+        }
 
         str_unpin(&str, &size);
 
