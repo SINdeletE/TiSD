@@ -440,7 +440,7 @@ void hashstat(void)
 
     // ---
 
-    printf("\nTERNARY HASH FUNCTION; SIZE = %zu\n", open_hash_table->size);
+    printf("\nBINARY HASH FUNCTION; SIZE = %zu\n", open_hash_table->size);
     printf("collision|");
     printf("HASH FIND (OPEN)|");
     printf("HASH FIND(CLOSE)|");
@@ -594,7 +594,7 @@ void avl_hash_stat(void)
 
     // ---
 
-    printf("\nHASHES VS AVL STATISTICS (time in nsec) (total iteration: %d)\n", ITER_COUNT);
+    printf("\nHASHES VS AVL STATISTICS (time in nsec) (size in bytes) (total iteration: %d)\n", ITER_COUNT);
     printf("(P.S. count is (collision count + 1) for hash tables)\n");
 
     printf("\nBINARY HASH FUNCTION; SIZE = %zu\n", open_hash_table->size);
@@ -895,7 +895,7 @@ void total_stat_search(void)
         avl_tree = node_free(avl_tree);
     }
 
-    printf("\nTOTAL STATISTICS: SIZES\n");
+    printf("\nTOTAL STATISTICS: SIZES (size in bytes)\n");
 
     printf(" count |");
     printf("  WORTH SIZE  |");
