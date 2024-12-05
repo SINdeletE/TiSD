@@ -17,5 +17,6 @@
 
 void hashstat(void);
 void avl_hash_stat(void);
+void total_stat_search(void);
 
 #endif

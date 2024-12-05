@@ -42,6 +42,7 @@ void node_delete_by_char(node_t **node, char c);
 
 node_t *node_cpy(node_t *node);
 size_t node_size(node_t *node);
+node_t *node_linked_list_tree(node_t **searched_element, int elements, double *time);
 
 node_t *node_left_max(node_t *node);
 node_t *node_right_min(node_t *node);

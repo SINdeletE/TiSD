@@ -1039,6 +1039,8 @@ int main(void)
             case CODE_STAT:
                 hashstat();
                 avl_hash_stat();
+                
+                total_stat_search();
 
                 break;
 

@@ -376,3 +376,130 @@ size_t node_size(node_t *node)
 
     return total_size;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+int decs(int a)
+{
+    int s = 0;
+
+    if (a == 0)
+        return 1;
+
+    while (a > 0)
+    {
+        a /= 10;
+
+        s++;
+    }
+
+    return s;
+}
+
+node_t *node_max_height_element(node_t *node)
+{
+    int max_h, left, right;
+
+    if (! node)
+        return NULL;
+
+    left = node_height(node->left);
+    right = node_height(node->right);
+
+    if (left == -1 && right == -1)
+        return node;
+
+    max_h = left > right ? left : right;
+
+    if (max_h == left)
+        return node_max_height_element(node->left);
+    else
+        return node_max_height_element(node->right);
+}
+
+node_t *node_alloc_with_num(int num, int max_decs)
+{
+    node_t *tmp = NULL;
+    char *data = NULL;
+    char *p = NULL;
+
+    data = calloc(max_decs + 1, sizeof(char));
+    if (! data)
+        return NULL;
+
+    sprintf(data, "%*d", max_decs, num);
+    p = data;
+    while (isspace(*p))
+    {
+        *p = '0';
+        
+        p++;
+    }
+
+    tmp = node_alloc(data);
+    if (! tmp)
+    {
+        free(data);
+
+        return NULL;
+    }
+
+    return tmp;
+}
+
+node_t *node_linked_list_tree(node_t **searched_element, int elements, double *time)
+{
+    node_t *tree = NULL;
+    node_t *tmp = NULL;
+
+    int max_decs;
+    int i = 0;
+
+    struct timespec t_beg, t_end;
+
+    max_decs = decs(elements);
+
+    elements--;
+    while (i <= elements)
+    {
+        tmp = node_alloc_with_num(i, max_decs);
+        if (! tmp)
+            break;
+
+        // ---
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        tree = node_add(tree, tmp);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+        *time += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+
+        // ---
+
+        i++;
+    }
+
+    *searched_element = node_max_height_element(tmp);
+    
+    return tree;
+}
