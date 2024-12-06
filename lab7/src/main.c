@@ -64,13 +64,9 @@ int main(void)
     int restruct_limit_tmp;
 
     open_hash_table_t *open_hash_table = NULL;
-    size_t open_hash_table_size = TABLE_INIT_SIZE;
-    size_t (*open_hash_function)(char *, size_t ) = binary_poly_hash_function;
     int open_restruct_limit = 3;
     
     close_hash_table_t *close_hash_table = NULL;
-    size_t close_hash_table_size = TABLE_INIT_SIZE;
-    size_t (*close_hash_function)(char *, size_t ) = binary_poly_hash_function;
     int close_restruct_limit = 3;
 
     char *filename = NULL;
@@ -610,8 +606,6 @@ int main(void)
 
                     break;
                 }
-                open_hash_table->size = open_hash_table_size;
-                open_hash_table->hash_function = open_hash_function;
 
                 printf("Enter filename (with extension): ");
                 if (getline(&filename, &filename_size, stdin) == -1)
@@ -686,6 +680,7 @@ int main(void)
                 default:
                     printf("\nDATA WAS ADDED SUCCESSFULLY\n");
                     printf("Total compares: %d\n", compares);
+                    printf("Average compares: %.6lf\n", open_hash_compares(open_hash_table));
 
                     if (compares > open_restruct_limit)
                     {
@@ -771,6 +766,7 @@ int main(void)
                 {
                     printf("\nDATA WAS FOUNDED SUCCESSFULLY\n");
                     printf("Total compares: %d\n", compares);
+                    printf("Average compares: %.6lf\n", open_hash_compares(open_hash_table));
 
                     if (compares > open_restruct_limit)
                     {
@@ -806,6 +802,7 @@ int main(void)
                 }
 
                 open_hash_table_output(open_hash_table);
+                printf("\nAverage compares: %.6lf\n", open_hash_compares(open_hash_table));
 
                 break;
 
@@ -825,12 +822,6 @@ int main(void)
 
                 break;
             case CODE_CLOSE_HASH_READ:
-                if (close_hash_table)
-                {
-                    close_hash_table_size = close_hash_table->size;
-                    close_hash_function = close_hash_table->hash_function;
-                }
-
                 close_hash_table_free(&close_hash_table);
 
                 if (! (close_hash_table = close_hash_table_init()))
@@ -839,8 +830,6 @@ int main(void)
 
                     break;
                 }
-                close_hash_table->size = close_hash_table_size;
-                close_hash_table->hash_function = close_hash_function;
 
                 printf("Enter filename (with extension): ");
                 if (getline(&filename, &filename_size, stdin) == -1)
@@ -911,6 +900,7 @@ int main(void)
                 default:
                     printf("\nDATA WAS ADDED SUCCESSFULLY\n");
                     printf("Total compares: %d\n", compares);
+                    printf("Average compares: %.6lf\n", close_hash_compares(close_hash_table));
 
                     if (compares > close_restruct_limit)
                     {
@@ -996,6 +986,7 @@ int main(void)
                 {
                     printf("\nDATA WAS FOUNDED SUCCESSFULLY\n");
                     printf("Total compares: %d\n", compares);
+                    printf("Average compares: %.6lf\n", close_hash_compares(close_hash_table));
 
                     if (compares > close_restruct_limit)
                     {
@@ -1031,6 +1022,7 @@ int main(void)
                 }
 
                 close_hash_table_output(close_hash_table);
+                printf("\nAverage compares: %.6lf\n", close_hash_compares(close_hash_table));
 
                 break;
 

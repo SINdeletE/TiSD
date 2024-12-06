@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "hash_table_tools.h"
 #include "file_tools.h"
@@ -92,10 +92,30 @@ open_hash_table_t *open_hash_table_init(void)
     if (! tmp)
         return tmp;
         
-    tmp->size = TABLE_INIT_SIZE;
+    tmp->size = 0;
     tmp->hash_function = binary_poly_hash_function;
+    tmp->elems_count = 0;
+    tmp->comp_limit = TABLE_INIT_COMP_LIMIT;
 
     return tmp;
+}
+
+double open_hash_compares(open_hash_table_t *hash_table)
+{
+    int total = 0;
+
+    int current_comps;
+
+    for (size_t i = 0; i < hash_table->size; i++)
+    {
+        current_comps = 1;
+
+        if (hash_table->data[i])
+            for (data_t *cur = hash_table->data[i]; cur; cur = cur->next)
+                total += (current_comps++);
+    }
+
+    return (double)total / hash_table->elems_count;
 }
 
 // --------------------------------------------------
@@ -304,9 +324,62 @@ size_t open_hash_table_size(open_hash_table_t *hash_table)
 
 // --------------------------------------------------
 
+int erat(size_t num)
+{
+    for (size_t i = 2; i < (size_t)sqrt(num); i++)
+        if (num % i == 0)
+            return 0;
+    
+    return 1;
+}
+
+size_t prime_nearest(size_t num)
+{
+    int flag = 1;
+
+    size_t left = num, right = num;
+
+    if (num < 2)
+        return 2; // MIN HASH SIZE
+
+    if (erat(num))
+        return num;
+    
+    while (flag)
+    {
+        if (left)
+        {
+            left--;
+
+            if (erat(left))
+                return left;
+        }
+
+        if (right < TABLE_MAX_SIZE)
+        {
+            right--;
+
+            if (erat(right))
+                return right;
+        }
+    }
+
+    return 2;
+}
+
+size_t open_hash_new_size(size_t elems_count)
+{
+    size_t new_size;
+
+    new_size = OPEN_NEW_SIZE(elems_count);
+
+    return prime_nearest(new_size);
+}
+
 int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table)
 {
     FILE *f = NULL;
+    size_t filesize = 0;
     int flag = 0;
 
     char *word = NULL;
@@ -316,8 +389,11 @@ int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table)
     
     char *word_tmp = NULL;
 
-    if (file_is_correct(filedata))
+    if (file_is_correct(filedata, &filesize))
         return READ_ERR_INVALID_FILE;
+
+    hash_table->size = open_hash_new_size(filesize);
+    hash_table->elems_count = filesize;
 
     f = fopen(filedata, "r");
 
@@ -362,6 +438,26 @@ int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // --------------------------------------------------
 
 void close_hash_table_free(close_hash_table_t **hash_table)
@@ -393,10 +489,33 @@ close_hash_table_t *close_hash_table_init(void)
     if (! tmp)
         return tmp;
 
-    tmp->size = TABLE_INIT_SIZE;
+    tmp->size = 0;
     tmp->hash_function = binary_poly_hash_function;
+    tmp->elems_count = 0;
+    tmp->comp_limit = TABLE_INIT_COMP_LIMIT;
 
     return tmp;
+}
+
+double close_hash_compares(close_hash_table_t *hash_table)
+{
+    int total = 0;
+
+    int current_comps = 0;
+
+    for (size_t i = 0; i < hash_table->size; i++)
+    {
+        current_comps = 0;
+
+        if (hash_table->data[i])
+        {
+            close_hash_table_search(hash_table, hash_table->data[i], &current_comps);
+
+            total += current_comps;
+        }
+    }
+
+    return (double)total / hash_table->elems_count;
 }
 
 // --------------------------------------------------
@@ -575,6 +694,7 @@ size_t close_hash_table_size(close_hash_table_t *hash_table)
 int close_hash_table_read_by_file(char *filedata, close_hash_table_t *hash_table)
 {
     FILE *f = NULL;
+    size_t filesize = 0;
     int flag = 0;
 
     char *word = NULL;
@@ -584,8 +704,11 @@ int close_hash_table_read_by_file(char *filedata, close_hash_table_t *hash_table
     
     char *word_tmp = NULL;
 
-    if (file_is_correct(filedata))
+    if (file_is_correct(filedata, &filesize))
         return READ_ERR_INVALID_FILE;
+
+    hash_table->size = filesize * CLOSE_SIZE_CONST < TABLE_MAX_SIZE ? filesize * CLOSE_SIZE_CONST : TABLE_MAX_SIZE;
+    hash_table->elems_count = filesize;
 
     f = fopen(filedata, "r");
 

@@ -19,7 +19,7 @@ void str_unpin(char **str, size_t *size)
     *size = 0;
 }
 
-int file_is_correct(char *filename)
+int file_is_correct(char *filename, size_t *filesize)
 {
     FILE *f = NULL;
     char *word = NULL;
@@ -33,6 +33,7 @@ int file_is_correct(char *filename)
 
     while (getline(&word, &size, f) != -1)
     {
+        (*filesize)++;
         has_data = 1;
 
         str_free(&word, &size);

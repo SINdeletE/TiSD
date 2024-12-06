@@ -104,7 +104,7 @@ void str_rand(char *str, size_t size)
     }
 }
 
-double open_average_compare(size_t count)
+double open_rand_average_compare(size_t count)
 {
     open_hash_table_t *hash_table = NULL;
 
@@ -139,7 +139,7 @@ double open_average_compare(size_t count)
     return total_comp / count;
 }
 
-double close_average_compare(size_t count)
+double close_rand_average_compare(size_t count)
 {
     close_hash_table_t *hash_table = NULL;
 
@@ -174,7 +174,7 @@ double close_average_compare(size_t count)
     return total_comp / count;
 }
 
-double node_average_compare(size_t count)
+double node_rand_average_compare(size_t count)
 {
     node_t *tree = NULL;
     node_t *tmp = NULL;
@@ -206,7 +206,7 @@ double node_average_compare(size_t count)
     return total_comp / count;
 }
 
-double avl_node_average_compare(size_t count)
+double avl_node_rand_average_compare(size_t count)
 {
     node_t *tree = NULL;
     node_t *tmp = NULL;
@@ -966,10 +966,10 @@ void total_stat_compares(void)
     for (size_t i = MIN_COLL_COUNT; i < MAX_COLL_COUNT * 4; i *= 2)
     {
         printf("%-*zu|", STR_TABLE_SIZE + 1 - 2, i);
-        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, node_average_compare(i));
-        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, avl_node_average_compare(i));
-        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, open_average_compare(i));
-        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, close_average_compare(i));
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, node_rand_average_compare(i));
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, avl_node_rand_average_compare(i));
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, open_rand_average_compare(i));
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, close_rand_average_compare(i));
 
         printf("\n");
     }

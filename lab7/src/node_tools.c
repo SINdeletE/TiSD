@@ -290,7 +290,9 @@ int node_read_by_file(char *filedata, node_t **root)
     node_t *tmp = NULL;
     int comp = 0;
 
-    if ((code = file_is_correct(filedata)))
+    size_t size_tmp = 0;
+
+    if ((code = file_is_correct(filedata, &size_tmp)))
         return READ_ERR_INVALID_FILE;
 
     f = fopen(filedata, "r");
