@@ -19,11 +19,15 @@
 #define TABLE_MAX_SIZE 8000
 #define TABLE_INIT_SIZE 3000
 
-#define TABLE_INIT_COMP_LIMIT 3
+#define TABLE_INIT_COMP_LIMIT 2
 
 #define OPEN_SIZE_CONST 0.82
+#define OPEN_SIZE_INIT 3
 #define OPEN_NEW_SIZE(SIZE) (size_t)(fabs((double)(SIZE) * OPEN_SIZE_CONST) < EPS ? (double)(SIZE) : ((double)(SIZE) * OPEN_SIZE_CONST))
-#define CLOSE_SIZE_CONST 2
+
+#define CLOSE_SIZE_CONST 1.42
+#define CLOSE_SIZE_INIT 4
+#define CLOSE_NEW_SIZE(SIZE) (size_t)((double)(SIZE) * CLOSE_SIZE_CONST)
 
 // ---
 
@@ -34,7 +38,8 @@ typedef struct
 
     size_t size;
     size_t elems_count;
-    size_t comp_limit;
+    
+    double comp_limit;
 } close_hash_table_t;
 
 // ---
@@ -57,7 +62,8 @@ struct open_hash_table
 
     size_t size;
     size_t elems_count;
-    size_t comp_limit;
+
+    double comp_limit;
 };
 
 // ---
@@ -68,7 +74,8 @@ size_t ternary_poly_hash_function(char *str, size_t size);
 void open_hash_table_free(open_hash_table_t **hash_table);
 open_hash_table_t *open_hash_table_init(void);
 double open_hash_compares(open_hash_table_t *hash_table);
-int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table);
+size_t open_hash_new_size(size_t elems_count);
+int open_hash_table_read_by_file(char *filedata, open_hash_table_t **hash_table);
 int open_hash_table_add(open_hash_table_t *hash_table, char *str, int *comp);
 int open_hash_table_delete(open_hash_table_t *hash_table, char *str);
 int open_hash_table_search(open_hash_table_t *hash_table, char *str, int *comp);
@@ -85,7 +92,8 @@ size_t open_hash_table_size(open_hash_table_t *hash_table);
 void close_hash_table_free(close_hash_table_t **hash_table);
 close_hash_table_t *close_hash_table_init(void);
 double close_hash_compares(close_hash_table_t *hash_table);
-int close_hash_table_read_by_file(char *filedata, close_hash_table_t *hash_table);
+size_t close_hash_new_size(size_t elems_count);
+int close_hash_table_read_by_file(char *filedata, close_hash_table_t **hash_table);
 int close_hash_table_add(close_hash_table_t *hash_table, char *str, int *comp);
 int close_hash_table_delete(close_hash_table_t *hash_table, char *str);
 void close_hash_table_output(close_hash_table_t *hash_table);

@@ -13,6 +13,8 @@
 
 #define _POSIX_C_SOURCE 200809L
 
+#define EPS 1e-8
+
 #define IO_OK 0
 #define IO_ERR_MEM 1
 
@@ -59,15 +61,10 @@ int main(void)
     node_t *tree = NULL;
     node_t *avl_tree = NULL;
 
-    size_t new_size;
-    size_t (*new_hash_function)(char *, size_t ) = NULL;
-    int restruct_limit_tmp;
+    double restruct_limit_tmp;
 
     open_hash_table_t *open_hash_table = NULL;
-    int open_restruct_limit = 3;
-    
     close_hash_table_t *close_hash_table = NULL;
-    int close_restruct_limit = 3;
 
     char *filename = NULL;
     size_t filename_size = 0;
@@ -130,7 +127,7 @@ int main(void)
             else if (open_hash_table->hash_function == ternary_poly_hash_function)
                 printf("hash function: ternary\n");
 
-            printf("restruct limit: %d\n", open_restruct_limit);
+            printf("restruct limit: %lf\n", open_hash_table->comp_limit);
         }
         printf("17. Enter restruct limit\n");
         printf("18. Read hash table (from file)\n");
@@ -148,7 +145,7 @@ int main(void)
             else if (close_hash_table->hash_function == ternary_poly_hash_function)
                 printf("hash function: ternary\n");
 
-            printf("restruct limit: %d\n", close_restruct_limit);
+            printf("restruct limit: %lf\n", close_hash_table->comp_limit);
         }
         printf("23. Enter restruct limit\n");
         printf("24. Read hash table (from file)\n");
@@ -593,8 +590,19 @@ int main(void)
                 }
 
                 printf("Enter restruct value (> 1) (or enter invalid value to skip changes): ");
-                if (scanf("%d", &restruct_limit_tmp) == 1 && restruct_limit_tmp > 1)
-                    open_restruct_limit = restruct_limit_tmp;
+                if (scanf("%lf", &restruct_limit_tmp) == 1 && restruct_limit_tmp - 1 > EPS)
+                {
+                    open_hash_table->comp_limit = restruct_limit_tmp;
+
+                    if (open_hash_compares(open_hash_table) - open_hash_table->comp_limit > -EPS)
+                    {
+                        printf("Restructing hash table\n");
+                        if (open_hash_table_restruct(&open_hash_table, open_hash_new_size(open_hash_table->elems_count), open_hash_table->hash_function))
+                            printf("\nINVALID RESTRUCT. HASH TABLE WAS DELETED\n");
+                        else
+                            printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
+                    }
+                }
 
                 break;
             case CODE_OPEN_HASH_READ:
@@ -621,7 +629,7 @@ int main(void)
                     tmp = NULL;
                 }
 
-                switch(open_hash_table_read_by_file(filename, open_hash_table))
+                switch(open_hash_table_read_by_file(filename, &open_hash_table))
                 {
                     case READ_ERR_NO_DATA:
                         printf("\nNO DATA IN FILE\n");
@@ -629,6 +637,7 @@ int main(void)
                         break;
                     case READ_ERR_INVALID_ALLOC:
                         printf("\nINVALID ALLOC\n");
+                        open_hash_table = NULL;
 
                         break;
                     case READ_ERR_INVALID_FILE:
@@ -682,17 +691,10 @@ int main(void)
                     printf("Total compares: %d\n", compares);
                     printf("Average compares: %.6lf\n", open_hash_compares(open_hash_table));
 
-                    if (compares > open_restruct_limit)
+                    if (open_hash_compares(open_hash_table) - open_hash_table->comp_limit > -EPS)
                     {
                         printf("Restructing hash table\n");
-                        if (open_hash_table->size * 2 > TABLE_MAX_SIZE)
-                            new_size = TABLE_MAX_SIZE;
-                        else
-                            new_size = open_hash_table->size * 2;
-                        
-                        new_hash_function = ternary_poly_hash_function;
-
-                        if (open_hash_table_restruct(&open_hash_table, new_size, new_hash_function))
+                        if (open_hash_table_restruct(&open_hash_table, open_hash_new_size(open_hash_table->elems_count), open_hash_table->hash_function))
                             printf("\nINVALID RESTRUCT. HASH TABLE WAS DELETED\n");
                         else
                             printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
@@ -768,18 +770,11 @@ int main(void)
                     printf("Total compares: %d\n", compares);
                     printf("Average compares: %.6lf\n", open_hash_compares(open_hash_table));
 
-                    if (compares > open_restruct_limit)
+                    if (open_hash_compares(open_hash_table) - open_hash_table->comp_limit > -EPS)
                     {
                         printf("Restructing hash table\n");
-                        if (open_hash_table->size * 2 > TABLE_MAX_SIZE)
-                            new_size = TABLE_MAX_SIZE;
-                        else
-                            new_size = open_hash_table->size * 2;
-                        
-                        new_hash_function = ternary_poly_hash_function;
-
-                        if (open_hash_table_restruct(&open_hash_table, new_size, new_hash_function))
-                            printf("\nINVALID RESTRUCT\n");
+                        if (open_hash_table_restruct(&open_hash_table, open_hash_new_size(open_hash_table->elems_count), open_hash_table->hash_function))
+                            printf("\nINVALID RESTRUCT. HASH TABLE WAS DELETED\n");
                         else
                             printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
                     }
@@ -817,8 +812,19 @@ int main(void)
                 }
 
                 printf("Enter restruct value (> 1) (or enter invalid value to skip changes): ");
-                if (scanf("%d", &restruct_limit_tmp) == 1 && restruct_limit_tmp > 1)
-                    close_restruct_limit = restruct_limit_tmp;
+                if (scanf("%lf", &restruct_limit_tmp) == 1 && restruct_limit_tmp > 1)
+                {
+                    close_hash_table->comp_limit = restruct_limit_tmp;
+
+                    if (close_hash_compares(close_hash_table) - close_hash_table->comp_limit > -EPS)
+                    {
+                        printf("Restructing hash table\n");
+                        if (close_hash_table_restruct(&close_hash_table, close_hash_new_size(close_hash_table->elems_count), close_hash_table->hash_function))
+                            printf("\nINVALID RESTRUCT. HASH TABLE WAS DELETED\n");
+                        else
+                            printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
+                    }
+                }
 
                 break;
             case CODE_CLOSE_HASH_READ:
@@ -845,10 +851,15 @@ int main(void)
                     tmp = NULL;
                 }
 
-                switch(close_hash_table_read_by_file(filename, close_hash_table))
+                switch(close_hash_table_read_by_file(filename, &close_hash_table))
                 {
                     case READ_ERR_NO_DATA:
                         printf("\nNO DATA IN FILE\n");
+
+                        break;
+                    case READ_ERR_INVALID_ALLOC:
+                        printf("\nINVALID ALLOC\n");
+                        close_hash_table = NULL;
 
                         break;
                     case READ_ERR_INVALID_FILE:
@@ -885,6 +896,21 @@ int main(void)
                 }
 
                 compares = 0;
+                if (close_hash_table->elems_count == close_hash_table->size && close_hash_table->size < TABLE_MAX_SIZE)
+                {
+                    printf("Restructing hash table (for size increasing)\n");
+                    if (close_hash_table_restruct(&close_hash_table, close_hash_new_size(close_hash_table->elems_count), close_hash_table->hash_function))
+                    {
+                        str_free(&data, &data_size);
+                        close_hash_table_free(&close_hash_table);
+
+                        printf("\nINVALID RESTRUCT. HASH TABLE WAS DELETED\n");
+                    }
+                    else
+                        printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
+                }
+
+                compares = 0;
                 switch (close_hash_table_add(close_hash_table, data, &compares))
                 {
                 case HASH_PRCS_ERR_ALLOC:
@@ -902,18 +928,11 @@ int main(void)
                     printf("Total compares: %d\n", compares);
                     printf("Average compares: %.6lf\n", close_hash_compares(close_hash_table));
 
-                    if (compares > close_restruct_limit)
+                    if (close_hash_compares(close_hash_table) - close_hash_table->comp_limit > -EPS)
                     {
                         printf("Restructing hash table\n");
-                        if (close_hash_table->size * 2 > TABLE_MAX_SIZE)
-                            new_size = TABLE_MAX_SIZE;
-                        else
-                            new_size = close_hash_table->size * 2;
-                        
-                        new_hash_function = ternary_poly_hash_function;
-
-                        if (close_hash_table_restruct(&close_hash_table, new_size, new_hash_function))
-                            printf("\nINVALID RESTRUCT\n");
+                        if (close_hash_table_restruct(&close_hash_table, close_hash_new_size(close_hash_table->elems_count), close_hash_table->hash_function))
+                            printf("\nINVALID RESTRUCT. HASH TABLE WAS DELETED\n");
                         else
                             printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
                     }
@@ -988,18 +1007,11 @@ int main(void)
                     printf("Total compares: %d\n", compares);
                     printf("Average compares: %.6lf\n", close_hash_compares(close_hash_table));
 
-                    if (compares > close_restruct_limit)
+                    if (close_hash_compares(close_hash_table) - close_hash_table->comp_limit > -EPS)
                     {
                         printf("Restructing hash table\n");
-                        if (close_hash_table->size * 2 > TABLE_MAX_SIZE)
-                            new_size = TABLE_MAX_SIZE;
-                        else
-                            new_size = close_hash_table->size * 2;
-                        
-                        new_hash_function = ternary_poly_hash_function;
-
-                        if (close_hash_table_restruct(&close_hash_table, new_size, new_hash_function))
-                            printf("\nINVALID RESTRUCT\n");
+                        if (close_hash_table_restruct(&close_hash_table, close_hash_new_size(close_hash_table->elems_count), close_hash_table->hash_function))
+                            printf("\nINVALID RESTRUCT. HASH TABLE WAS DELETED\n");
                         else
                             printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
                     }

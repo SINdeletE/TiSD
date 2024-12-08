@@ -43,6 +43,60 @@ size_t ternary_poly_hash_function(char *str, size_t size)
 
 // HASH FUNC
 
+int erat(size_t num)
+{
+    for (size_t i = 2; i < (size_t)sqrt(num) + 1; i++)
+        if (num % i == 0)
+            return 0;
+    
+    return 1;
+}
+
+// ----------
+
+size_t open_prime_nearest(size_t num)
+{
+    int flag = 1;
+
+    // size_t left = num;
+    size_t right = num;
+
+    if (num < 2)
+        return OPEN_SIZE_INIT; // MIN HASH SIZE
+
+    if (erat(num))
+        return num;
+    
+    if (num > TABLE_MAX_SIZE)
+        return TABLE_MAX_SIZE;
+    
+    while (flag)
+    {
+        if (right < TABLE_MAX_SIZE)
+        {
+            right++;
+
+            if (erat(right))
+                return right;
+        }
+        else if (right == TABLE_MAX_SIZE)
+            return TABLE_MAX_SIZE;
+    }
+
+    return OPEN_SIZE_INIT;
+}
+
+size_t open_hash_new_size(size_t elems_count)
+{
+    size_t new_size;
+
+    new_size = OPEN_NEW_SIZE(elems_count);
+
+    return open_prime_nearest(new_size);
+}
+
+// ----------
+
 void data_free(data_t *data)
 {
     if (! data)
@@ -92,7 +146,7 @@ open_hash_table_t *open_hash_table_init(void)
     if (! tmp)
         return tmp;
         
-    tmp->size = 0;
+    tmp->size = OPEN_SIZE_INIT;
     tmp->hash_function = binary_poly_hash_function;
     tmp->elems_count = 0;
     tmp->comp_limit = TABLE_INIT_COMP_LIMIT;
@@ -150,16 +204,21 @@ int data_add(data_t **data, char *str, int *comp)
 
     *cur = tmp;
 
+
     return HASH_PRCS_OK;
 }
 
 int open_hash_table_add(open_hash_table_t *hash_table, char *str, int *comp)
 {
+    int res;
     size_t hash = 0;
 
     hash = hash_table->hash_function(str, hash_table->size);
+    res = data_add(&hash_table->data[hash], str, comp);
+    if (! res)
+        hash_table->elems_count++;
 
-    return data_add(&hash_table->data[hash], str, comp);
+    return res;
 }
 
 // --------------------------------------------------
@@ -261,6 +320,7 @@ int open_hash_table_restruct(open_hash_table_t **hash_table, size_t new_size, si
 
     new_hash_table->size = new_size;
     new_hash_table->hash_function = new_hash_function;
+    new_hash_table->comp_limit = (*hash_table)->comp_limit;
 
     for (size_t i = 0; i < (*hash_table)->size; i++)
         for (data_t *cur = (*hash_table)->data[i]; cur; cur = cur->next)
@@ -324,59 +384,7 @@ size_t open_hash_table_size(open_hash_table_t *hash_table)
 
 // --------------------------------------------------
 
-int erat(size_t num)
-{
-    for (size_t i = 2; i < (size_t)sqrt(num); i++)
-        if (num % i == 0)
-            return 0;
-    
-    return 1;
-}
-
-size_t prime_nearest(size_t num)
-{
-    int flag = 1;
-
-    size_t left = num, right = num;
-
-    if (num < 2)
-        return 2; // MIN HASH SIZE
-
-    if (erat(num))
-        return num;
-    
-    while (flag)
-    {
-        if (left)
-        {
-            left--;
-
-            if (erat(left))
-                return left;
-        }
-
-        if (right < TABLE_MAX_SIZE)
-        {
-            right--;
-
-            if (erat(right))
-                return right;
-        }
-    }
-
-    return 2;
-}
-
-size_t open_hash_new_size(size_t elems_count)
-{
-    size_t new_size;
-
-    new_size = OPEN_NEW_SIZE(elems_count);
-
-    return prime_nearest(new_size);
-}
-
-int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table)
+int open_hash_table_read_by_file(char *filedata, open_hash_table_t **hash_table)
 {
     FILE *f = NULL;
     size_t filesize = 0;
@@ -392,9 +400,6 @@ int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table)
     if (file_is_correct(filedata, &filesize))
         return READ_ERR_INVALID_FILE;
 
-    hash_table->size = open_hash_new_size(filesize);
-    hash_table->elems_count = filesize;
-
     f = fopen(filedata, "r");
 
     while (getline(&word, &size, f) != -1)
@@ -405,7 +410,7 @@ int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table)
             word_tmp = NULL;
         }
 
-        switch (open_hash_table_add(hash_table, word, &compares))
+        switch (open_hash_table_add((*hash_table), word, &compares))
         {
         case HASH_PRCS_ERR_ALLOC:
             str_free(&word, &size);
@@ -427,6 +432,14 @@ int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table)
 
     if (! flag)
         return READ_ERR_NO_DATA;
+    
+    if (open_hash_compares((*hash_table)) - (*hash_table)->comp_limit > -EPS)
+        if (open_hash_table_restruct(hash_table, open_hash_new_size((*hash_table)->elems_count), (*hash_table)->hash_function))
+        {
+            open_hash_table_free(hash_table);
+
+            return READ_ERR_INVALID_ALLOC;
+        }
 
     return READ_OK;
 }
@@ -458,7 +471,58 @@ int open_hash_table_read_by_file(char *filedata, open_hash_table_t *hash_table)
 
 
 
-// --------------------------------------------------
+// ----------
+
+size_t close_prime_nearest(size_t num)
+{
+    int flag = 1;
+
+    size_t left = num;
+    size_t right = num;
+
+    if (num < 2)
+        return CLOSE_SIZE_INIT; // MIN HASH SIZE
+
+    if (erat(num))
+        return num;
+    
+    if (num > TABLE_MAX_SIZE)
+        return TABLE_MAX_SIZE;
+    
+    while (flag)
+    {
+        if (! left)
+        {
+            left--;
+
+            if (erat(left))
+                return left;
+        }
+
+        if (right < TABLE_MAX_SIZE)
+        {
+            right++;
+
+            if (erat(right))
+                return right;
+        }
+        else if (right == TABLE_MAX_SIZE)
+            return TABLE_MAX_SIZE;
+    }
+
+    return CLOSE_SIZE_INIT;
+}
+
+size_t close_hash_new_size(size_t elems_count)
+{
+    size_t new_size;
+
+    new_size = CLOSE_NEW_SIZE(elems_count);
+
+    return close_prime_nearest(new_size);
+}
+
+// ----------
 
 void close_hash_table_free(close_hash_table_t **hash_table)
 {
@@ -489,7 +553,7 @@ close_hash_table_t *close_hash_table_init(void)
     if (! tmp)
         return tmp;
 
-    tmp->size = 0;
+    tmp->size = CLOSE_SIZE_INIT;
     tmp->hash_function = binary_poly_hash_function;
     tmp->elems_count = 0;
     tmp->comp_limit = TABLE_INIT_COMP_LIMIT;
@@ -547,6 +611,7 @@ int close_hash_table_data_add(close_hash_table_t *hash_table, size_t hash, char 
     }
 
     hash_table->data[i] = str;
+    hash_table->elems_count++;
 
     return HASH_PRCS_OK;
 }
@@ -691,7 +756,7 @@ size_t close_hash_table_size(close_hash_table_t *hash_table)
 
 // --------------------------------------------------
 
-int close_hash_table_read_by_file(char *filedata, close_hash_table_t *hash_table)
+int close_hash_table_read_by_file(char *filedata, close_hash_table_t **hash_table)
 {
     FILE *f = NULL;
     size_t filesize = 0;
@@ -707,10 +772,9 @@ int close_hash_table_read_by_file(char *filedata, close_hash_table_t *hash_table
     if (file_is_correct(filedata, &filesize))
         return READ_ERR_INVALID_FILE;
 
-    hash_table->size = filesize * CLOSE_SIZE_CONST < TABLE_MAX_SIZE ? filesize * CLOSE_SIZE_CONST : TABLE_MAX_SIZE;
-    hash_table->elems_count = filesize;
-
     f = fopen(filedata, "r");
+
+    (*hash_table)->size = filesize + 1;
 
     while (getline(&word, &size, f) != -1)
     {
@@ -720,7 +784,7 @@ int close_hash_table_read_by_file(char *filedata, close_hash_table_t *hash_table
             word_tmp = NULL;
         }
 
-        switch (close_hash_table_add(hash_table, word, &compares))
+        switch (close_hash_table_add(*hash_table, word, &compares))
         {
         case HASH_PRCS_ERR_SAME_DATA:
             str_free(&word, &size);
@@ -742,6 +806,14 @@ int close_hash_table_read_by_file(char *filedata, close_hash_table_t *hash_table
 
     if (! flag)
         return READ_ERR_NO_DATA;
+
+    if (close_hash_compares((*hash_table)) - (*hash_table)->comp_limit > -EPS)
+        if (close_hash_table_restruct(hash_table, close_hash_new_size((*hash_table)->elems_count), (*hash_table)->hash_function))
+        {
+            close_hash_table_free(hash_table);
+
+            return READ_ERR_INVALID_ALLOC;
+        }
 
     return READ_OK;
 }
