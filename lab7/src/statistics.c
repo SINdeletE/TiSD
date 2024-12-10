@@ -16,6 +16,10 @@
 
 #define STR_TABLE_SIZE 8
 
+double node_search_time(node_t *node, node_t *tree);
+double open_hash_table_search_time(open_hash_table_t *hash_table);
+double close_hash_table_search_time(close_hash_table_t *hash_table);
+
 void hashstat_data_str_create(char *name, size_t size)
 {
     for (int i = MAX_INDEX - 1; i >= MIN_INDEX; i--)
@@ -116,7 +120,7 @@ void str_rand(char *str, size_t size)
     }
 }
 
-double open_rand_average_compare(size_t count)
+double open_rand_average_compare(size_t count, double *time)
 {
     open_hash_table_t *hash_table = NULL;
 
@@ -153,13 +157,14 @@ double open_rand_average_compare(size_t count)
         open_hash_table_restruct(&hash_table, open_hash_new_size(hash_table), hash_table->hash_function);
 
     total_comp = open_hash_compares(hash_table);
+    *time += open_hash_table_search_time(hash_table);
 
     open_hash_table_free(&hash_table);
 
     return total_comp;
 }
 
-double close_rand_average_compare(size_t count)
+double close_rand_average_compare(size_t count, double *time)
 {
     close_hash_table_t *hash_table = NULL;
     int code;
@@ -201,6 +206,7 @@ double close_rand_average_compare(size_t count)
         close_hash_table_restruct(&hash_table, close_hash_new_size(hash_table), hash_table->hash_function);
 
     total_comp = close_hash_compares(hash_table);
+    *time += close_hash_table_search_time(hash_table);
 
     close_hashstat_data_clear(hash_table);
     close_hash_table_free(&hash_table);
@@ -208,7 +214,7 @@ double close_rand_average_compare(size_t count)
     return total_comp;
 }
 
-double node_rand_average_compare(size_t count)
+double node_rand_average_compare(size_t count, double *time)
 {
     node_t *tree = NULL;
     node_t *tmp = NULL;
@@ -234,13 +240,14 @@ double node_rand_average_compare(size_t count)
     }
 
     total_comp = node_compares(tree, tree);
+    *time += node_search_time(tree, tree);
 
     tree = node_free(tree);
 
     return total_comp / count;
 }
 
-double avl_node_rand_average_compare(size_t count)
+double avl_node_rand_average_compare(size_t count, double *time)
 {
     node_t *tree = NULL;
     node_t *tmp = NULL;
@@ -266,6 +273,7 @@ double avl_node_rand_average_compare(size_t count)
     }
 
     total_comp = node_compares(tree, tree);
+    *time += node_search_time(tree, tree);
 
     tree = node_free(tree);
 
@@ -286,7 +294,7 @@ double avl_node_rand_average_compare(size_t count)
 
 
 
-double node_average_search_time(node_t *node, node_t *tree)
+double node_search_time(node_t *node, node_t *tree)
 {
     double total_time = 0.0;
     int comps = 0;
@@ -296,14 +304,17 @@ double node_average_search_time(node_t *node, node_t *tree)
     if (! node)
         return 0;
 
-    total_time += node_average_search_time(node->left, tree);
-    total_time += node_average_search_time(node->right, tree);
+    total_time += node_search_time(node->left, tree);
+    total_time += node_search_time(node->right, tree);
     
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
-    node_search(tree, node->data, &comps);
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+    for (size_t i = 0; i < ITER_COUNT; i++)
+    {
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        node_search(tree, node->data, &comps);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
 
-    total_time += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+        total_time += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+    }
 
     return total_time;
 }
@@ -317,16 +328,15 @@ double open_hash_table_search_time(open_hash_table_t *hash_table)
 
     for (size_t i = 0; i < hash_table->size; i++)
         if (hash_table->data[i])
-        {
             for (data_t *cur = hash_table->data[i]; cur; cur = cur->next)
-            {
-                clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
-                open_hash_table_search(hash_table, cur->str, &comps);
-                clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+                for (size_t z = 0; z < ITER_COUNT; z++)
+                {
+                    clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+                    open_hash_table_search(hash_table, cur->str, &comps);
+                    clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
 
-                total_time += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
-            }
-        }
+                    total_time += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+                }
     
     return total_time;
 }
@@ -340,13 +350,14 @@ double close_hash_table_search_time(close_hash_table_t *hash_table)
 
     for (size_t i = 0; i < hash_table->size; i++)
         if (hash_table->data[i])
-        {
-            clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
-            close_hash_table_search(hash_table, hash_table->data[i], &comps);
-            clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+            for (size_t z = 0; z < ITER_COUNT; z++)
+            {
+                clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+                close_hash_table_search(hash_table, hash_table->data[i], &comps);
+                clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
 
-            total_time += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
-        }
+                total_time += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+            }
     
     return total_time;
 }
@@ -393,7 +404,7 @@ void hashstat(void)
 
     printf("\nHASHES STATISTICS (time in nsec) (total iteration: %d)\n", ITER_COUNT);
 
-    printf("\nBINARY HASH FUNCTION; SIZE = %zu\n", open_hash_table->size);
+    printf("\nBINARY HASH FUNCTION\n");
     printf("collision|");
     printf("HASH FIND (OPEN)|");
     printf("HASH FIND(CLOSE)|");
@@ -442,8 +453,8 @@ void hashstat(void)
         close_hashstat_data_clear(close_hash_table);
 
         printf("%-*zu|", STR_TABLE_SIZE + 1, coll_count - 1);
-        printf("%-*lf|", STR_TABLE_SIZE * 2, open_time_search / MAX_ITER_COUNT);
-        printf("%-*lf|", STR_TABLE_SIZE * 2, close_time_search / MAX_ITER_COUNT);
+        printf("%-*lf|", STR_TABLE_SIZE * 2, open_time_search / ITER_COUNT);
+        printf("%-*lf|", STR_TABLE_SIZE * 2, close_time_search / ITER_COUNT);
         printf("%-*d|", STR_TABLE_SIZE * 2, open_time_search_compares);
         printf("%-*d|", STR_TABLE_SIZE * 2, close_time_search_compares);
         if (open_time_search < close_time_search)
@@ -548,7 +559,12 @@ void total_stat_search(void)
 
 void total_stat_compares(void)
 {
-    printf("\nTOTAL STATISTICS: AVERAGE COMPARES FROM RANDOM DATA (time in nsec) (total iteration: %d) (comp limit = %d)\n", ITER_COUNT, TABLE_INIT_COMP_LIMIT);
+    double usual_time_search = 0;
+    double avg_time_search = 0;
+    double open_time_search = 0;
+    double close_time_search = 0;
+
+    printf("\nTOTAL STATISTICS: SEARCH AVERAGE COMPARES FROM RANDOM DATA (time in nsec) (total iteration: %d) (comp limit = %d)\n", ITER_COUNT, TABLE_INIT_COMP_LIMIT);
     // printf("(P.S. count is (collision count + 1) for hash tables)\n");
 
     printf("BINARY HASH FUNCTION\n");
@@ -556,23 +572,32 @@ void total_stat_compares(void)
     printf("  USUAL COMP  |");
     printf("    AVL COMP  |");
     printf("   OPEN COMP  |");
-    printf("  CLOSE COMP  |\n");
+    printf("  CLOSE COMP  |");
+    printf("  USUAL TIME  |");
+    printf("    AVL TIME  |");
+    printf("   OPEN TIME  |");
+    printf("  CLOSE TIME  |\n");
 
     srand(time(NULL));
 
     for (size_t i = MIN_COLL_COUNT; i < MAX_COLL_COUNT; i *= 2)
     {
         printf("%-*zu|", STR_TABLE_SIZE + 1 - 2, i);
-        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, node_rand_average_compare(i));
-        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, avl_node_rand_average_compare(i));
-        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, open_rand_average_compare(i));
-        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, close_rand_average_compare(i));
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, node_rand_average_compare(i, &usual_time_search));
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, avl_node_rand_average_compare(i, &avg_time_search));
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, open_rand_average_compare(i, &open_time_search));
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, close_rand_average_compare(i, &close_time_search));
         
-        // printf("%-*zu|", STR_TABLE_SIZE * 2 - 2, node_rand_average_compare(i));
-        // printf("%-*zu|", STR_TABLE_SIZE * 2 - 2, avl_node_rand_average_compare(i));
-        // printf("%-*zu|", STR_TABLE_SIZE * 2 - 2, open_rand_average_compare(i));
-        // printf("%-*zu|", STR_TABLE_SIZE * 2 - 2, close_rand_average_compare(i));
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, usual_time_search / i / ITER_COUNT);
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, avg_time_search / i / ITER_COUNT);
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, open_time_search / i / ITER_COUNT);
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, close_time_search / i / ITER_COUNT);
 
         printf("\n");
+
+        usual_time_search = 0;
+        avg_time_search = 0;
+        open_time_search = 0;
+        close_time_search = 0;
     }
 }
