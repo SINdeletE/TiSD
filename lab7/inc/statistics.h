@@ -11,7 +11,7 @@
 #define HASHES_MIN_COLL_COUNT 1
 #define HASHES_COLL_STEP 1
 
-#define MAX_COLL_COUNT 1025
+#define MAX_COLL_COUNT 513
 #define MIN_COLL_COUNT 1
 #define COLL_STEP 2
 

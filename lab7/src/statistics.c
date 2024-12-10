@@ -284,6 +284,221 @@ double avl_node_rand_average_compare(size_t count, double *time)
 
 
 
+// ---
+
+
+
+
+
+
+
+double open_rand_delete_time(size_t count)
+{
+    double total_time = 0.0;
+
+    open_hash_table_t *hash_table = NULL;
+    data_t *cur = NULL;
+
+    char *str = NULL;
+    int comp = 0;
+    size_t size = 0;
+
+    struct timespec t_beg, t_end;
+
+    hash_table = open_hash_table_init();
+
+    for (size_t i = 0; i < count; i++)
+    {
+        str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
+        
+        str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
+        while (open_hash_table_add(hash_table, str, &comp))
+        {
+            str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
+
+            comp = 0;
+        }
+        
+        if (open_hash_compares(hash_table) - hash_table->comp_limit > -EPS && hash_table->size != TABLE_MAX_SIZE)
+            open_hash_table_restruct(&hash_table, open_hash_new_size(hash_table), hash_table->hash_function);
+
+        str_unpin(&str, &size);
+
+        comp = 0;
+    }
+
+    while (open_hash_compares(hash_table) - hash_table->comp_limit > -EPS && hash_table->size != TABLE_MAX_SIZE) // РЕШЕНИЕ, ЕСЛИ РЕБАЛАНСИРОВКА НЕ ПОМОГЛА
+        open_hash_table_restruct(&hash_table, open_hash_new_size(hash_table), hash_table->hash_function);
+
+    for (size_t i = hash_table->size; i > 0; i--)
+        if (hash_table->data[i - 1])
+            while (hash_table->data[i - 1])
+            {
+                for (size_t i = 0; i < ITER_COUNT; i++)
+                {
+                    for (cur = hash_table->data[i - 1]; cur->next; cur = cur->next);
+
+                    str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
+                    strcpy(str, hash_table->data[i - 1]->str);
+
+                    clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+                    open_hash_table_delete(hash_table, str);
+                    clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+
+                    total_time += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+
+                    open_hash_table_add(hash_table, str, &comp);
+
+                    str_unpin(&str, &size);
+                }
+
+                for (cur = hash_table->data[i - 1]; cur->next; cur = cur->next);
+                open_hash_table_delete(hash_table, cur->str);
+            }
+
+    open_hash_table_free(&hash_table);
+
+    return total_time;
+}
+
+double close_rand_delete_time(size_t count)
+{
+    double total_time = 0.0;
+
+    close_hash_table_t *hash_table = NULL;
+    int code;
+
+    char *str = NULL;
+    int comp = 0;
+    size_t size = 0;
+
+    struct timespec t_beg, t_end;
+
+    hash_table = close_hash_table_init();
+
+    for (size_t i = 0; i < (count > TABLE_INIT_SIZE ? TABLE_INIT_SIZE : count); i++)
+    {
+        str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
+        str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
+        while ((code = close_hash_table_add(hash_table, str, &comp)))
+        {
+            if (code == HASH_PRCS_ERR_MAX_SIZE)
+                close_hash_table_restruct(&hash_table, close_hash_new_size(hash_table), hash_table->hash_function);
+            else
+            {
+                str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
+
+                comp = 0;
+            }
+        }
+
+        if (close_hash_compares(hash_table) - hash_table->comp_limit > -EPS && hash_table->size != TABLE_MAX_SIZE)
+            close_hash_table_restruct(&hash_table, close_hash_new_size(hash_table), hash_table->hash_function);
+
+        str_unpin(&str, &size);
+
+        comp = 0;
+    }
+
+    while (close_hash_compares(hash_table) - hash_table->comp_limit > -EPS && hash_table->size != TABLE_MAX_SIZE) // РЕШЕНИЕ, ЕСЛИ РЕБАЛАНСИРОВКА НЕ ПОМОГЛА
+        close_hash_table_restruct(&hash_table, close_hash_new_size(hash_table), hash_table->hash_function);
+
+    for (size_t i = hash_table->size; i > 0; i--)
+        if (hash_table->data[i - 1])
+        {
+            for (size_t i = 0; i < ITER_COUNT; i++)
+            {
+                str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
+                strcpy(str, hash_table->data[i - 1]);
+
+                clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+                close_hash_table_delete(hash_table, str);
+                clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+
+                total_time += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+
+                close_hash_table_add(hash_table, str, &comp);
+
+                str_unpin(&str, &size);
+            }
+
+            close_hash_table_delete(hash_table, hash_table->data[i - 1]);
+            
+            str_free(&str, &size);
+        }
+
+    close_hashstat_data_clear(hash_table);
+    close_hash_table_free(&hash_table);
+
+    return total_time;
+}
+
+double avl_rec_time(node_t **node, node_t **tree)
+{
+    double total_time = 0.0;
+
+    node_t *tmp = NULL;
+    char *str = NULL;
+
+    struct timespec t_beg, t_end;
+
+    if (! node || ! *node || ! tree || ! *tree)
+        return 0.0;
+
+    total_time += avl_rec_time(&(*node)->left, tree);
+    total_time += avl_rec_time(&(*node)->right, tree);
+
+    for (size_t i = 0; i < ITER_COUNT; i++)
+    {
+        str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
+        strcpy(str, (*node)->data);
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
+        node_delete(tree, str);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
+
+        total_time += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
+
+        tmp = node_alloc(str);
+        node_add(*tree, tmp);
+    }
+
+    node_delete(tree, (*node)->data);
+
+    return total_time;
+}
+
+double avl_rand_delete_time(size_t count)
+{
+    node_t *tree = NULL;
+    node_t *tmp = NULL;
+
+    char *str = NULL;
+    size_t size = 0;
+
+    double total_time;
+
+    int cmp = 0;
+
+    for (size_t i = 0; i < count; i++)
+    {
+        str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
+        str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
+        while (node_search(tree, str, &cmp))
+            str_rand(str, rand() % (HASHSTAT_STR_SIZE - 3) + 2);
+
+        tmp = node_alloc(str);
+        tree = avl_node_add(tree, tmp);
+
+        str_unpin(&str, &size);
+    }
+
+    total_time = avl_rec_time(&tree, &tree);
+
+    tree = node_free(tree);
+
+    return total_time;
+}
 
 
 // ---
@@ -565,8 +780,6 @@ void total_stat_compares(void)
     double close_time_search = 0;
 
     printf("\nTOTAL STATISTICS: SEARCH AVERAGE COMPARES FROM RANDOM DATA (time in nsec) (total iteration: %d) (comp limit = %d)\n", ITER_COUNT, TABLE_INIT_COMP_LIMIT);
-    // printf("(P.S. count is (collision count + 1) for hash tables)\n");
-
     printf("BINARY HASH FUNCTION\n");
     printf(" count |");
     printf("  USUAL COMP  |");
@@ -596,6 +809,27 @@ void total_stat_compares(void)
         printf("\n");
 
         usual_time_search = 0;
+        avg_time_search = 0;
+        open_time_search = 0;
+        close_time_search = 0;
+    }
+
+    printf("\nTOTAL STATISTICS: DELETE AVERAGE COMPARES FROM RANDOM DATA (time in nsec) (total iteration: %d) (comp limit = %d)\n", ITER_COUNT, TABLE_INIT_COMP_LIMIT);
+    printf("BINARY HASH FUNCTION\n");
+    printf(" count |");
+    printf("    AVL TIME  |");
+    printf("   OPEN TIME  |");
+    printf("  CLOSE TIME  |\n");
+
+    for (size_t i = MIN_COLL_COUNT; i < MAX_COLL_COUNT; i *= 2)
+    {
+        printf("%-*zu|", STR_TABLE_SIZE + 1 - 2, i);
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, avl_rand_delete_time(i) / i / ITER_COUNT);
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, open_rand_delete_time(i) / i / ITER_COUNT);
+        printf("%-*lf|", STR_TABLE_SIZE * 2 - 2, close_rand_delete_time(i) / i / ITER_COUNT);
+
+        printf("\n");
+
         avg_time_search = 0;
         open_time_search = 0;
         close_time_search = 0;
