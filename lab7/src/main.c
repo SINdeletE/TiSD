@@ -118,7 +118,7 @@ int main(void)
         printf("15. Output tree (with post-order) + Graphviz visualization\n");
         printf("16. Find elements by char and delete it\n");
 
-        printf("\nOPEN ADDRESS HASH TABLE\n");
+        printf("\nOPEN HASHING HASH TABLE\n");
         if (open_hash_table)
         {
             printf("size: %zu\n", open_hash_table->size);
@@ -136,7 +136,7 @@ int main(void)
         printf("21. Search element to hash table\n");
         printf("22. Output hash table\n");
 
-        printf("\nCLOSE ADDRESS HASH TABLE\n");
+        printf("\nCLOSE HASHING HASH TABLE\n");
         if (close_hash_table)
         {
             printf("size: %zu\n", close_hash_table->size);
@@ -594,15 +594,17 @@ int main(void)
                 {
                     open_hash_table->comp_limit = restruct_limit_tmp;
 
-                    if (open_hash_compares(open_hash_table) - open_hash_table->comp_limit > -EPS)
+                    if (open_hash_compares(open_hash_table) - open_hash_table->comp_limit > -EPS && open_hash_table->size < TABLE_MAX_SIZE)
                     {
                         printf("Restructing hash table\n");
-                        if (open_hash_table_restruct(&open_hash_table, open_hash_new_size(open_hash_table->elems_count), open_hash_table->hash_function))
+                        if (open_hash_table_restruct(&open_hash_table, open_hash_new_size(open_hash_table), open_hash_table->hash_function))
                             printf("\nINVALID RESTRUCT. HASH TABLE WAS DELETED\n");
                         else
                             printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
                     }
                 }
+
+                open_hash_table->comp_limit = restruct_limit_tmp;
 
                 break;
             case CODE_OPEN_HASH_READ:
@@ -691,10 +693,10 @@ int main(void)
                     printf("Total compares: %d\n", compares);
                     printf("Average compares: %.6lf\n", open_hash_compares(open_hash_table));
 
-                    if (open_hash_compares(open_hash_table) - open_hash_table->comp_limit > -EPS)
+                    if (open_hash_compares(open_hash_table) - open_hash_table->comp_limit > -EPS && open_hash_table->size < TABLE_MAX_SIZE)
                     {
                         printf("Restructing hash table\n");
-                        if (open_hash_table_restruct(&open_hash_table, open_hash_new_size(open_hash_table->elems_count), open_hash_table->hash_function))
+                        if (open_hash_table_restruct(&open_hash_table, open_hash_new_size(open_hash_table), open_hash_table->hash_function))
                             printf("\nINVALID RESTRUCT. HASH TABLE WAS DELETED\n");
                         else
                             printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
@@ -770,10 +772,10 @@ int main(void)
                     printf("Total compares: %d\n", compares);
                     printf("Average compares: %.6lf\n", open_hash_compares(open_hash_table));
 
-                    if (open_hash_compares(open_hash_table) - open_hash_table->comp_limit > -EPS)
+                    if (open_hash_compares(open_hash_table) - open_hash_table->comp_limit > -EPS && open_hash_table->size < TABLE_MAX_SIZE)
                     {
                         printf("Restructing hash table\n");
-                        if (open_hash_table_restruct(&open_hash_table, open_hash_new_size(open_hash_table->elems_count), open_hash_table->hash_function))
+                        if (open_hash_table_restruct(&open_hash_table, open_hash_new_size(open_hash_table), open_hash_table->hash_function))
                             printf("\nINVALID RESTRUCT. HASH TABLE WAS DELETED\n");
                         else
                             printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
@@ -812,19 +814,21 @@ int main(void)
                 }
 
                 printf("Enter restruct value (> 1) (or enter invalid value to skip changes): ");
-                if (scanf("%lf", &restruct_limit_tmp) == 1 && restruct_limit_tmp > 1)
+                if (scanf("%lf", &restruct_limit_tmp) == 1 && restruct_limit_tmp - 1 > EPS)
                 {
                     close_hash_table->comp_limit = restruct_limit_tmp;
 
-                    if (close_hash_compares(close_hash_table) - close_hash_table->comp_limit > -EPS)
+                    if (close_hash_compares(close_hash_table) - close_hash_table->comp_limit > -EPS && close_hash_table->size < TABLE_MAX_SIZE)
                     {
                         printf("Restructing hash table\n");
-                        if (close_hash_table_restruct(&close_hash_table, close_hash_new_size(close_hash_table->elems_count), close_hash_table->hash_function))
+                        if (close_hash_table_restruct(&close_hash_table, close_hash_new_size(close_hash_table), close_hash_table->hash_function))
                             printf("\nINVALID RESTRUCT. HASH TABLE WAS DELETED\n");
                         else
                             printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
                     }
                 }
+
+                close_hash_table->comp_limit = restruct_limit_tmp;
 
                 break;
             case CODE_CLOSE_HASH_READ:
@@ -899,7 +903,7 @@ int main(void)
                 if (close_hash_table->elems_count == close_hash_table->size && close_hash_table->size < TABLE_MAX_SIZE)
                 {
                     printf("Restructing hash table (for size increasing)\n");
-                    if (close_hash_table_restruct(&close_hash_table, close_hash_new_size(close_hash_table->elems_count), close_hash_table->hash_function))
+                    if (close_hash_table_restruct(&close_hash_table, close_hash_new_size(close_hash_table), close_hash_table->hash_function))
                     {
                         str_free(&data, &data_size);
                         close_hash_table_free(&close_hash_table);
@@ -928,10 +932,10 @@ int main(void)
                     printf("Total compares: %d\n", compares);
                     printf("Average compares: %.6lf\n", close_hash_compares(close_hash_table));
 
-                    if (close_hash_compares(close_hash_table) - close_hash_table->comp_limit > -EPS)
+                    if (close_hash_compares(close_hash_table) - close_hash_table->comp_limit > -EPS && close_hash_table->size < TABLE_MAX_SIZE)
                     {
                         printf("Restructing hash table\n");
-                        if (close_hash_table_restruct(&close_hash_table, close_hash_new_size(close_hash_table->elems_count), close_hash_table->hash_function))
+                        if (close_hash_table_restruct(&close_hash_table, close_hash_new_size(close_hash_table), close_hash_table->hash_function))
                             printf("\nINVALID RESTRUCT. HASH TABLE WAS DELETED\n");
                         else
                             printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
@@ -1007,10 +1011,10 @@ int main(void)
                     printf("Total compares: %d\n", compares);
                     printf("Average compares: %.6lf\n", close_hash_compares(close_hash_table));
 
-                    if (close_hash_compares(close_hash_table) - close_hash_table->comp_limit > -EPS)
+                    if (close_hash_compares(close_hash_table) - close_hash_table->comp_limit > -EPS && close_hash_table->size < TABLE_MAX_SIZE)
                     {
                         printf("Restructing hash table\n");
-                        if (close_hash_table_restruct(&close_hash_table, close_hash_new_size(close_hash_table->elems_count), close_hash_table->hash_function))
+                        if (close_hash_table_restruct(&close_hash_table, close_hash_new_size(close_hash_table), close_hash_table->hash_function))
                             printf("\nINVALID RESTRUCT. HASH TABLE WAS DELETED\n");
                         else
                             printf("\nHASH TABLE WAS RESTRUCTED SUCCESSFULLY\n");
@@ -1040,10 +1044,9 @@ int main(void)
 
 // STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS STATISTICS
 
-            case CODE_STAT:
+            case CODE_STAT:    
                 hashstat();
-                avl_hash_stat();
-                
+
                 total_stat_search();
                 total_stat_compares();
 

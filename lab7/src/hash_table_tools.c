@@ -63,9 +63,6 @@ size_t open_prime_nearest(size_t num)
 
     if (num < 2)
         return OPEN_SIZE_INIT; // MIN HASH SIZE
-
-    if (erat(num))
-        return num;
     
     if (num > TABLE_MAX_SIZE)
         return TABLE_MAX_SIZE;
@@ -86,13 +83,23 @@ size_t open_prime_nearest(size_t num)
     return OPEN_SIZE_INIT;
 }
 
-size_t open_hash_new_size(size_t elems_count)
+size_t open_hash_new_size(open_hash_table_t *hash_table)
 {
+    size_t elems_count = hash_table->elems_count;
     size_t new_size;
+    size_t res;
 
     new_size = OPEN_NEW_SIZE(elems_count);
+    res = open_prime_nearest(new_size);
+    while (res <= hash_table->size && res != TABLE_MAX_SIZE)
+    {
+        elems_count++;
 
-    return open_prime_nearest(new_size);
+        new_size = OPEN_NEW_SIZE(elems_count);
+        res = open_prime_nearest(new_size);
+    }
+
+    return res;
 }
 
 // ----------
@@ -302,8 +309,7 @@ void open_hash_table_output(open_hash_table_t *hash_table)
     printf("HASH TABLE:\n\n");
 
     for (size_t i = 0; i < hash_table->size; i++)
-        if (hash_table->data[i])
-            data_output(hash_table->data[i], i);
+        data_output(hash_table->data[i], i);
 }
 
 // --------------------------------------------------
@@ -358,32 +364,6 @@ size_t open_hash_table_size(open_hash_table_t *hash_table)
     return total_size;
 }
 
-// --------------------------------------------------
-
-// void open_hash_table_delete_by_char(open_hash_table_t *hash_table, char c)
-// {
-//     data_t *cur = NULL;
-//     data_t *tmp = NULL;
-
-//     for (size_t i = 0; i < hash_table->size; i++)
-//     {
-//         cur = hash_table->data[i];
-
-//         while (cur)
-//             if (*cur->str == c)
-//             {
-//                 tmp = cur;
-//                 cur = cur->next;
-
-//                 open_hash_table_delete(hash_table, hash_function, tmp->str);
-//             }
-//             else
-//                 cur = cur->next;
-//     }
-// }
-
-// --------------------------------------------------
-
 int open_hash_table_read_by_file(char *filedata, open_hash_table_t **hash_table)
 {
     FILE *f = NULL;
@@ -433,8 +413,8 @@ int open_hash_table_read_by_file(char *filedata, open_hash_table_t **hash_table)
     if (! flag)
         return READ_ERR_NO_DATA;
     
-    if (open_hash_compares((*hash_table)) - (*hash_table)->comp_limit > -EPS)
-        if (open_hash_table_restruct(hash_table, open_hash_new_size((*hash_table)->elems_count), (*hash_table)->hash_function))
+    while (open_hash_compares((*hash_table)) - (*hash_table)->comp_limit > -EPS && (*hash_table)->size < TABLE_MAX_SIZE)
+        if (open_hash_table_restruct(hash_table, open_hash_new_size(*hash_table), (*hash_table)->hash_function))
         {
             open_hash_table_free(hash_table);
 
@@ -477,28 +457,16 @@ size_t close_prime_nearest(size_t num)
 {
     int flag = 1;
 
-    size_t left = num;
     size_t right = num;
 
     if (num < 2)
         return CLOSE_SIZE_INIT; // MIN HASH SIZE
-
-    if (erat(num))
-        return num;
     
-    if (num > TABLE_MAX_SIZE)
+    if (num >= TABLE_MAX_SIZE)
         return TABLE_MAX_SIZE;
     
     while (flag)
     {
-        if (! left)
-        {
-            left--;
-
-            if (erat(left))
-                return left;
-        }
-
         if (right < TABLE_MAX_SIZE)
         {
             right++;
@@ -513,13 +481,23 @@ size_t close_prime_nearest(size_t num)
     return CLOSE_SIZE_INIT;
 }
 
-size_t close_hash_new_size(size_t elems_count)
+size_t close_hash_new_size(close_hash_table_t *hash_table)
 {
+    size_t elems_count = hash_table->elems_count;
     size_t new_size;
+    size_t res;
 
     new_size = CLOSE_NEW_SIZE(elems_count);
+    res = close_prime_nearest(new_size);
+    while (res <= hash_table->size && res != TABLE_MAX_SIZE)
+    {
+        elems_count++;
 
-    return close_prime_nearest(new_size);
+        new_size = CLOSE_NEW_SIZE(elems_count);
+        res = close_prime_nearest(new_size);
+    }
+
+    return res;
 }
 
 // ----------
@@ -700,14 +678,17 @@ void close_hash_table_output(close_hash_table_t *hash_table)
     printf("HASH TABLE:\n\n");
 
     for (size_t i = 0; i < hash_table->size; i++)
+    {
+        printf("Hash: %zu | ", i);
         if (hash_table->data[i])
         {
-            printf("Hash: %zu | ", i);
             printf("\"");
             fputs(hash_table->data[i], stdout);
             printf("\"");
-            printf("\n");
         }
+
+        printf("\n");
+    }
 }
 
 // --------------------------------------------------
@@ -807,8 +788,8 @@ int close_hash_table_read_by_file(char *filedata, close_hash_table_t **hash_tabl
     if (! flag)
         return READ_ERR_NO_DATA;
 
-    if (close_hash_compares((*hash_table)) - (*hash_table)->comp_limit > -EPS)
-        if (close_hash_table_restruct(hash_table, close_hash_new_size((*hash_table)->elems_count), (*hash_table)->hash_function))
+    while (close_hash_compares((*hash_table)) - (*hash_table)->comp_limit > -EPS && (*hash_table)->size < TABLE_MAX_SIZE)
+        if (close_hash_table_restruct(hash_table, close_hash_new_size(*hash_table), (*hash_table)->hash_function))
         {
             close_hash_table_free(hash_table);
 
