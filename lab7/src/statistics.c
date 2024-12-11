@@ -64,14 +64,16 @@ void close_hashstat_data_add(close_hash_table_t *hash_table, size_t hash, size_t
     {
         str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
         hashstat_data_str_create(str, i);
-        close_hash_table_data_add(hash_table, hash, str, &comp);
+        if (close_hash_table_data_add(hash_table, hash, str, &comp))
+            printf("LOKKKKKKKKKKKKKKK\n\n");
 
         str_unpin(&str, &size);
     }
 
     str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
     strcpy(str, last_str);
-    close_hash_table_data_add(hash_table, hash, str, &comp);
+    if (close_hash_table_data_add(hash_table, hash, str, &comp))
+        printf("FEWFKEP{WKF{WEFW}}\n\n");
 
     str_unpin(&str, &size);
 }
@@ -334,7 +336,7 @@ double open_rand_delete_time(size_t count)
         if (hash_table->data[i - 1])
             while (hash_table->data[i - 1])
             {
-                for (size_t i = 0; i < ITER_COUNT; i++)
+                for (size_t z = 0; z < ITER_COUNT; z++)
                 {
                     for (cur = hash_table->data[i - 1]; cur->next; cur = cur->next);
 
@@ -406,7 +408,7 @@ double close_rand_delete_time(size_t count)
     for (size_t i = hash_table->size; i > 0; i--)
         if (hash_table->data[i - 1])
         {
-            for (size_t i = 0; i < ITER_COUNT; i++)
+            for (size_t z = 0; z < ITER_COUNT; z++)
             {
                 str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
                 strcpy(str, hash_table->data[i - 1]);
@@ -445,8 +447,10 @@ double avl_rec_time(node_t **node, node_t **tree)
     if (! node || ! *node || ! tree || ! *tree)
         return 0.0;
 
-    total_time += avl_rec_time(&(*node)->left, tree);
-    total_time += avl_rec_time(&(*node)->right, tree);
+    if ((*node)->left)
+        total_time += avl_rec_time(&(*node)->left, tree);
+    if ((*node)->right)
+        total_time += avl_rec_time(&(*node)->right, tree);
 
     for (size_t i = 0; i < ITER_COUNT; i++)
     {
@@ -460,10 +464,13 @@ double avl_rec_time(node_t **node, node_t **tree)
         total_time += 1000000000 * (t_end.tv_sec - t_beg.tv_sec) + (t_end.tv_nsec - t_beg.tv_nsec);
 
         tmp = node_alloc(str);
-        node_add(*tree, tmp);
+        *tree = node_add(*tree, tmp);
     }
 
-    node_delete(tree, (*node)->data);
+    str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
+    strcpy(str, (*node)->data);
+    node_delete(tree, str);
+    free(str);
 
     return total_time;
 }
@@ -613,7 +620,7 @@ void hashstat(void)
     close_hash_table = close_hash_table_init();
     if (! close_hash_table)
         return;
-    close_hash_table_restruct(&close_hash_table, MAX_COLL_COUNT + 1, binary_poly_hash_function);
+    close_hash_table_restruct(&close_hash_table, HASHES_MAX_COLL_COUNT + 1, binary_poly_hash_function);
 
     // ---
 
