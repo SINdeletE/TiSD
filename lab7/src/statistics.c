@@ -703,7 +703,7 @@ void hashstat(void)
 
 
 
-void total_stat_search(void)
+void total_stat_size(void)
 {
     char hash_searching_data[HASHSTAT_STR_SIZE] = "Searchable";
 
@@ -728,7 +728,7 @@ void total_stat_search(void)
     printf("\nTOTAL STATISTICS: SIZES (size in bytes)\n");
 
     printf(" count |");
-    printf("  WORTH SIZE  |");
+    printf("  USUAL SIZE  |");
     printf("    AVL SIZE  |");
     printf("   OPEN SIZE  |");
     printf("  CLOSE SIZE  |\n");
@@ -779,7 +779,7 @@ void total_stat_search(void)
 
 
 
-void total_stat_compares(void)
+void total_stat(void)
 {
     double usual_time_search = 0;
     double avg_time_search = 0;

@@ -23,7 +23,7 @@
 
 void hashstat(void);
 
-void total_stat_search(void);
-void total_stat_compares(void);
+void total_stat_size(void);
+void total_stat(void);
 
 #endif

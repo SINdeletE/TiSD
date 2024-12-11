@@ -1047,8 +1047,8 @@ int main(void)
             case CODE_STAT:    
                 hashstat();
 
-                total_stat_search();
-                total_stat_compares();
+                total_stat_size();
+                total_stat();
 
                 break;
 
