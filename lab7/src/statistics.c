@@ -366,6 +366,7 @@ double open_rand_delete_time(size_t count)
 double close_rand_delete_time(size_t count)
 {
     double total_time = 0.0;
+    char text[HASHSTAT_STR_SIZE + 6] = {0};
 
     close_hash_table_t *hash_table = NULL;
     int code;
@@ -406,12 +407,14 @@ double close_rand_delete_time(size_t count)
         close_hash_table_restruct(&hash_table, close_hash_new_size(hash_table), hash_table->hash_function);
 
     for (size_t i = hash_table->size; i > 0; i--)
-        if (hash_table->data[i - 1])
+        if (hash_table->data[i - 1] && hash_table->data[i - 1] != PILL)
         {
+            strcpy(text, hash_table->data[i - 1]);
+
             for (size_t z = 0; z < ITER_COUNT; z++)
             {
                 str = calloc(HASHSTAT_STR_SIZE, sizeof(char));
-                strcpy(str, hash_table->data[i - 1]);
+                strcpy(str, text);
 
                 clock_gettime(CLOCK_MONOTONIC_RAW, &t_beg);
                 close_hash_table_delete(hash_table, str);
@@ -424,7 +427,7 @@ double close_rand_delete_time(size_t count)
                 str_unpin(&str, &size);
             }
 
-            close_hash_table_delete(hash_table, hash_table->data[i - 1]);
+            close_hash_table_delete(hash_table, text);
             
             str_free(&str, &size);
         }

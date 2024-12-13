@@ -29,6 +29,8 @@
 #define CLOSE_SIZE_INIT 3
 #define CLOSE_NEW_SIZE(SIZE) (size_t)((size_t)((double)(SIZE) * CLOSE_SIZE_CONST) == (SIZE) ? (SIZE) + 1 : (size_t)((double)(SIZE) * CLOSE_SIZE_CONST))
 
+#define PILL (void *)((char *)(1))
+
 // ---
 
 typedef struct

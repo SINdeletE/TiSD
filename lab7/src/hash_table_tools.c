@@ -508,7 +508,8 @@ void close_hash_table_free(close_hash_table_t **hash_table)
         return;
 
     for (size_t i = 0; i < TABLE_MAX_SIZE; i++)
-        free((*hash_table)->data[i]);
+        if ((*hash_table)->data[i] != PILL)
+            free((*hash_table)->data[i]);
 
     free(*hash_table);
     *hash_table = NULL;
@@ -518,7 +519,9 @@ void close_hashstat_data_clear(close_hash_table_t *hash_table)
 {
     for (size_t i = 0; i < TABLE_MAX_SIZE; i++)
     {
-        free(hash_table->data[i]);
+        if (hash_table->data[i] != PILL)
+            free(hash_table->data[i]);
+
         hash_table->data[i] = NULL;
     }
 }
@@ -549,7 +552,7 @@ double close_hash_compares(close_hash_table_t *hash_table)
     {
         current_comps = 0;
 
-        if (hash_table->data[i])
+        if (hash_table->data[i] && hash_table->data[i] != PILL)
         {
             close_hash_table_search(hash_table, hash_table->data[i], &current_comps);
 
@@ -569,7 +572,7 @@ int close_hash_table_data_add(close_hash_table_t *hash_table, size_t hash, char 
 
     (*comp)++;
     i = hash;
-    while (hash_table->data[i])
+    while (hash_table->data[i] && hash_table->data[i] != PILL)
     {
         if (! strcmp(hash_table->data[i], str))
             return HASH_PRCS_ERR_SAME_DATA;
@@ -619,7 +622,7 @@ int close_hash_table_delete(close_hash_table_t *hash_table, char *str)
         return HASH_PRCS_ERR_NO_DATA;
 
     i = hash;
-    while (hash_table->data[i] && strcmp(hash_table->data[i], str))
+    while (hash_table->data[i] && (hash_table->data[i] == PILL || strcmp(hash_table->data[i], str)))
     {
         if (i == hash_table->size - 1)
         {
@@ -634,6 +637,7 @@ int close_hash_table_delete(close_hash_table_t *hash_table, char *str)
     }
 
     str_free(&hash_table->data[i], &tmp);
+    hash_table->data[i] = PILL;
 
     return HASH_PRCS_OK;
 }
@@ -653,7 +657,7 @@ int close_hash_table_search(close_hash_table_t *hash_table, char *str, int *comp
 
     (*comp)++;
     i = hash;
-    while (hash_table->data[i] && strcmp(hash_table->data[i], str))
+    while (hash_table->data[i] && (hash_table->data[i] == PILL || strcmp(hash_table->data[i], str)))
     {
         if (i == hash_table->size - 1)
         {
@@ -680,14 +684,14 @@ void close_hash_table_output(close_hash_table_t *hash_table)
     for (size_t i = 0; i < hash_table->size; i++)
     {
         printf("Hash: %zu | ", i);
-        if (hash_table->data[i])
+        if (hash_table->data[i] != PILL && hash_table->data[i])
         {
             printf("\"");
             fputs(hash_table->data[i], stdout);
             printf("\"");
 
-            if (i && hash_table->data[i - 1] && hash_table->hash_function(hash_table->data[i - 1], hash_table->size) == hash_table->hash_function(hash_table->data[i], hash_table->size))
-                printf(" (COLLISION)");
+            if (hash_table->data[i] != PILL && hash_table->hash_function(hash_table->data[i], hash_table->size) != i)
+                printf(" (hash = %zu)", hash_table->hash_function(hash_table->data[i], hash_table->size));
         }
 
         printf("\n");
