@@ -685,6 +685,9 @@ void close_hash_table_output(close_hash_table_t *hash_table)
             printf("\"");
             fputs(hash_table->data[i], stdout);
             printf("\"");
+
+            if (i && hash_table->data[i - 1] && hash_table->hash_function(hash_table->data[i - 1], hash_table->size) == hash_table->hash_function(hash_table->data[i], hash_table->size))
+                printf(" (COLLISION)");
         }
 
         printf("\n");
