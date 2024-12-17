@@ -282,7 +282,7 @@ graph_error_t graph_read_from_file(graph_t **graph, char *filename)
     for (size_t i = 0; i < n - 1; i++)
         for (size_t j = i + 1; j < n; j++)
         {
-            if (! lane)
+            if (! lane_element)
         }
 
     fclose(f);
