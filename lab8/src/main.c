@@ -16,6 +16,7 @@
 
 #define CODE_READ 1
 #define CODE_PATH 2
+#define CODE_OUTPUT 3
 #define CODE_EXIT 8
 
 int clear_buf(FILE *f);
@@ -46,8 +47,8 @@ int main(void)
         printf("\n--------------------------------\n");
         printf("\nEnter a number of command:\n");
         printf("1. Read graph (from file)\n");
-        printf("2. Find shortest path from A to B\n");
-        printf("3. Remove tree element by data\n");
+        printf("2. Find shortest path from A to B (instant result output)\n");
+        printf("3. Output graph\n");
         printf("4. Search tree element by data\n");
         printf("5. Output tree (with pre-order) + Graphviz visualization\n");
         printf("6. Output tree (with in-order) + Graphviz visualization\n");
@@ -140,10 +141,22 @@ int main(void)
 
                 tmp_size = 0;
 
-                way_find(graph, A, B);
+                graph_way_find_path(graph, A, B);
 
                 str_free(&A, &tmp_size);
                 str_free(&B, &tmp_size);
+
+                break;
+            case CODE_OUTPUT:
+                if (! graph)
+                {
+                    printf("\nNO DATA\n");
+
+                    break;
+                }
+
+                graph_clear(graph);
+                graph_output(graph, NULL, NULL);
 
                 break;
             case CODE_EXIT:

@@ -71,9 +71,18 @@ void graph_free(graph_t **graph)
     *graph = NULL;
 }
 
+void graph_way_color(graph_t *graph, size_t end_i)
+{
+    if (! graph)
+        return;
+
+    for (city_t *cur = graph->cities[end_i]; cur; cur = cur->last)
+        cur->color = COLOR_RED;
+}
+
 // ------------------------------
 
-void way_find_clear(graph_t *graph)
+void graph_clear(graph_t *graph)
 {
     for (size_t i = 0; i < graph->n; i++)
     {
@@ -85,6 +94,8 @@ void way_find_clear(graph_t *graph)
         graph->cities[i]->min_fee = -1;
     }
 }
+
+// ------------------------------
 
 void *memory_alloc(size_t n, size_t size)
 {
@@ -111,7 +122,86 @@ size_t city_find_by_str(graph_t *graph, char *str)
     return tmp;
 }
 
-graph_error_t way_find(graph_t *graph, char *beg, char *end)
+// ------------------------------
+
+void graph_output_all_lanes(graph_t *graph, FILE *f)
+{
+    for (size_t i = 0; i < graph->n; i++)
+    {
+        for (size_t j = 0; j < graph->n; j++)
+            if (graph->lanes[i][j])
+            {
+                fprintf(f, "  \"");
+                fputs(graph->cities[i]->name, f);
+                fprintf(f, "\" -> \"");
+                fputs(graph->cities[j]->name, f);
+                fprintf(f, "\"");
+                fprintf(f, "[label=\"(%.1lf %.1lf)\", ", graph->lanes[i][j]->value, graph->lanes[i][j]->fee);
+
+                if (graph->lanes[i][j]->is_colored)
+                {
+                    if (graph->cities[j]->color == COLOR_RED)
+                        fprintf(f, "color=red");
+                }
+                
+                fprintf(f, "]\n");
+            }
+    }
+}
+
+void additional_find_path(graph_t *graph, void *key)
+{
+    city_t *end_city = (city_t *)key;
+    size_t end_i = 0, beg_i = 0;
+
+    for (city_t *cur = end_city; cur->last; cur = cur->last)
+    {
+        end_i = city_find_by_str(graph, cur->name);
+        beg_i = city_find_by_str(graph, cur->last->name);
+
+        graph->lanes[beg_i][end_i]->is_colored = 1;
+    }
+}
+
+void graph_output(graph_t *graph, void (*additional_output)(graph_t *, void *), void *key)
+{
+    FILE *f = NULL;
+    char *filename = "TreeVisual.gv";
+
+    f = fopen(filename, "w");
+
+    fprintf(f, "digraph \"");
+    fputs(filename, f);
+    fprintf(f, "\" {\n");
+    fprintf(f, "  node [fontdata=\"Arial\"];\n");
+
+    for (size_t i = 0; i < graph->n; i++)
+    {
+        fprintf(f, "  \"");
+        fputs(graph->cities[i]->name, f);
+        fprintf(f, "\"");
+
+        if (graph->cities[i]->color == COLOR_RED)
+            fprintf(f, "[color=red]\n");
+        else
+            fputc('\n', f);
+    }
+
+    if (additional_output)
+        additional_output(graph, key);
+    
+    graph_output_all_lanes(graph, f);
+
+    fprintf(f, "}");
+
+    fclose(f);
+
+    system("dot -Tpng TreeVisual.gv -o graph.png");
+}
+
+// ------------------------------
+
+graph_error_t graph_way_find_path(graph_t *graph, char *beg, char *end)
 {
     size_t iters;
     size_t cur_i = 0;
@@ -129,7 +219,7 @@ graph_error_t way_find(graph_t *graph, char *beg, char *end)
     if ((end_i = city_find_by_str(graph, end)) == graph->n)
         return GRAPH_ERR_UNKNOWN_CITY;
 
-    way_find_clear(graph);
+    graph_clear(graph);
 
     graph->cities[cur_i]->min_value = 0;
     graph->cities[cur_i]->min_fee = 0;
@@ -149,11 +239,13 @@ graph_error_t way_find(graph_t *graph, char *beg, char *end)
                 {
                     graph->cities[j]->min_value = value;
                     graph->cities[j]->min_fee = fee;
+                    graph->cities[j]->last = graph->cities[cur_i];
                 }
                 else if (key - graph->cities[j]->min_value - graph->cities[j]->min_fee < -EPS) // 55555
                 {
                     graph->cities[j]->min_value = value;
                     graph->cities[j]->min_fee = fee;
+                    graph->cities[j]->last = graph->cities[cur_i];
                 }
             }
         
@@ -175,7 +267,19 @@ graph_error_t way_find(graph_t *graph, char *beg, char *end)
         iters++;
     }
 
-    printf("MIN PATH S+P: %.6lf\n", graph->cities[end_i]->min_value + graph->cities[end_i]->min_fee);
+    key = graph->cities[end_i]->min_value + graph->cities[end_i]->min_fee;
+
+    graph_way_color(graph, end_i);
+
+    if (key < -EPS)
+        printf("\nPATH ISN'T EXIST\n");
+    else
+    {
+        printf("\nMIN PATH S+P: %.6lf\n", key);
+        printf("S: %.6lf P: %.6lf\n", graph->cities[end_i]->min_value, graph->cities[end_i]->min_fee);
+    }
+
+    graph_output(graph, additional_find_path, graph->cities[end_i]);
 
     return GRAPH_OK;
 }
