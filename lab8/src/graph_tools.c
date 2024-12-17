@@ -14,14 +14,51 @@ void cities_free(city_t ***cities, size_t n)
     city_t **tmp = cities;
 
     for (size_t i = 0; i < n; i++)
-    {
-        free(cities[i]->name);
-        free(cities[i]);
-        cities[i] = NULL;
-    }
+        if (cities[i])
+        {
+            free(cities[i]->name);
+            free(cities[i]);
+            cities[i] = NULL;
+        }
 
     free(tmp);
     *cities = NULL;
+}
+
+void lane_free(lane_t ****lanes, size_t n)
+{
+    lane_t ***tmp = lanes;
+
+    for (size_t i = 0; i < n; i++)
+    {
+        if (tmp[i])
+        {
+            for (size_t j = 0; j < n; j++)
+                if (tmp[i][j])
+                    free(tmp[i][j]);
+            
+            free(tmp[i]);
+        }
+    }
+
+    free(tmp);
+    *lanes = NULL;
+}
+
+void graph_free(graph_t **graph)
+{
+    graph_t *tmp = *graph;
+
+    if (! graph)
+        return NULL;
+
+    if (tmp->cities)
+        cities_free(&tmp->cities, tmp->n);
+    if (tmp->lanes)
+        lanes_free(&tmp->lanes, tmp->n);
+
+    free(tmp);
+    *graph = NULL;
 }
 
 // ------------------------------
@@ -145,6 +182,7 @@ graph_error_t graph_read_from_file(graph_t **graph, char *filename)
 
     graph_t *graph_tmp = NULL;
     city_t **cities_tmp = NULL;
+    city_t *city_tmp = NULL;
     size_t n = 0;
     city_t *realloc_tmp = NULL;
 
@@ -153,7 +191,9 @@ graph_error_t graph_read_from_file(graph_t **graph, char *filename)
     size_t size;
 
     double num_tmp = 0.0;
-    lane_t *lane_tmp = NULL;
+    lane_t ***lanes_tmp = NULL;
+    lane_t **lane_stroke_tmp = NULL;
+    lane_t *lane_element_tmp = NULL;
 
     if (! (f = fopen(filename, "r")))
         return GRAPH_ERR_INVALID_FILE;
@@ -170,16 +210,36 @@ graph_error_t graph_read_from_file(graph_t **graph, char *filename)
         {
             free(graph_tmp);
             cities_free(&cities_tmp, n);
+            free(name_tmp);
 
             return GRAPH_ERR_ALLOC;
         }
+        cities_tmp = realloc_tmp;
 
         if (p = strchr(name_tmp, '\n'))
             *p = '\0';
 
+        if (! (city_tmp = memory_alloc(1, sizeof(struct city))))
+        {
+            free(graph_tmp);
+            cities_free(&cities_tmp, n);
+            free(name_tmp);
+
+            return GRAPH_ERR_ALLOC;
+        }
+        city_tmp->name = name_tmp;
+
+        cities_tmp[n] = city_tmp;
+
         str_unpin(&name_tmp, &size);
 
         n++;
+    }
+
+    if (name_tmp)
+    {
+        free(name_tmp);
+        name_tmp = NULL;
     }
 
     if (! n)
@@ -190,8 +250,40 @@ graph_error_t graph_read_from_file(graph_t **graph, char *filename)
         return GRAPH_ERR_NO_DATA;
     }
 
-    if (! (graph_tmp = memory_alloc(1, sizeof(graph_t))))
-        return GRAPH_ERR_ALLOC;
+    if (n < 2)
+    {
+        free(graph_tmp);
+        cities_free(&cities_tmp, n);
+
+        return GRAPH_ERR_INVALID_DATA;
+    }
+
+    if (! (lanes_tmp = memory_alloc(n, sizeof(**lane_t))))
+    {
+        free(graph_tmp);
+        cities_free(&cities_tmp, n);
+
+        return GRAPH_ERR_INVALID_DATA;
+    }
+
+    for (size_t i = 0; i < n; i++)
+    {
+        if (! (lane_stroke_tmp = memory_alloc(n, sizeof(lane_t *))))
+        {
+            free(graph_tmp);
+            cities_free(&cities_tmp, n);
+
+            return GRAPH_ERR_ALLOC;
+        }
+
+        lanes_tmp[i] = lane_stroke_tmp;
+    }
+
+    for (size_t i = 0; i < n - 1; i++)
+        for (size_t j = i + 1; j < n; j++)
+        {
+            if (! lane)
+        }
 
     fclose(f);
 
