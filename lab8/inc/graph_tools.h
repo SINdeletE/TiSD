@@ -58,6 +58,11 @@ typedef struct
     lane_t ***lanes;
 } graph_t;
 
+void graph_free(graph_t **graph);
+void str_unpin(char **str, size_t *size);
+void str_free(char **str, size_t *size);
+
 graph_error_t way_find(graph_t *graph, char *beg, char *end);
+graph_error_t graph_read_from_file(graph_t **graph, char *filename);
 
 #endif

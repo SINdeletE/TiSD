@@ -7,27 +7,35 @@
 
 #define EPS 1e-8
 
+void str_free(char **str, size_t *size)
+{
+    free(*str);
+    *str = NULL;
+
+    *size = 0;
+}
+
 // ------------------------------
 
 void cities_free(city_t ***cities, size_t n)
 {
-    city_t **tmp = cities;
+    city_t **tmp = *cities;
 
     for (size_t i = 0; i < n; i++)
-        if (cities[i])
+        if (tmp[i])
         {
-            free(cities[i]->name);
-            free(cities[i]);
-            cities[i] = NULL;
+            free(tmp[i]->name);
+            free(tmp[i]);
+            tmp[i] = NULL;
         }
 
     free(tmp);
     *cities = NULL;
 }
 
-void lane_free(lane_t ****lanes, size_t n)
+void lanes_free(lane_t ****lanes, size_t n)
 {
-    lane_t ***tmp = lanes;
+    lane_t ***tmp = *lanes;
 
     for (size_t i = 0; i < n; i++)
     {
@@ -47,10 +55,12 @@ void lane_free(lane_t ****lanes, size_t n)
 
 void graph_free(graph_t **graph)
 {
-    graph_t *tmp = *graph;
+    graph_t *tmp;
 
-    if (! graph)
-        return NULL;
+    if (! graph || ! *graph)
+        return;
+
+    tmp = *graph;
 
     if (tmp->cities)
         cities_free(&tmp->cities, tmp->n);
@@ -165,6 +175,8 @@ graph_error_t way_find(graph_t *graph, char *beg, char *end)
         iters++;
     }
 
+    printf("MIN PATH S+P: %.6lf\n", graph->cities[end_i]->min_value + graph->cities[end_i]->min_fee);
+
     return GRAPH_OK;
 }
 
@@ -179,12 +191,13 @@ void str_unpin(char **str, size_t *size)
 graph_error_t graph_read_from_file(graph_t **graph, char *filename)
 {
     FILE *f = NULL;
+    int flag = 1;
 
     graph_t *graph_tmp = NULL;
     city_t **cities_tmp = NULL;
     city_t *city_tmp = NULL;
     size_t n = 0;
-    city_t *realloc_tmp = NULL;
+    city_t **realloc_tmp = NULL;
 
     char *name_tmp = NULL;
     char *p = NULL;
@@ -199,15 +212,24 @@ graph_error_t graph_read_from_file(graph_t **graph, char *filename)
         return GRAPH_ERR_INVALID_FILE;
 
     if (! graph)
+    {
+        fclose(f);
+
         return GRAPH_ERR_INVALID_IN;
+    }
 
     if (! (graph_tmp = memory_alloc(1, sizeof(graph_t))))
+    {
+        fclose(f);
+
         return GRAPH_ERR_ALLOC;
+    }
 
     while (getline(&name_tmp, &size, f) != -1 && strcmp(name_tmp, READ_END))
     {
         if (! (realloc_tmp = realloc(cities_tmp, (n + 1) * sizeof(city_t *))))
         {
+            fclose(f);
             free(graph_tmp);
             cities_free(&cities_tmp, n);
             free(name_tmp);
@@ -216,11 +238,12 @@ graph_error_t graph_read_from_file(graph_t **graph, char *filename)
         }
         cities_tmp = realloc_tmp;
 
-        if (p = strchr(name_tmp, '\n'))
+        if ((p = strchr(name_tmp, '\n')))
             *p = '\0';
 
         if (! (city_tmp = memory_alloc(1, sizeof(struct city))))
         {
+            fclose(f);
             free(graph_tmp);
             cities_free(&cities_tmp, n);
             free(name_tmp);
@@ -244,6 +267,7 @@ graph_error_t graph_read_from_file(graph_t **graph, char *filename)
 
     if (! n)
     {
+        fclose(f);
         free(graph_tmp);
         cities_free(&cities_tmp, n);
 
@@ -252,14 +276,16 @@ graph_error_t graph_read_from_file(graph_t **graph, char *filename)
 
     if (n < 2)
     {
+        fclose(f);
         free(graph_tmp);
         cities_free(&cities_tmp, n);
 
         return GRAPH_ERR_INVALID_DATA;
     }
 
-    if (! (lanes_tmp = memory_alloc(n, sizeof(**lane_t))))
+    if (! (lanes_tmp = memory_alloc(n, sizeof(lane_t **))))
     {
+        fclose(f);
         free(graph_tmp);
         cities_free(&cities_tmp, n);
 
@@ -270,8 +296,10 @@ graph_error_t graph_read_from_file(graph_t **graph, char *filename)
     {
         if (! (lane_stroke_tmp = memory_alloc(n, sizeof(lane_t *))))
         {
+            fclose(f);
             free(graph_tmp);
             cities_free(&cities_tmp, n);
+            lanes_free(&lanes_tmp, n);
 
             return GRAPH_ERR_ALLOC;
         }
@@ -279,13 +307,90 @@ graph_error_t graph_read_from_file(graph_t **graph, char *filename)
         lanes_tmp[i] = lane_stroke_tmp;
     }
 
-    for (size_t i = 0; i < n - 1; i++)
-        for (size_t j = i + 1; j < n; j++)
+    for (size_t i = 0; flag && i < n - 1; i++)
+        for (size_t j = i + 1; flag && j < n; j++)
         {
-            if (! lane_element)
+            if (fscanf(f, "%lf", &num_tmp) != 1)
+            {
+                if (! feof(f) || ferror(f))
+                {
+                    fclose(f);
+                    free(graph_tmp);
+                    cities_free(&cities_tmp, n);
+                    lanes_free(&lanes_tmp, n);
+
+                    return GRAPH_ERR_INVALID_DATA;
+                }
+            }
+            else
+            {
+                if (! (num_tmp < EPS))
+                {
+                    if (! (lane_element_tmp = memory_alloc(1, sizeof(lane_t))))
+                    {
+                        fclose(f);
+                        free(graph_tmp);
+                        cities_free(&cities_tmp, n);
+                        lanes_free(&lanes_tmp, n);
+
+                        return GRAPH_ERR_ALLOC;
+                    }
+
+                    lane_element_tmp->value = num_tmp;
+                    lanes_tmp[i][j] = lane_element_tmp;
+                    lane_element_tmp = NULL;
+
+                    if (fscanf(f, "%lf", &num_tmp) != 1 || num_tmp < EPS)
+                    {
+                        fclose(f);
+                        free(graph_tmp);
+                        cities_free(&cities_tmp, n);
+                        lanes_free(&lanes_tmp, n);
+                        free(lane_element_tmp);
+
+                        return GRAPH_ERR_INVALID_DATA;
+                    }
+
+                    if (! (lane_element_tmp = memory_alloc(1, sizeof(lane_t))))
+                    {
+                        fclose(f);
+                        free(graph_tmp);
+                        cities_free(&cities_tmp, n);
+                        lanes_free(&lanes_tmp, n);
+
+                        return GRAPH_ERR_ALLOC;
+                    }
+
+                    lane_element_tmp->value = num_tmp;
+                    lanes_tmp[j][i] = lane_element_tmp;
+                    lane_element_tmp = NULL;
+
+                    if (fscanf(f, "%lf", &num_tmp) != 1 || num_tmp < -EPS)
+                    {
+                        fclose(f);
+                        free(graph_tmp);
+                        cities_free(&cities_tmp, n);
+                        lanes_free(&lanes_tmp, n);
+                        free(lane_element_tmp);
+
+                        return GRAPH_ERR_INVALID_DATA;
+                    }
+                    else
+                    {
+                        lanes_tmp[i][j]->fee = num_tmp;
+                        lanes_tmp[j][i]->fee = num_tmp;
+                    }
+                }
+            }
         }
 
     fclose(f);
+
+    graph_tmp->cities = cities_tmp;
+    graph_tmp->lanes = lanes_tmp;
+    graph_tmp->n = n;
+
+    *graph = graph_tmp;
 
     return GRAPH_OK;
 }
