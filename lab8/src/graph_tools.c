@@ -137,8 +137,26 @@ void graph_output_all_lanes(graph_t *graph, FILE *f)
                 fputs(graph->cities[j]->name, f);
                 fprintf(f, "\"");
                 fprintf(f, "[label=\"(%.1lf %.1lf)\", ", graph->lanes[i][j]->value, graph->lanes[i][j]->fee);
+                fprintf(f, "]\n");
+            }
+    }
+}
 
-                if (graph->lanes[i][j]->is_colored)
+void graph_output_additional_find_path(graph_t *graph, FILE *f)
+{
+    for (size_t i = 0; i < graph->n; i++)
+    {
+        for (size_t j = 0; j < graph->n; j++)
+            if (graph->lanes[i][j])
+            {
+                fprintf(f, "  \"");
+                fputs(graph->cities[i]->name, f);
+                fprintf(f, "\" -> \"");
+                fputs(graph->cities[j]->name, f);
+                fprintf(f, "\"");
+                fprintf(f, "[label=\"(%.1lf %.1lf)\", ", graph->lanes[i][j]->value, graph->lanes[i][j]->fee);
+
+                if (graph->cities[j]->last == graph->cities[i])
                 {
                     if (graph->cities[j]->color == COLOR_RED)
                         fprintf(f, "color=red");
@@ -149,21 +167,7 @@ void graph_output_all_lanes(graph_t *graph, FILE *f)
     }
 }
 
-void additional_find_path(graph_t *graph, void *key)
-{
-    city_t *end_city = (city_t *)key;
-    size_t end_i = 0, beg_i = 0;
-
-    for (city_t *cur = end_city; cur->last; cur = cur->last)
-    {
-        end_i = city_find_by_str(graph, cur->name);
-        beg_i = city_find_by_str(graph, cur->last->name);
-
-        graph->lanes[beg_i][end_i]->is_colored = 1;
-    }
-}
-
-void graph_output(graph_t *graph, void (*additional_output)(graph_t *, void *), void *key)
+void graph_output(graph_t *graph, void (*additional_output)(graph_t *, FILE *))
 {
     FILE *f = NULL;
     char *filename = "TreeVisual.gv";
@@ -188,9 +192,9 @@ void graph_output(graph_t *graph, void (*additional_output)(graph_t *, void *), 
     }
 
     if (additional_output)
-        additional_output(graph, key);
-    
-    graph_output_all_lanes(graph, f);
+        additional_output(graph, f);
+    else
+        graph_output_all_lanes(graph, f);
 
     fprintf(f, "}");
 
@@ -279,7 +283,7 @@ graph_error_t graph_way_find_path(graph_t *graph, char *beg, char *end)
         printf("S: %.6lf P: %.6lf\n", graph->cities[end_i]->min_value, graph->cities[end_i]->min_fee);
     }
 
-    graph_output(graph, additional_find_path, graph->cities[end_i]);
+    graph_output(graph, graph_output_additional_find_path);
 
     return GRAPH_OK;
 }

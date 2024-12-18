@@ -156,7 +156,7 @@ int main(void)
                 }
 
                 graph_clear(graph);
-                graph_output(graph, NULL, NULL);
+                graph_output(graph, NULL);
 
                 break;
             case CODE_EXIT:
