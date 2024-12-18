@@ -208,6 +208,7 @@ void graph_output(graph_t *graph, void (*additional_output)(graph_t *, FILE *))
 graph_error_t graph_way_find_path(graph_t *graph, char *beg, char *end)
 {
     size_t iters;
+    size_t last_i = 0;
     size_t cur_i = 0;
     size_t end_i = 0;
 
@@ -219,6 +220,8 @@ graph_error_t graph_way_find_path(graph_t *graph, char *beg, char *end)
 
     if ((cur_i = city_find_by_str(graph, beg)) == graph->n)
         return GRAPH_ERR_UNKNOWN_CITY;
+
+    last_i = cur_i;
 
     if ((end_i = city_find_by_str(graph, end)) == graph->n)
         return GRAPH_ERR_UNKNOWN_CITY;
@@ -233,7 +236,7 @@ graph_error_t graph_way_find_path(graph_t *graph, char *beg, char *end)
     while (iters < graph->n && ! graph->cities[end_i]->is_major)
     {
         for (size_t j = 0; j < graph->n; j++)
-            if (graph->lanes[cur_i][j])
+            if (graph->lanes[cur_i][j] && j != last_i)
             {
                 value = graph->cities[cur_i]->min_value + graph->lanes[cur_i][j]->value;
                 fee = graph->cities[cur_i]->min_fee + graph->lanes[cur_i][j]->fee;
@@ -252,6 +255,8 @@ graph_error_t graph_way_find_path(graph_t *graph, char *beg, char *end)
                     graph->cities[j]->last = graph->cities[cur_i];
                 }
             }
+
+        last_i = cur_i;
         
         min_key = -1.0;
         for (size_t i = 0; i < graph->n; i++)
@@ -260,7 +265,7 @@ graph_error_t graph_way_find_path(graph_t *graph, char *beg, char *end)
             fee = graph->cities[i]->min_fee;
             key = value + fee; // 55555
 
-            if (! graph->cities[i]->is_major && min_key - key < -EPS) // 55555
+            if (fabs(value = graph->cities[i]->min_value + 1) > EPS && ! graph->cities[i]->is_major && (fabs(min_key + 1.0) < EPS || min_key - key > EPS)) // 55555
             {
                 min_key = key;
                 cur_i = i;
@@ -272,6 +277,11 @@ graph_error_t graph_way_find_path(graph_t *graph, char *beg, char *end)
     }
 
     key = graph->cities[end_i]->min_value + graph->cities[end_i]->min_fee;
+    
+    if (graph->cities[end_i]->min_value < EPS)
+            graph->cities[end_i]->min_value = 0.0;
+    if (graph->cities[end_i]->min_fee < EPS)
+            graph->cities[end_i]->min_fee = 0.0;
 
     graph_way_color(graph, end_i);
 
