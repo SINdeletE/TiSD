@@ -40,11 +40,11 @@ typedef struct
 typedef struct city city_t;
 struct city
 {
-    char *name; // Название города
+    char *name;
 
-    int is_major; // Является ли город посещённым
-    city_t *last; // Из какого города минимальный путь до этого города
-    color_t color; // Цвет (для визуализации графа)
+    int is_major;
+    city_t *last;
+    color_t color;
 
     double min_value;
     double min_fee;

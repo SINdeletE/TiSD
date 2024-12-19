@@ -40,7 +40,7 @@ int main(void)
 
     bool flag = true;
     int code;
-    // int func_code = 0;
+    graph_error_t func_code = 0;
 
     while (flag)
     {   
@@ -49,10 +49,6 @@ int main(void)
         printf("1. Read graph (from file)\n");
         printf("2. Find shortest path from A to B (instant result output)\n");
         printf("3. Output graph\n");
-        printf("4. Search tree element by data\n");
-        printf("5. Output tree (with pre-order) + Graphviz visualization\n");
-        printf("6. Output tree (with in-order) + Graphviz visualization\n");
-        printf("7. Output tree (with post-order) + Graphviz visualization\n");
         printf("\n8. Exit\n");
         printf("\n--------------------------------\n");
 
@@ -141,7 +137,13 @@ int main(void)
 
                 tmp_size = 0;
 
-                graph_way_find_path(graph, A, B);
+                func_code = graph_way_find_path(graph, A, B);
+                if (func_code == GRAPH_ERR_UNKNOWN_CITY)
+                {
+                    printf("\nINVALID CITY NAME: UNKNOWN CITY\n");
+
+                    break;
+                }
 
                 str_free(&A, &tmp_size);
                 str_free(&B, &tmp_size);

@@ -185,7 +185,7 @@ void graph_output(graph_t *graph, void (*additional_output)(graph_t *, FILE *))
         fputs(graph->cities[i]->name, f);
         fprintf(f, "\"");
 
-        if (graph->cities[i]->color == COLOR_RED)
+        if (graph->cities[i]->color == COLOR_RED && additional_output)
             fprintf(f, "[color=red]\n");
         else
             fputc('\n', f);
@@ -286,14 +286,18 @@ graph_error_t graph_way_find_path(graph_t *graph, char *beg, char *end)
     graph_way_color(graph, end_i);
 
     if (key < -EPS)
+    {
         printf("\nPATH ISN'T EXIST\n");
+
+        graph_output(graph, NULL);
+    }
     else
     {
         printf("\nMIN PATH S+P: %.6lf\n", key);
         printf("S: %.6lf P: %.6lf\n", graph->cities[end_i]->min_value, graph->cities[end_i]->min_fee);
-    }
 
-    graph_output(graph, graph_output_additional_find_path);
+        graph_output(graph, graph_output_additional_find_path);
+    }
 
     return GRAPH_OK;
 }
