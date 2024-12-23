@@ -310,6 +310,15 @@ void str_unpin(char **str, size_t *size)
     *size = 0;
 }
 
+int is_already_exist(city_t **cities, size_t n, char *str)
+{
+    for (size_t i = 0; i < n; i++)
+        if (! strcmp(cities[i]->name, str))
+            return 1;
+    
+    return 0;
+}
+
 graph_error_t graph_read_from_file(graph_t **graph, char *filename)
 {
     FILE *f = NULL;
@@ -362,6 +371,16 @@ graph_error_t graph_read_from_file(graph_t **graph, char *filename)
 
         if ((p = strchr(name_tmp, '\n')))
             *p = '\0';
+
+        if (is_already_exist(cities_tmp, n, name_tmp))
+        {
+            fclose(f);
+            free(graph_tmp);
+            cities_free(&cities_tmp, n);
+            free(name_tmp);
+
+            return GRAPH_ERR_SAME_DATA;
+        }
 
         if (! (city_tmp = memory_alloc(1, sizeof(struct city))))
         {

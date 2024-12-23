@@ -93,6 +93,10 @@ int main(void)
                     printf("\nINVALID DATA\n");
                     
                     break;
+                case GRAPH_ERR_SAME_DATA:
+                    printf("\nSAME DATA\n");
+                    
+                    break;
                 default:
                     printf("\nGRAPH WAS READ SUCCESSFULLY\n");
 
